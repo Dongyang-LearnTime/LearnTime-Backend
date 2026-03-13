@@ -1,4 +1,4 @@
-package learntime.backend.global.config;
+package learntime.backend.global.config.security;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;

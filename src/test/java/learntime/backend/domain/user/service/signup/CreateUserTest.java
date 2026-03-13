@@ -1,7 +1,8 @@
-package learntime.backend.domain.user.service;
+package learntime.backend.domain.user.service.signup;
 
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.domain.user.model.User;
+import learntime.backend.domain.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
