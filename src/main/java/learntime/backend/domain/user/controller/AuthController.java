@@ -1,10 +1,13 @@
 package learntime.backend.domain.user.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import learntime.backend.domain.user.dto.request.LoginRequest;
+import learntime.backend.domain.user.dto.request.SignUpRequest;
 import learntime.backend.domain.user.dto.response.TokenResponse;
 import learntime.backend.domain.user.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
@@ -89,4 +93,13 @@ public class AuthController {
 
         return ResponseEntity.ok("logout success");
     }
+
+    // 회원가입
+    @PostMapping("/signup")
+    public ResponseEntity<String> signupUser(@Valid @RequestBody SignUpRequest request) {
+        authService.createUser(request.getUserName(), request.getEmail(), request.getPassword());
+        log.info("{} 회원가입 성공!", request.getUserName());
+        return ResponseEntity.ok().build();
+    }
+
 }

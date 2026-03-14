@@ -1,7 +1,6 @@
 package learntime.backend.domain.user.service;
 
 import learntime.backend.domain.user.dto.request.LoginRequest;
-import learntime.backend.domain.user.dto.response.TokenResponse;
 import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
@@ -62,6 +61,21 @@ public class AuthService {
     public void logout(String refreshToken) {
         refreshTokenRepository.findByToken(refreshToken) // 리프레쉬 토큰 db에서 삭제
                 .ifPresent(refreshTokenRepository::delete);
+    }
+
+    // 회원가입
+    @Transactional
+    public void createUser(String userName, String email, String password) {
+        String encodedPassword = passwordEncoder.encode(password); // 비밀번호 암호화
+
+        User user = User.builder()
+                .name(userName)
+                .email(email)
+                .password(encodedPassword)
+                .role(User.Role.ROLE_ADMIN) // 관리자는 ROLE_ADMIN, 유저는 ROLE_USER
+                .build();
+
+        userRepository.save(user);
     }
 
     // 토큰 DB에 저장 및 return

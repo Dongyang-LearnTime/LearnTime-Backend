@@ -2,7 +2,7 @@ package learntime.backend.domain.user.service.signup;
 
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.domain.user.service.UserService;
+import learntime.backend.domain.user.service.AuthService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.verify;
 class CreateUserTest {
 
     @InjectMocks // 가짜 객체들(@Mock)을 주입받을 진짜 테스트 대상 객체
-    private UserService userService;
+    private AuthService authService;
 
     @Mock // DB에 실제로 접근하지 않도록 가짜(Mock) Repository 생성
     private UserRepository userRepository;
@@ -40,7 +40,7 @@ class CreateUserTest {
         given(userRepository.save(any(User.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // when (실행 단계)
-        userService.createUser("홍길동", "test@email.com", rawPassword);
+        authService.createUser("홍길동", "test@email.com", rawPassword);
 
         // then (검증 단계)
         // 1. 비밀번호 암호화 메서드가 1번 호출되었는가?
