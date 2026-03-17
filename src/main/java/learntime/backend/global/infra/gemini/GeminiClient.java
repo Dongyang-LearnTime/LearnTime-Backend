@@ -10,11 +10,11 @@ import java.util.Map;
 @Component
 public class GeminiClient {
 
+    // gemini-2.5-flash
+    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
     @Value("${gemini.api.key}")
     private String apiKey;
-
-    // gemini-2.5-flash
-    private final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
     private final RestClient restClient;
 
