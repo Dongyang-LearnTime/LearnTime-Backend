@@ -1,10 +1,11 @@
 package learntime.backend.global.infra.gemini;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Component
@@ -27,12 +28,18 @@ public class GeminiClient {
                 .uri(GEMINI_URL + "?key=" + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestBody)
-                .retrieve()
-                // 에러 발생 시 상세 메시지 출력
-                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
-                    throw new RuntimeException("Gemini API Client Error: " + response.getStatusText() +
-                            " | Body: " + new String(response.getBody().readAllBytes()));
-                })
-                .body(String.class);
+                .exchange((request, response) -> {
+                    // 1. 응답 바디를 무조건 바이트 배열
+                    byte[] bodyBytes = response.getBody().readAllBytes();
+                    String bodyString = new String(bodyBytes, StandardCharsets.UTF_8);
+
+                    // 2. 에러 발생 시 처리 (4xx, 5xx)
+                    if (response.getStatusCode().isError()) {
+                        throw new RuntimeException("Gemini API Error [" + response.getStatusCode() + "] | Body: " + bodyString);
+                    }
+
+                    // 3. 정상 응답 반환
+                    return bodyString;
+                });
     }
 }
