@@ -15,6 +15,24 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class CustomExceptionHandler {
 
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponseDTO> handleBusiness(BusinessException e) {
+        ErrorCode errorCode = e.getErrorCode();
+
+        log.warn("비즈니스 예외 발생: {} - {}", errorCode.getCode(), errorCode.getMessage());
+
+        ErrorResponseDTO body = new ErrorResponseDTO(
+                errorCode.getCode(),
+                errorCode.getMessage(),
+                "",
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.
+                status(errorCode.getStatus()).
+                body(body);
+    }
+
     // 설정한 예외 외의 모든 예외 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handle(Exception error) {
