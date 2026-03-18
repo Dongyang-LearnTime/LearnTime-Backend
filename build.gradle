@@ -24,6 +24,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-json'
 
     // MySQL
     runtimeOnly 'com.mysql:mysql-connector-j'
@@ -31,6 +32,8 @@ dependencies {
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 
     // Spring Boot Test Tool
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -41,6 +44,12 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
+
+    // XML
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+
+    // Jsoup
+    implementation 'org.jsoup:jsoup:1.21.1'
 }
 
 tasks.named('test') {

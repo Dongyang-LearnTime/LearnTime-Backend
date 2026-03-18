@@ -1,22 +1,34 @@
 package learntime.backend.domain.study.controller;
 
-import learntime.backend.domain.study.dto.StudyPlanResponseDTO;
-import learntime.backend.domain.study.dto.StudyRequestDTO;
+import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.dto.response.Yes24BookResponseDTO;
 import learntime.backend.domain.study.service.GeminiStudyService;
+import learntime.backend.domain.study.service.StudyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/study")
 @RequiredArgsConstructor
 public class StudyController {
 
-    private final GeminiStudyService studyService;
+    private final StudyService studyService;
+    private final GeminiStudyService geminiStudyService;
+
+    @GetMapping("/book")
+    public ResponseEntity<List<Yes24BookResponseDTO>> getYes24BookList(@RequestParam("title") String title,
+                                                                       @RequestParam("page") int page) {
+        List<Yes24BookResponseDTO> result = studyService.getYes24BookList(title, page);
+        return ResponseEntity.ok(result);
+    }
 
     @PostMapping("/generate")
-    public ResponseEntity<StudyPlanResponseDTO> createPlan(@RequestBody StudyRequestDTO request) {
-        StudyPlanResponseDTO result = studyService.generateSmartStudyPlan(request);
+    public ResponseEntity<StudyPlanResponseDTO> createPlan(@RequestBody GeminiStudyRequestDTO request) {
+        StudyPlanResponseDTO result = geminiStudyService.generateSmartStudyPlan(request);
         return ResponseEntity.ok(result);
     }
 }

@@ -1,6 +1,6 @@
 package learntime.backend.domain.user.service;
 
-import learntime.backend.domain.user.dto.request.LoginRequest;
+import learntime.backend.domain.user.dto.request.LoginRequestDTO;
 import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
@@ -31,7 +31,7 @@ public class AuthService {
     ) {}
 
     @Transactional
-    public TokenPair login(LoginRequest request) {
+    public TokenPair login(LoginRequestDTO request) {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));

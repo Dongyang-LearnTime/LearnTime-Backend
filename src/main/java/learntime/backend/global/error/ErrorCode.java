@@ -8,6 +8,7 @@ public enum ErrorCode {
     //Gemini Study 관련 에러
     AI_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-001", "학습 계획 생성 중 오류가 발생했습니다."),
     AI_RESPONSE_BLOCKED(HttpStatus.BAD_REQUEST, "STUDY-002", "AI 답변이 차단되었습니다. 다른 책으로 시도해주세요."),
+    EXTERNAL_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-03", "크롤링 중 오류가 발생했습니다."),
 
     // 기타 공통 에러
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON-001", "잘못된 입력값입니다.");
