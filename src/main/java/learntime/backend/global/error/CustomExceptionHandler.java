@@ -4,11 +4,14 @@ import learntime.backend.global.dto.ErrorResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 // 전역 예외 관리
 @Slf4j
@@ -56,6 +59,32 @@ public class CustomExceptionHandler {
                         .errorCode(String.valueOf(e.getStatusCode().value()))
                         .message(e.getReason() != null ? e.getReason() : "요청 처리 중 오류가 발생했습니다.")
                         .detail("")
+                        .build());
+    }
+
+
+    // @Valid 범위값 오류
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex) {
+
+        // 첫 번째 에러 메시지를 추출
+        String errorMessage = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(FieldError::getDefaultMessage)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse("유효하지 않은 입력값입니다.");
+
+        log.warn("Validation 예외 발생: {}", errorMessage);
+
+        // 2. HTTP 400에 맞는 규격화된 응답 반환
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .errorCode("400")
+                        .message("잘못된 요청입니다. 입력값을 확인해주세요.")
+                        .detail(errorMessage)
                         .build());
     }
 }

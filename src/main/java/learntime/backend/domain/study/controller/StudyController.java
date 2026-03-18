@@ -1,5 +1,6 @@
 package learntime.backend.domain.study.controller;
 
+import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.Yes24BookResponseDTO;
@@ -27,7 +28,7 @@ public class StudyController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<StudyPlanResponseDTO> createPlan(@RequestBody GeminiStudyRequestDTO request) {
+    public ResponseEntity<StudyPlanResponseDTO> createPlan(@Valid @RequestBody GeminiStudyRequestDTO request) {
         StudyPlanResponseDTO result = geminiStudyService.generateSmartStudyPlan(request);
         return ResponseEntity.ok(result);
     }
