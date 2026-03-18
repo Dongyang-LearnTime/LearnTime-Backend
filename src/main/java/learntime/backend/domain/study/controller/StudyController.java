@@ -8,9 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/study")
+@RequestMapping("/api/study")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000") // React 연동을 위한 CORS 허용
 public class StudyController {
 
     private final GeminiStudyService studyService;
