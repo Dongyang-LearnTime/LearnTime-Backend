@@ -2,9 +2,9 @@ package learntime.backend.domain.user.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import learntime.backend.domain.user.dto.request.LoginRequest;
-import learntime.backend.domain.user.dto.request.SignUpRequest;
-import learntime.backend.domain.user.dto.response.TokenResponse;
+import learntime.backend.domain.user.dto.request.LoginRequestDTO;
+import learntime.backend.domain.user.dto.request.SignUpRequestDTO;
+import learntime.backend.domain.user.dto.response.TokenResponseDTO;
 import learntime.backend.domain.user.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +24,8 @@ public class AuthController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(
-            @RequestBody LoginRequest request,
+    public ResponseEntity<TokenResponseDTO> login(
+            @RequestBody LoginRequestDTO request,
             HttpServletResponse response
     ) {
         AuthService.TokenPair token = authService.login(request);
@@ -42,14 +42,14 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
 
         return ResponseEntity.ok(
-                new TokenResponse(token.accessToken(), "Bearer")
+                new TokenResponseDTO(token.accessToken(), "Bearer")
         );
     }
 
 
     // AccessToken 재발급
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponse> refresh(
+    public ResponseEntity<TokenResponseDTO> refresh(
             @CookieValue("refreshToken") String refreshToken,
             HttpServletResponse response
     ) {
@@ -66,7 +66,7 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
 
         return ResponseEntity.ok(
-                new TokenResponse(token.accessToken(), "Bearer")
+                new TokenResponseDTO(token.accessToken(), "Bearer")
         );
     }
 
@@ -96,7 +96,7 @@ public class AuthController {
 
     // 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<String> signupUser(@Valid @RequestBody SignUpRequest request) {
+    public ResponseEntity<String> signupUser(@Valid @RequestBody SignUpRequestDTO request) {
         authService.createUser(request.getUserName(), request.getEmail(), request.getPassword());
         log.info("{} 회원가입 성공!", request.getUserName());
         return ResponseEntity.ok().build();

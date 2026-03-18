@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.dto;
+package learntime.backend.domain.study.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -21,8 +21,6 @@ public class StudyPlanResponseDTO {
     public static class Task {
         @JsonProperty("chapter_title")
         private String chapterTitle;
-        @JsonProperty("page_range")
-        private String pageRange;
 
         private String difficulty; // "쉬움", "보통", "어려움"
     }
