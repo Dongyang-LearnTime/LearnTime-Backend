@@ -20,6 +20,7 @@ public class StudyController {
     private final StudyService studyService;
     private final GeminiStudyService geminiStudyService;
 
+    // 책 목록 요청
     @GetMapping("/book")
     public ResponseEntity<List<Yes24BookResponseDTO>> getYes24BookList(@RequestParam("title") String title,
                                                                        @RequestParam("page") int page) {
@@ -27,6 +28,7 @@ public class StudyController {
         return ResponseEntity.ok(result);
     }
 
+    // 책 목록 기반으로 AI가 일정, 진도 생성
     @PostMapping("/generate")
     public ResponseEntity<StudyPlanResponseDTO> createPlan(@Valid @RequestBody GeminiStudyRequestDTO request) {
         StudyPlanResponseDTO result = geminiStudyService.generateSmartStudyPlan(request);

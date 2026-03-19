@@ -1,19 +1,41 @@
 package learntime.backend.domain.study.dto.request;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
+import learntime.backend.global.error.BusinessException;
+import learntime.backend.global.error.ErrorCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Getter
 @NoArgsConstructor
 public class GeminiStudyRequestDTO {
+    @NotNull(message = "책 제목은 필수입니다.")
     private String title;
+
+    @NotNull(message = "링크는 필수입니다.")
     private String linkUrl;
 
-    @NotNull
-    @Min(value = 7, message = "기간은 최소 7일 이상이어야 합니다.")
-    @Max(value = 90, message = "기간은 최대 90일 이하여야 합니다.")
-    private int period;
+    @NotNull(message = "시작 날짜는 필수입니다.")
+    @FutureOrPresent(message = "시작 날짜는 오늘 이후여야 합니다.")
+    private LocalDate startDate; // yyyy-MM-dd 형식
+
+    @NotNull(message = "종료 날짜는 필수입니다.")
+    private LocalDate endDate; // yyyy-MM-dd 형식
+
+    public int getValidatedStudyDays() {
+        if (endDate.isBefore(startDate)) {
+            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
+        }
+
+        int days = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+
+        if (days < 7 || days > 90) {
+            throw new BusinessException(ErrorCode.INVALID_STUDY_PERIOD);
+        }
+        return days;
+    }
 }
