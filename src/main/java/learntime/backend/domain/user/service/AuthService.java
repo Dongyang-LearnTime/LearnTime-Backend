@@ -33,10 +33,10 @@ public class AuthService {
     @Transactional
     public TokenPair login(LoginRequestDTO request) {
 
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
@@ -53,6 +53,8 @@ public class AuthService {
             refreshTokenRepository.delete(storedToken);
             throw new RuntimeException("리프레시 토큰이 만료되었습니다. 다시 로그인하세요.");
         }
+
+        refreshTokenRepository.delete(storedToken);
 
         return generateTokenPair(storedToken.getUser());
     }

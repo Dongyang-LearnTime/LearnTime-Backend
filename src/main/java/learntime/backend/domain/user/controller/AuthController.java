@@ -8,6 +8,7 @@ import learntime.backend.domain.user.dto.response.TokenResponseDTO;
 import learntime.backend.domain.user.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,24 +51,22 @@ public class AuthController {
     // AccessToken 재발급
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponseDTO> refresh(
-            @CookieValue("refreshToken") String refreshToken,
-            HttpServletResponse response
+            @CookieValue(value = "refreshToken") String refreshToken
     ) {
-        AuthService.TokenPair token = authService.refresh(refreshToken);
+        AuthService.TokenPair tokenPair = authService.refresh(refreshToken);
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", token.refreshToken())
+        // 보안 쿠키 설정
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", tokenPair.refreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(true) // HTTPS 필수
                 .path("/")
                 .maxAge(REFRESH_TIME)
-                .sameSite("Strict")
+                .sameSite("Strict") // CSRF 방어
                 .build();
 
-        response.addHeader("Set-Cookie", cookie.toString());
-
-        return ResponseEntity.ok(
-                new TokenResponseDTO(token.accessToken(), "Bearer")
-        );
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new TokenResponseDTO(tokenPair.accessToken(), "Bearer"));
     }
 
 
@@ -82,7 +81,7 @@ public class AuthController {
             authService.logout(refreshToken);
         }
 
-        // 쿠키 삭제(덮어쒸우기)
+        // 쿠키 삭제(덮어씌우기)
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
@@ -97,8 +96,8 @@ public class AuthController {
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<String> signupUser(@Valid @RequestBody SignUpRequestDTO request) {
-        authService.createUser(request.getUserName(), request.getEmail(), request.getPassword());
-        log.info("{} 회원가입 성공!", request.getUserName());
+        authService.createUser(request.userName(), request.email(), request.password());
+        log.info("{} 회원가입 성공!", request.userName());
         return ResponseEntity.ok().build();
     }
 

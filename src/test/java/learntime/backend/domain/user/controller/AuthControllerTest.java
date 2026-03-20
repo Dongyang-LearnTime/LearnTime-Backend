@@ -20,10 +20,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional // 테스트 종료 시 DB 롤백을 위해 사용
+@Transactional
 class AuthControllerTest {
 
     @Autowired
@@ -38,6 +37,7 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         // 테스트 실행 전, 미리 검증용 사용자 데이터를 DB에 세팅합니다.
+        // 실무 최적화: 비밀번호는 반드시 PasswordEncoder로 암호화하여 저장해야 실제 로그인 검증 로직을 통과할 수 있습니다.
         User testUser = User.builder()
                 .email("test123@example.com")
                 .password(passwordEncoder.encode("learntime123!!!!"))
@@ -52,10 +52,11 @@ class AuthControllerTest {
     @DisplayName("유효한 이메일과 비밀번호로 로그인하면 AccessToken과 RefreshToken 쿠키를 발급한다.")
     void login_Success() throws Exception {
         // given: JDK 21 텍스트 블록을 활용하여 JSON 객체 생성 (ObjectMapper 직렬화 비용 절감)
+        // 핵심 수정: setUp()에서 저장한 유저 정보와 요청 JSON의 데이터가 정확히 일치해야 합니다.
         String requestBody = """
                 {
-                    "email": "test@example.com",
-                    "password": "learntime123!"
+                    "email": "test123@example.com",
+                    "password": "learntime123!!!!"
                 }
                 """;
 
@@ -72,7 +73,7 @@ class AuthControllerTest {
                 // AccessToken이 응답 Body의 accessToken 필드에 존재하는지 확인
                 .andExpect(jsonPath("$.accessToken").exists())
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
-                // RefreshToken이 쿠키에 정상적으로 담겼는지, HttpOnly 및 Secure 설정이 들어갔는지 확인
+                // RefreshToken이 쿠키에 정상적으로 담겼는지, HttpOnly 및 Secure(HTTPS) 설정이 들어갔는지 확인
                 .andExpect(cookie().exists("refreshToken"))
                 .andExpect(cookie().httpOnly("refreshToken", true))
                 .andExpect(cookie().secure("refreshToken", true));

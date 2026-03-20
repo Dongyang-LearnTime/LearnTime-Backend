@@ -3,6 +3,7 @@ package learntime.backend.domain.study.service;
 import jakarta.annotation.PostConstruct;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.dto.response.Yes24BookInfoResponseDTO;
 import learntime.backend.domain.study.service.component.Yes24BookCrawler;
 import learntime.backend.domain.study.service.component.GeminiPromptParser;
 import learntime.backend.global.error.BusinessException;
@@ -28,6 +29,7 @@ public class GeminiStudyService {
 
     @Value("classpath:prompts/study-plan-prompt.txt")
     private Resource promptResource;
+
     private String promptTemplate;
 
     @PostConstruct
@@ -44,10 +46,15 @@ public class GeminiStudyService {
 
         int periodDays = request.getValidatedStudyDays(); // 일차 계산
 
-        String bookToc = yes24BookCrawler.crawlToc(request.getLinkUrl()); // 책 목차 정보 크롤링
+        Yes24BookInfoResponseDTO crawlingResult =
+                yes24BookCrawler.crawlToc(request.linkUrl());  // 책 목차, 쪽수 정보 크롤링
 
         // 프롬프트 생성 및 AI 요청
-        String userPrompt = promptTemplate.formatted(periodDays, request.getTitle(), bookToc);
+        String userPrompt = promptTemplate.formatted(periodDays,
+                                                    request.title(),
+                                                    crawlingResult.pageCount()
+                                                    ,crawlingResult.bookToc());
+
         Map<String, Object> requestBody = promptParser.createRequestBody(userPrompt);
 
         try {
