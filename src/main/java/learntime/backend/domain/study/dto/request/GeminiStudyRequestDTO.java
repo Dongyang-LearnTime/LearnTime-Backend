@@ -2,6 +2,7 @@ package learntime.backend.domain.study.dto.request;
 
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import learntime.backend.global.error.BusinessException;
 import learntime.backend.global.error.ErrorCode;
 
@@ -11,7 +12,11 @@ import java.util.*;
 
 public record GeminiStudyRequestDTO(
         @NotNull(message = "책 제목은 필수입니다.")
-        String title,
+        String bookTitle,
+
+        @NotNull(message = "공부 진도 제목은 필수입니다.")
+        @Size(max = 100, message = "진도 제목은 100자 이하여야 합니다")
+        String studyTitle,
 
         @NotNull(message = "링크는 필수입니다.")
         String linkUrl,

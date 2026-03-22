@@ -28,12 +28,15 @@ public class Study {
     private Long studyId;
 
     @Column(nullable = false, length = 100)
-    private String title;
+    private String studyTitle;
 
-    @Column(name = "start_date", nullable = false)
+    @Column(nullable = false)
+    private String bookTitle;
+
+    @Column(nullable = false)
     private LocalDate startDate;
 
-    @Column(name = "end_date", nullable = false)
+    @Column(nullable = false)
     private LocalDate endDate;
 
     @CreatedDate
@@ -41,6 +44,7 @@ public class Study {
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     // 일차별 진도 내용
@@ -56,8 +60,9 @@ public class Study {
     private List<StudyRestDate> restDates = new ArrayList<>();
 
     @Builder
-    public Study(String title, LocalDate startDate, LocalDate endDate) {
-        this.title = title;
+    public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate) {
+        this.studyTitle = studyTitle;
+        this.bookTitle = bookTitle;
         this.startDate = startDate;
         this.endDate = endDate;
     }

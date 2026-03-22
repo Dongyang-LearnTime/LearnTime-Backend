@@ -6,6 +6,8 @@ import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.config.security.jwt.JwtProvider;
+import learntime.backend.global.error.BusinessException;
+import learntime.backend.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,10 +36,10 @@ public class AuthService {
     public TokenPair login(LoginRequestDTO request) {
 
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
 
         return generateTokenPair(user);
@@ -47,11 +49,11 @@ public class AuthService {
     public TokenPair refresh(String refreshToken) {
 
         RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("유효하지 않은 리프레시 토큰입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN));
 
         if (storedToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             refreshTokenRepository.delete(storedToken);
-            throw new RuntimeException("리프레시 토큰이 만료되었습니다. 다시 로그인하세요.");
+            throw new BusinessException(ErrorCode.EXPIRED_REFRESH_TOKEN);
         }
 
         refreshTokenRepository.delete(storedToken);

@@ -51,7 +51,7 @@ public class GeminiStudyService {
 
         // 프롬프트 생성 및 AI 요청
         String userPrompt = promptTemplate.formatted(periodDays,
-                                                    request.title(),
+                                                    request.bookTitle(),
                                                     crawlingResult.pageCount()
                                                     ,crawlingResult.bookToc());
 

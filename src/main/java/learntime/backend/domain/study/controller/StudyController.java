@@ -5,6 +5,7 @@ import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.Yes24BookListResponseDTO;
 import learntime.backend.domain.study.service.GeminiStudyService;
+import learntime.backend.domain.study.service.StudyCommandService;
 import learntime.backend.domain.study.service.StudyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ public class StudyController {
 
     private final StudyService studyService;
     private final GeminiStudyService geminiStudyService;
+    private final StudyCommandService studyCommandService;
 
     // 책 목록 요청
     @GetMapping("/book")
@@ -32,6 +34,7 @@ public class StudyController {
     @PostMapping("/generate")
     public ResponseEntity<StudyPlanResponseDTO> createPlan(@Valid @RequestBody GeminiStudyRequestDTO request) {
         StudyPlanResponseDTO result = geminiStudyService.generateSmartStudyPlan(request);
+        studyCommandService.saveStudyPlan(request, result); // 공부 진도 DB에 저장
         return ResponseEntity.ok(result);
     }
 }
