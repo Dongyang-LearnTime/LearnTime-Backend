@@ -6,8 +6,12 @@ import learntime.backend.domain.user.dto.request.LoginRequestDTO;
 import learntime.backend.domain.user.dto.request.SignUpRequestDTO;
 import learntime.backend.domain.user.dto.response.TokenResponseDTO;
 import learntime.backend.domain.user.service.AuthService;
+import learntime.backend.global.error.BusinessException;
+import learntime.backend.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,10 +40,12 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(REFRESH_TIME)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
+
+        log.info("aa");
 
         return ResponseEntity.ok(
                 new TokenResponseDTO(token.accessToken(), "Bearer")
@@ -50,24 +56,29 @@ public class AuthController {
     // AccessToken 재발급
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponseDTO> refresh(
-            @CookieValue("refreshToken") String refreshToken,
-            HttpServletResponse response
-    ) {
-        AuthService.TokenPair token = authService.refresh(refreshToken);
+            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", token.refreshToken())
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(REFRESH_TIME)
-                .sameSite("Strict")
-                .build();
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        response.addHeader("Set-Cookie", cookie.toString());
+        try {
+            AuthService.TokenPair tokenPair = authService.refresh(refreshToken);
 
-        return ResponseEntity.ok(
-                new TokenResponseDTO(token.accessToken(), "Bearer")
-        );
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", tokenPair.refreshToken())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(REFRESH_TIME)
+                    .sameSite("None")
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(new TokenResponseDTO(tokenPair.accessToken(), "Bearer"));
+        } catch (BusinessException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
 
@@ -82,7 +93,7 @@ public class AuthController {
             authService.logout(refreshToken);
         }
 
-        // 쿠키 삭제(덮어쒸우기)
+        // 쿠키 삭제(덮어씌우기)
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
@@ -97,8 +108,8 @@ public class AuthController {
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<String> signupUser(@Valid @RequestBody SignUpRequestDTO request) {
-        authService.createUser(request.getUserName(), request.getEmail(), request.getPassword());
-        log.info("{} 회원가입 성공!", request.getUserName());
+        authService.createUser(request.userName(), request.email(), request.password());
+        log.info("{} 회원가입 성공!", request.userName());
         return ResponseEntity.ok().build();
     }
 

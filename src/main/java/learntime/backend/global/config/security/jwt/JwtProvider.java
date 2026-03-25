@@ -3,6 +3,8 @@ package learntime.backend.global.config.security.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import learntime.backend.global.error.BusinessException;
+import learntime.backend.global.error.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -61,14 +63,17 @@ public class JwtProvider {
 
         } catch (SecurityException | MalformedJwtException e) {
             log.error("잘못된 JWT 서명입니다.", e);
+            throw new BusinessException(ErrorCode.INVALID_JWT_SIGNATURE);
         } catch (ExpiredJwtException e) {
             log.error("만료된 JWT 토큰입니다.", e);
+            throw new BusinessException(ErrorCode.EXPIRED_JWT_TOKEN);
         } catch (UnsupportedJwtException e) {
             log.error("지원되지 않는 JWT 토큰입니다.", e);
+            throw new BusinessException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (IllegalArgumentException e) {
             log.error("JWT 토큰이 비어있습니다.", e);
+            throw new BusinessException(ErrorCode.EMPTY_JWT_CLAIM);
         }
-        return null;
     }
 
     // 토큰에서 userId 추출
