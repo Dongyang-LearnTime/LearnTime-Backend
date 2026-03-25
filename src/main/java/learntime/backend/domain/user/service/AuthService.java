@@ -5,11 +5,12 @@ import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.global.config.security.CustomPasswordEncoder;
 import learntime.backend.global.config.security.jwt.JwtProvider;
 import learntime.backend.global.error.BusinessException;
 import learntime.backend.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProvider jwtProvider;
-    private final PasswordEncoder passwordEncoder;
+    private final CustomPasswordEncoder customPasswordEncoder;
 
     private static final long ACCESS_TIME = 1000L * 60 * 30; // 엑세스 토큰 유효기간, 30분
     private static final long REFRESH_TIME = 1000L * 60 * 60 * 24 * 14; // 리프레쉬 토큰 유효기간, 14일
@@ -38,7 +39,7 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+        if (!customPasswordEncoder.matches(request.password(), user.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
 
@@ -56,8 +57,6 @@ public class AuthService {
             throw new BusinessException(ErrorCode.EXPIRED_REFRESH_TOKEN);
         }
 
-        refreshTokenRepository.delete(storedToken);
-
         return generateTokenPair(storedToken.getUser());
     }
 
@@ -70,7 +69,7 @@ public class AuthService {
     // 회원가입
     @Transactional
     public void createUser(String userName, String email, String password) {
-        String encodedPassword = passwordEncoder.encode(password); // 비밀번호 암호화
+        String encodedPassword = customPasswordEncoder.encode(password); // 비밀번호 암호화
 
         User user = User.builder()
                 .name(userName)
@@ -84,19 +83,11 @@ public class AuthService {
 
     // 토큰 DB에 저장 및 return
     private TokenPair generateTokenPair(User user) {
-
         String newAccess = jwtProvider.createToken(user, ACCESS_TIME);
         String newRefresh = jwtProvider.createToken(user, REFRESH_TIME);
+        LocalDateTime newExpiry = LocalDateTime.now().plusSeconds(REFRESH_TIME / 1000);
 
-        refreshTokenRepository.deleteByUser(user); // 기존 리프레쉬 토큰 삭제
-
-        RefreshToken refreshTokenEntity = RefreshToken.builder()
-                .user(user)
-                .token(newRefresh)
-                .expiryDate(LocalDateTime.now().plusSeconds(REFRESH_TIME / 1000))
-                .build();
-
-        refreshTokenRepository.save(refreshTokenEntity);
+        refreshTokenRepository.upsertToken(user.getUserId(), newRefresh, newExpiry);
 
         return new TokenPair(newAccess, newRefresh);
     }

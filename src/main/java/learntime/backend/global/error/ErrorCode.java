@@ -11,7 +11,7 @@ public enum ErrorCode {
     EXTERNAL_CRAWLING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-03", "크롤링 중 오류가 발생했습니다."),
     CRAWLING_DOM_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-04", "대상 사이트의 구조에서 정보를 찾을 수 없습니다"),
     INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "STUDY-05", "종료일은 시작일보다 빠를 수 없습니다."),
-    INVALID_STUDY_PERIOD(HttpStatus.BAD_REQUEST, "STUDY-06", "학습 기간은 7일 이상 90일 이하만 가능합니다."),
+    INVALID_STUDY_PERIOD(HttpStatus.BAD_REQUEST, "STUDY-06", "학습 기간은 14일 이상 90일 이하만 가능합니다."),
 
     // 로그인, 인증 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH-001", "사용자를 찾을 수 없습니다."),

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -129,5 +130,87 @@ class StudyCommandServiceTest {
         assertThat(studyDailyPlanRepository.findAll()).isEmpty();
         assertThat(studyRestDateRepository.findAll()).isEmpty();
         assertThat(studyRestDayRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("AI 진도 재설정 시, 완료된 일정은 유지하고 미완료 일정은 삭제 후 새 일정으로 덮어쓴다.")
+    void replanStudy_success() {
+        // given 1: 기존 남은 스터디 일정 데이터는 더미데이터로 생성 (완료된거 2개, 안된거 1개 섞어서)
+        Study study = Study.builder()
+                .studyTitle("기존 스터디 제목")
+                .bookTitle("스프링 부트 마스터")
+                .startDate(LocalDate.of(2026, 4, 1))
+                .endDate(LocalDate.of(2026, 4, 10))
+                .build();
+        studyRepository.save(study);
+
+        // 기존 스케줄 (쉬는 요일: 일요일, 쉬는 날: 4월 5일)
+        studyRestDayRepository.save(StudyRestDay.builder().study(study).dayOfWeek(DayOfWeek.SUNDAY).build());
+        studyRestDateRepository.save(StudyRestDate.builder().study(study).restDate(LocalDate.of(2026, 4, 5)).build());
+
+        // 완료된 진도 더미데이터
+        StudyDailyPlan completed1 = StudyDailyPlan.builder().study(study).dayNumber(1).planContent("1장 읽기").build();
+        ReflectionTestUtils.setField(completed1, "progressStatus", StudyDailyPlan.ProgressStatus.COMPLETED);
+
+        StudyDailyPlan completed2 = StudyDailyPlan.builder().study(study).dayNumber(2).planContent("2장 읽기").build();
+        ReflectionTestUtils.setField(completed2, "progressStatus", StudyDailyPlan.ProgressStatus.COMPLETED);
+
+        // 미완료(진행 전/중) 진도 더미데이터
+        StudyDailyPlan inProgress = StudyDailyPlan.builder().study(study).dayNumber(3).planContent("3장 읽기").build();
+        
+        studyDailyPlanRepository.saveAll(List.of(completed1, completed2, inProgress));
+
+        em.flush();
+        em.clear();
+
+        // 기존 진도 로그 출력
+        System.out.println("\n=== [LOG] 기존 진도 ===");
+        studyDailyPlanRepository.findAll().forEach(plan ->
+                System.out.println(plan.getDayNumber() + "일차 [" + plan.getProgressStatus() + "]: " + plan.getPlanContent())
+        );
+
+        // given 2: 변경할 스케줄 정보 (쉬는 날, 쉬는 요일 수정)
+        GeminiReplanRequestDTO request = new GeminiReplanRequestDTO(
+                "수정된 스터디 제목",
+                LocalDate.of(2026, 5, 1),
+                LocalDate.of(2026, 5, 10),
+                List.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY), // 토, 일 쉬는 요일로 변경
+                List.of(LocalDate.of(2026, 5, 5))              // 쉬는 날 변경
+        );
+
+        // given 3: gemini로 재생성한 일정 모킹 (미완료된 3장을 남은 기간에 맞춰 분배했다고 가정)
+        StudyPlanResponseDTO.DailyPlan newPlan1 = new StudyPlanResponseDTO.DailyPlan(1, "3장 전반부 읽기");
+        StudyPlanResponseDTO.DailyPlan newPlan2 = new StudyPlanResponseDTO.DailyPlan(2, "3장 후반부 읽기");
+        StudyPlanResponseDTO geminiResult = new StudyPlanResponseDTO(List.of(newPlan1, newPlan2));
+
+        // when: 재설정 로직 실행
+        studyCommandService.replanStudy(study.getStudyId(), request, geminiResult);
+
+        em.flush();
+        em.clear();
+
+        // 재설정된 진도 로그 출력
+        System.out.println("\n=== [LOG] 재설정된 진도 ===");
+        studyDailyPlanRepository.findAll().forEach(plan ->
+                System.out.println(plan.getDayNumber() + "일차 [" + plan.getProgressStatus() + "]: " + plan.getPlanContent())
+        );
+
+        // then 4: DB 저장 및 덮어쓰기 검증
+        Study updatedStudy = studyRepository.findAll().getFirst();
+        assertThat(updatedStudy.getStudyTitle()).isEqualTo("수정된 스터디 제목");
+        
+        // 쉬는 날, 쉬는 요일 기존 더미데이터에서 수정되었는지 검증
+        assertThat(studyRestDayRepository.findAll()).hasSize(2)
+                .extracting("dayOfWeek").containsExactlyInAnyOrder(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
+        assertThat(studyRestDateRepository.findAll()).hasSize(1)
+                .extracting("restDate").containsExactly(LocalDate.of(2026, 5, 5));
+
+        // 진도 검증: 미완료였던 "3장 읽기"가 지워지고, 완료된 1,2장 뒤에 새 일정이 3, 4일차로 붙어야 함
+        List<StudyDailyPlan> finalPlans = studyDailyPlanRepository.findAll();
+        assertThat(finalPlans).hasSize(4); // 완료 2개 + 신규 2개
+        assertThat(finalPlans).extracting("dayNumber")
+                .containsExactlyInAnyOrder(1, 2, 3, 4); 
+        assertThat(finalPlans).extracting("planContent")
+                .contains("1장 읽기", "2장 읽기", "3장 전반부 읽기", "3장 후반부 읽기");
     }
 }

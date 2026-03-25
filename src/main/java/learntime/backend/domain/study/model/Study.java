@@ -67,4 +67,10 @@ public class Study {
         this.endDate = endDate;
     }
 
+    // --- 비즈니스 로직 --- //
+    public void updateStudyInfo(String studyTitle, LocalDate startDate, LocalDate endDate) {
+        this.studyTitle = studyTitle;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
 }

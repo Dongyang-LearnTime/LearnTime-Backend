@@ -51,7 +51,7 @@ public record GeminiStudyRequestDTO(
                 .count();
 
         // 쉬는 날짜, 쉬는 요일을 뺀 실제 일수에서 계산
-        if (actualStudyDays < 7 || actualStudyDays > 90) {
+        if (actualStudyDays < 14 || actualStudyDays > 90) {
             throw new BusinessException(ErrorCode.INVALID_STUDY_PERIOD);
         }
 
