@@ -3,11 +3,13 @@ package learntime.backend.domain.study.controller;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study.dto.request.SavePlanRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.Yes24BookListResponseDTO;
 import learntime.backend.domain.study.service.GeminiStudyService;
 import learntime.backend.domain.study.service.StudyCommandService;
 import learntime.backend.domain.study.service.StudyService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
@@ -34,18 +36,24 @@ public class StudyController {
 
     // 책 목록 기반으로 AI가 일정, 진도 생성
     @PostMapping("/generate")
-    public ResponseEntity<StudyPlanResponseDTO> createPlan(@Valid @RequestBody GeminiStudyRequestDTO request) {
+    public ResponseEntity<StudyPlanResponseDTO> createStudyPlan(@Valid @RequestBody GeminiStudyRequestDTO request) {
         StudyPlanResponseDTO result = geminiStudyService.generateSmartStudyPlan(request);
-        studyCommandService.saveStudyPlan(request, result); // 공부 진도 DB에 저장
 
         return ResponseEntity.ok(result);
     }
 
     // 유저에게 프롬프트를 받아 AI가 진도를 재설정
 
+    // 공부 진도 db에 저장
+    @PostMapping("/plans")
+    public ResponseEntity<Void> saveStudyPlan(@RequestBody SavePlanRequestDTO request) {
+        studyCommandService.saveStudyPlan(request.planInfo(), request.planGeminiResult());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
     // AI 진도 재조정 (쉬는 날, 쉬는 요일 등 변경)
     @PutMapping("/{studyId}/replan")
-    public ResponseEntity<StudyPlanResponseDTO> replanStudy(@PathVariable("studyId") Long studyId,
+    public ResponseEntity<StudyPlanResponseDTO> replanStudyPlan(@PathVariable("studyId") Long studyId,
                                                             @Valid @RequestBody GeminiReplanRequestDTO request) {
         String remainingContent = studyCommandService.getRemainingStudyContent(studyId); // 기존 진행 중인 스터디의 '남은 학습 내용'을 합쳐서 문자열로 가져오기
         
