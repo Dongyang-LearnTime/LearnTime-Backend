@@ -36,7 +36,7 @@ public class ExerciseService {
             return youtubeClient.searchVideos("전신 홈 트레이닝");
         }
 
-        String mainPart = bodyParts.get(0);
+        String mainPart = bodyParts.getFirst();
         return youtubeClient.searchVideos(mainPart);
     }
 
