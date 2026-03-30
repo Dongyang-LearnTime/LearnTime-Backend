@@ -7,6 +7,7 @@ import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.Yes24BookInfoResponseDTO;
 import learntime.backend.domain.study.service.component.Yes24BookCrawler;
 import learntime.backend.domain.study.service.component.GeminiPromptParser;
+import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.global.error.BusinessException;
 import learntime.backend.global.error.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -27,6 +29,7 @@ public class GeminiStudyService {
     private final GeminiClient geminiClient;
     private final Yes24BookCrawler yes24BookCrawler;
     private final GeminiPromptParser promptParser;
+    private final PromptQuotaRepository promptQuotaRepository;
 
     @Value("classpath:prompts/study-plan-prompt.txt")
     private Resource promptResource; // 진도 프롬프트
@@ -48,7 +51,8 @@ public class GeminiStudyService {
         }
     }
 
-    public StudyPlanResponseDTO generateSmartStudyPlan(GeminiStudyRequestDTO request) {
+    @Transactional
+    public StudyPlanResponseDTO generateSmartStudyPlan(GeminiStudyRequestDTO request, Long userId) {
         int periodDays = request.getValidatedStudyDays();
 
         Yes24BookInfoResponseDTO crawlingResult =
@@ -61,26 +65,33 @@ public class GeminiStudyService {
                 crawlingResult.bookToc()
         );
 
-        return executeGeminiRequest(userPrompt, request);
+        return executeGeminiRequest(userPrompt, request, userId);
     }
 
-    public StudyPlanResponseDTO generateReplan(GeminiReplanRequestDTO request, String remainingContent, int remainingDays) {
+    @Transactional
+    public StudyPlanResponseDTO generateReplan(GeminiReplanRequestDTO request, String remainingContent, int remainingDays, Long userId) {
         String userPrompt = replanPromptTemplate.formatted(
                 remainingDays,
                 request.studyTitle(),
                 remainingContent
         );
 
-        return executeGeminiRequest(userPrompt, request);
+        return executeGeminiRequest(userPrompt, request, userId);
     }
 
-    // 프롬프트를 넣어 결과를 파싱하여 반환
-    private StudyPlanResponseDTO executeGeminiRequest(String userPrompt, Object requestDto) {
+    private StudyPlanResponseDTO executeGeminiRequest(String userPrompt, Object requestDto, Long userId) {
+        // Gemini 이용량 차감
+        int updatedRows = promptQuotaRepository.decreaseCountAtomic(userId);
+        if (updatedRows == 0) {
+            throw new BusinessException(ErrorCode.PROMPT_QUOTA_EXCEEDED); // 프롬프트 할당량 소진 예외
+        }
+
         Map<String, Object> requestBody = promptParser.createRequestBody(userPrompt);
 
         try {
             String rawJson = geminiClient.sendRequest(requestBody);
-            return promptParser.parseResponse(rawJson);  // JSON (String) -> DTO 변환 과정
+            return promptParser.parseResponse(rawJson);
+
         } catch (Exception e) {
             log.error("AI 학습 계획 생성 실패. Request: {}", requestDto, e);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED);

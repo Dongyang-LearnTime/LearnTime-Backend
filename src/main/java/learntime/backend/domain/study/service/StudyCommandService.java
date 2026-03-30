@@ -5,6 +5,9 @@ import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
+import learntime.backend.domain.user.model.User;
+import learntime.backend.domain.user.repository.PromptQuotaRepository;
+import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.BusinessException;
 import learntime.backend.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -24,15 +27,21 @@ public class StudyCommandService {
     private final StudyDailyPlanRepository studyDailyPlanRepository;
     private final StudyRestDateRepository studyRestDateRepository;
     private final StudyRestDayRepository studyRestDayRepository;
+    private final UserRepository userRepository;
+    private final PromptQuotaRepository promptQuotaRepository;
 
     @Transactional
-    public void saveStudyPlan(GeminiStudyRequestDTO request, StudyPlanResponseDTO geminiResult) {
+    public void saveStudyPlan(GeminiStudyRequestDTO request, StudyPlanResponseDTO geminiResult, Long userId) {
+
+        User user = userRepository.findById(userId).
+                orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         Study study = Study.builder()
                 .studyTitle(request.studyTitle())
                 .bookTitle(request.bookTitle())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
-                // userId 컬럼이 Study 엔티티에 추가되면 여기에 매핑
+                .user(user)
                 .build();
 
         studyRepository.save(study);

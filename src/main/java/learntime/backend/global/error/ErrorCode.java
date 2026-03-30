@@ -5,6 +5,9 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorCode {
+    // 할당량 관령 에러
+    PROMPT_QUOTA_EXCEEDED(HttpStatus.FORBIDDEN, "QUOTA-001", "프롬프트 사용 가능 횟수를 모두 소진했습니다."),
+
     // Study 관련 에러
     AI_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-001", "학습 계획 생성 중 오류가 발생했습니다."),
     AI_RESPONSE_BLOCKED(HttpStatus.BAD_REQUEST, "STUDY-002", "AI 답변이 차단되었습니다. 다른 책으로 시도해주세요."),

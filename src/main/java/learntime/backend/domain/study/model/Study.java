@@ -1,6 +1,7 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.user.model.User;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -47,6 +48,10 @@ public class Study {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     // 일차별 진도 내용
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyDailyPlan> studyDailyPlans = new ArrayList<>();
@@ -60,11 +65,12 @@ public class Study {
     private List<StudyRestDate> restDates = new ArrayList<>();
 
     @Builder
-    public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate) {
+    public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate, User user) {
         this.studyTitle = studyTitle;
         this.bookTitle = bookTitle;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.user = user;
     }
 
     // --- 비즈니스 로직 --- //

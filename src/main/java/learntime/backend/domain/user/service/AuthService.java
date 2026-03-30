@@ -75,7 +75,7 @@ public class AuthService {
                 .name(userName)
                 .email(email)
                 .password(encodedPassword)
-                .role(User.Role.ROLE_ADMIN) // 관리자는 ROLE_ADMIN, 유저는 ROLE_USER
+                .role(User.Role.ROLE_USER) // 관리자는 ROLE_ADMIN, 유저는 ROLE_USER
                 .build();
 
         userRepository.save(user);
