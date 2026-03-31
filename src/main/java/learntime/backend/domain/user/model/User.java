@@ -68,9 +68,13 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Study> study = new ArrayList<>();
 
-    // 1대1 연쇄삭제로 연결
+    // 리프레쉬 토큰
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private RefreshToken refreshToken;
+
+    // 토큰 할당량
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PromptQuota promptQuota;
 
     @Builder
     public User(String email, String password, String name, String socialId, AuthProvider socialProvider, Role role) {

@@ -26,7 +26,4 @@ public class WeightRecord extends BaseTimeEntity {
     @Column(nullable = false)
     private Double weight; // 체중 (kg)
     private Double bodyFat; // 체지방률 (%)
-
-    @CreatedDate
-    private LocalDateTime createAt;
 }
