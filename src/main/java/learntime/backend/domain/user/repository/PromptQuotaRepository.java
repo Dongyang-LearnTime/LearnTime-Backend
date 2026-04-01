@@ -10,6 +10,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PromptQuotaRepository extends JpaRepository<PromptQuota, Long>  {
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE PromptQuota q SET q.remainingCount = q.remainingCount - 1 WHERE q.userId = :userId AND q.remainingCount > 0")
+    @Query("UPDATE PromptQuota q " +
+            "SET q.remainingCount = q.remainingCount - 1 " +
+            "WHERE q.userId = :userId AND q.remainingCount > 0")
     int decreaseCountAtomic(@Param("userId") Long userId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE PromptQuota q " +
+            "SET q.remainingCount = q.remainingCount + 1 " +
+            "WHERE q.userId = :userId")
+    int increaseCountAtomic(@Param("userId") Long userId);
 }

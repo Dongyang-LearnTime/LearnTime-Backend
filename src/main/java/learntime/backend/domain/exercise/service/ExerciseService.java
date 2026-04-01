@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.exercise.dto.request.ExerciseRequestDTO;
 import learntime.backend.domain.exercise.dto.response.ExerciseCalorieResponseDTO;
-import learntime.backend.domain.exercise.entity.ExerciseRecord;
+import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.repository.ExerciseRecordRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
@@ -41,11 +41,10 @@ public class ExerciseService {
     }
 
     @Transactional
-    public ExerciseRecord saveExercise(String email, ExerciseRequestDTO request) {
+    public ExerciseRecord saveExercise(Long userId, ExerciseRequestDTO request) {
 
-        // 이메일로 유저 찾기
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.findById(userId).
+                orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         Map<String, Object> requestBody = createGeminiRequest(request);
         try {

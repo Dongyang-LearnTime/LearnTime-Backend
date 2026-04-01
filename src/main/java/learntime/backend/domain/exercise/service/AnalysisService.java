@@ -3,14 +3,16 @@ package learntime.backend.domain.exercise.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.exercise.dto.response.AnalysisResponseDTO;
-import learntime.backend.domain.exercise.entity.ExerciseRecord;
+import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.repository.ExerciseRecordRepository;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.domain.exercise.entity.WeightRecord;
+import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.exercise.repository.WeightRecordRepository;
+import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.BusinessException;
 import learntime.backend.global.error.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
+import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,15 +28,20 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AnalysisService {
 
+    private final UserRepository userRepository;
     private final ExerciseRecordRepository exerciseRepository;
     private final WeightRecordRepository weightRepository;
+    private final PromptQuotaUtil promptQuotaUtil;
     private final GeminiClient geminiClient;
     private final ObjectMapper objectMapper;
 
     @Transactional(readOnly = true)
-    public AnalysisResponseDTO getWeeklyAnalysis(User user) {
+    public AnalysisResponseDTO getWeeklyAnalysis(Long userId) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sevenDaysAgo = now.minusDays(7);
+
+        User user = userRepository.findById(userId).
+                orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 1. 최근 7일간의 운동 및 체중 데이터 조회
         List<ExerciseRecord> exercises = exerciseRepository.findAllByUserAndCreateAtBetweenOrderByCreateAtAsc(user, sevenDaysAgo, now);
@@ -42,6 +49,7 @@ public class AnalysisService {
 
         // 2. AI에게 전달할 데이터 요약 생성
         String dataSummary = buildDataSummary(exercises, weights);
+        promptQuotaUtil.decreasePromptQuota(userId); // Gemini 이용량 차감
 
         // 3. Gemini 요청 바디 생성
         Map<String, Object> requestBody = createAnalysisRequest(dataSummary);
@@ -54,6 +62,7 @@ public class AnalysisService {
             return parseAnalysisResponse(rawJson);
         } catch (Exception e) {
             log.error("AI 분석 생성 중 오류 발생: {}", e.getMessage());
+            promptQuotaUtil.restorePromptQuota(userId);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED);
         }
     }

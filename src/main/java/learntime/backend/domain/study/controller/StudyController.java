@@ -60,11 +60,11 @@ public class StudyController {
                                                             @Valid @RequestBody GeminiReplanRequestDTO request,
                                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
         String remainingContent = studyCommandService.getRemainingStudyContent(studyId); // 기존 진행 중인 스터디의 '남은 학습 내용'을 합쳐서 문자열로 가져오기
-        
         int remainingDays = studyCommandService.calculateRemainingStudyDays(studyId, request); // 새로 설정된 기간과 휴일을 반영하고 완료된 일수를 제외한 실제 남은 학습 일수 계산
+
         StudyPlanResponseDTO result =
                 geminiStudyService.generateReplan(request, remainingContent, remainingDays, userDetails.userId());
-        studyCommandService.replanStudy(studyId, request, result); // AI가 짜준 새로운 진도로 기존 스터디 업데이트
+        studyCommandService.replanStudy(studyId, request, result, userDetails.userId()); // AI가 짜준 새로운 진도로 기존 스터디 업데이트
 
         return ResponseEntity.ok(result);
     }

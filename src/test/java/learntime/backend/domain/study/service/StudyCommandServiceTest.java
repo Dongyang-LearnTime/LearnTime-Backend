@@ -174,6 +174,7 @@ class StudyCommandServiceTest {
                 .user(testUser) // 유저 매핑
                 .build();
         studyRepository.save(study);
+        Long userId = testUser.getUserId();
 
         studyRestDayRepository.save(StudyRestDay.builder().study(study).dayOfWeek(DayOfWeek.SUNDAY).build());
         studyRestDateRepository.save(StudyRestDate.builder().study(study).restDate(LocalDate.of(2026, 4, 5)).build());
@@ -206,7 +207,7 @@ class StudyCommandServiceTest {
         StudyPlanResponseDTO geminiResult = new StudyPlanResponseDTO(List.of(newPlan1, newPlan2));
 
         // when: 재설정 로직 실행
-        studyCommandService.replanStudy(study.getStudyId(), request, geminiResult);
+        studyCommandService.replanStudy(study.getStudyId(), request, geminiResult, userId); //
 
         em.flush();
         em.clear();

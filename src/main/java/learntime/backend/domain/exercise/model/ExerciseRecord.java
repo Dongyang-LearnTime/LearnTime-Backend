@@ -1,4 +1,4 @@
-package learntime.backend.domain.exercise.entity;
+package learntime.backend.domain.exercise.model;
 
 import jakarta.persistence.*;
 import learntime.backend.domain.user.model.User;
@@ -16,7 +16,7 @@ public class ExerciseRecord extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long exerciseRecordId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

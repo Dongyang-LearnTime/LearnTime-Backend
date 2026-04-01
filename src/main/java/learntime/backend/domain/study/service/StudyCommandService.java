@@ -5,11 +5,12 @@ import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
+import learntime.backend.domain.study.service.component.StudyRestScheduleManager;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.BusinessException;
 import learntime.backend.global.error.ErrorCode;
+import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,109 +26,75 @@ public class StudyCommandService {
 
     private final StudyRepository studyRepository;
     private final StudyDailyPlanRepository studyDailyPlanRepository;
-    private final StudyRestDateRepository studyRestDateRepository;
-    private final StudyRestDayRepository studyRestDayRepository;
     private final UserRepository userRepository;
-    private final PromptQuotaRepository promptQuotaRepository;
+    private final StudyRestScheduleManager studyRestScheduleManager;
+    private final PromptQuotaUtil promptQuotaUtil;
 
     @Transactional
     public void saveStudyPlan(GeminiStudyRequestDTO request, StudyPlanResponseDTO geminiResult, Long userId) {
+        try {
+            User user = userRepository.findById(userId).
+                    orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        User user = userRepository.findById(userId).
-                orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+            Study study = Study.builder()
+                    .studyTitle(request.studyTitle())
+                    .bookTitle(request.bookTitle())
+                    .startDate(request.startDate())
+                    .endDate(request.endDate())
+                    .user(user)
+                    .build();
 
-        Study study = Study.builder()
-                .studyTitle(request.studyTitle())
-                .bookTitle(request.bookTitle())
-                .startDate(request.startDate())
-                .endDate(request.endDate())
-                .user(user)
-                .build();
+            studyRepository.save(study);
 
-        studyRepository.save(study);
-
-        List<StudyDailyPlan> dailyPlans = geminiResult.dailyPlans().stream()
-                .map(planDto -> StudyDailyPlan.builder()
-                        .study(study) // 외래키
-                        .dayNumber(planDto.day())
-                        .planContent(planDto.tasks())
-                        .build())
-                .toList();
-
-        studyDailyPlanRepository.saveAll(dailyPlans);
-
-        // 쉬는 날이 존재한다면 저장
-        if (!CollectionUtils.isEmpty(request.restDates())) {
-            List<StudyRestDate> restDates = request.restDates().stream()
-                    .map(date -> StudyRestDate.builder()
-                            .study(study)
-                            .restDate(date)
-                            .build())
-                    .toList();
-
-            studyRestDateRepository.saveAll(restDates);
-        }
-
-        // 쉬는 요일이 존재한다면 저장
-        if (!CollectionUtils.isEmpty(request.restDays())) {
-            List<StudyRestDay> restDays = request.restDays().stream()
-                    .map(dayOfWeek -> StudyRestDay.builder()
-                            .study(study)
-                            .dayOfWeek(dayOfWeek)
-                            .build())
-                    .toList();
-
-            studyRestDayRepository.saveAll(restDays);
+            studyRestScheduleManager.saveRestDates(study, request.restDates()); // 쉬는 요일이 존재한다면 저장
+            studyRestScheduleManager.saveRestDays(study, request.restDays());  // 쉬는 날이 존재한다면 저장
+        } catch (Exception e) {
+            promptQuotaUtil.restorePromptQuota(userId); // 프롬프트 할당량 롤백
+            throw new BusinessException(ErrorCode.STUDY_SAVE_FAILED);
         }
     }
 
     @Transactional
-    public void replanStudy(Long studyId, GeminiReplanRequestDTO request, StudyPlanResponseDTO geminiResult) {
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+    public void replanStudy(Long studyId, GeminiReplanRequestDTO request, StudyPlanResponseDTO geminiResult, Long userId) {
+        try {
+            Study study = studyRepository.findById(studyId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
 
-        // 학습 기간 및 제목 등 기본 정보 업데이트
-        study.updateStudyInfo(request.studyTitle(), request.startDate(), request.endDate());
+            // 학습 기간 및 제목 등 기본 정보 업데이트
+            study.updateStudyInfo(request.studyTitle(), request.startDate(), request.endDate());
 
-        //  기존 쉬는 날 / 쉬는 요일 초기화 (orphanRemoval=true 에 의해 DB에서 삭제됨)
-        study.getRestDates().clear();
-        study.getRestDays().clear();
+            //  기존 쉬는 날 / 쉬는 요일 초기화 (orphanRemoval=true 에 의해 DB에서 삭제됨)
+            study.getRestDates().clear();
+            study.getRestDays().clear();
 
-        if (!CollectionUtils.isEmpty(request.restDates())) {
-            List<StudyRestDate> restDates = request.restDates().stream()
-                    .map(date -> StudyRestDate.builder().study(study).restDate(date).build())
+            studyRestScheduleManager.saveRestDates(study, request.restDates()); // 쉬는 요일이 존재한다면 저장
+            studyRestScheduleManager.saveRestDays(study, request.restDays());  // 쉬는 날이 존재한다면 저장
+
+            // 기존 진도 중 진행 완료(COMPLETED) 상태가 "아닌" 진도만 삭제
+            study.getStudyDailyPlans().removeIf(plan ->
+                    plan.getProgressStatus() != StudyDailyPlan.ProgressStatus.COMPLETED);
+
+            // 완료된 일정 이후부터 일차(Day)가 이어지도록 가장 마지막 일차 계산
+            // 예: 5일차까지 완료되었다면, 새 진도는 6일차부터 매핑되게 함
+            int lastDayNumber = study.getStudyDailyPlans().stream()
+                    .mapToInt(StudyDailyPlan::getDayNumber)
+                    .max()
+                    .orElse(0);
+
+            // 새 진도 추가
+            List<StudyDailyPlan> newDailyPlans = geminiResult.dailyPlans().stream()
+                    .map(planDto -> StudyDailyPlan.builder()
+                            .study(study)
+                            .dayNumber(lastDayNumber + planDto.day())
+                            .planContent(planDto.tasks())
+                            .build())
                     .toList();
-            studyRestDateRepository.saveAll(restDates);
+
+            studyDailyPlanRepository.saveAll(newDailyPlans);
+        } catch (Exception e) {
+            promptQuotaUtil.restorePromptQuota(userId); // 프롬프트 할당량 롤백
+            throw new BusinessException(ErrorCode.STUDY_SAVE_FAILED);
         }
-
-        if (!CollectionUtils.isEmpty(request.restDays())) {
-            List<StudyRestDay> restDays = request.restDays().stream()
-                    .map(dayOfWeek -> StudyRestDay.builder().study(study).dayOfWeek(dayOfWeek).build())
-                    .toList();
-            studyRestDayRepository.saveAll(restDays);
-        }
-
-        // 기존 진도 중 진행 완료(COMPLETED) 상태가 "아닌" 진도만 삭제
-        study.getStudyDailyPlans().removeIf(plan ->
-                plan.getProgressStatus() != StudyDailyPlan.ProgressStatus.COMPLETED);
-
-        // 완료된 일정 이후부터 일차(Day)가 이어지도록 가장 마지막 일차 계산
-        // 예: 5일차까지 완료되었다면, 새 진도는 6일차부터 매핑되게 함
-        int lastDayNumber = study.getStudyDailyPlans().stream()
-                .mapToInt(StudyDailyPlan::getDayNumber)
-                .max()
-                .orElse(0);
-
-        // 새 진도 추가
-        List<StudyDailyPlan> newDailyPlans = geminiResult.dailyPlans().stream()
-                .map(planDto -> StudyDailyPlan.builder()
-                        .study(study)
-                        .dayNumber(lastDayNumber + planDto.day())
-                        .planContent(planDto.tasks())
-                        .build())
-                .toList();
-
-        studyDailyPlanRepository.saveAll(newDailyPlans);
     }
 
     // 남은 미완료 학습 내용 추출 메서드
@@ -179,4 +146,5 @@ public class StudyCommandService {
         }
         return remainingDays;
     }
+
 }

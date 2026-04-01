@@ -7,10 +7,10 @@ import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.Yes24BookInfoResponseDTO;
 import learntime.backend.domain.study.service.component.Yes24BookCrawler;
 import learntime.backend.domain.study.service.component.GeminiPromptParser;
-import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.global.error.BusinessException;
 import learntime.backend.global.error.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
+import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +29,7 @@ public class GeminiStudyService {
     private final GeminiClient geminiClient;
     private final Yes24BookCrawler yes24BookCrawler;
     private final GeminiPromptParser promptParser;
-    private final PromptQuotaRepository promptQuotaRepository;
+    private final PromptQuotaUtil promptQuotaUtil;
 
     @Value("classpath:prompts/study-plan-prompt.txt")
     private Resource promptResource; // 진도 프롬프트
@@ -81,10 +81,7 @@ public class GeminiStudyService {
 
     private StudyPlanResponseDTO executeGeminiRequest(String userPrompt, Object requestDto, Long userId) {
         // Gemini 이용량 차감
-        int updatedRows = promptQuotaRepository.decreaseCountAtomic(userId);
-        if (updatedRows == 0) {
-            throw new BusinessException(ErrorCode.PROMPT_QUOTA_EXCEEDED); // 프롬프트 할당량 소진 예외
-        }
+        promptQuotaUtil.decreasePromptQuota(userId);
 
         Map<String, Object> requestBody = promptParser.createRequestBody(userPrompt);
 
@@ -94,6 +91,7 @@ public class GeminiStudyService {
 
         } catch (Exception e) {
             log.error("AI 학습 계획 생성 실패. Request: {}", requestDto, e);
+            promptQuotaUtil.restorePromptQuota(userId);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED);
         }
     }

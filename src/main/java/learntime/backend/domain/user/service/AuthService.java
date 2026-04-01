@@ -1,8 +1,10 @@
 package learntime.backend.domain.user.service;
 
 import learntime.backend.domain.user.dto.request.LoginRequestDTO;
+import learntime.backend.domain.user.model.PromptQuota;
 import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
+import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.config.security.CustomPasswordEncoder;
@@ -22,6 +24,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PromptQuotaRepository promptQuotaRepository;
     private final JwtProvider jwtProvider;
     private final CustomPasswordEncoder customPasswordEncoder;
 
@@ -77,8 +80,11 @@ public class AuthService {
                 .password(encodedPassword)
                 .role(User.Role.ROLE_USER) // 관리자는 ROLE_ADMIN, 유저는 ROLE_USER
                 .build();
+        User savedUser = userRepository.save(user);
 
-        userRepository.save(user);
+        // 프롬프트 할당량 생성
+        PromptQuota quota = new PromptQuota(savedUser);
+        promptQuotaRepository.save(quota);
     }
 
     // 토큰 DB에 저장 및 return

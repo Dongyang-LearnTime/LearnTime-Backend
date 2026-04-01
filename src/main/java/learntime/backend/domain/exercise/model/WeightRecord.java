@@ -1,12 +1,9 @@
-package learntime.backend.domain.exercise.entity;
+package learntime.backend.domain.exercise.model;
 
 import jakarta.persistence.*;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.common.BaseTimeEntity;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -17,7 +14,7 @@ public class WeightRecord extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long weightRecordId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
