@@ -1,7 +1,7 @@
 package learntime.backend.domain.exercise.repository;
 
 import learntime.backend.domain.user.model.User;
-import learntime.backend.domain.exercise.entity.WeightRecord;
+import learntime.backend.domain.exercise.model.WeightRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

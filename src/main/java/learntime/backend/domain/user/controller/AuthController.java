@@ -45,8 +45,6 @@ public class AuthController {
 
         response.addHeader("Set-Cookie", cookie.toString());
 
-        log.info("aa");
-
         return ResponseEntity.ok(
                 new TokenResponseDTO(token.accessToken(), "Bearer")
         );

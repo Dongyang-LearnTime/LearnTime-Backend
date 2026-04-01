@@ -39,7 +39,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").authenticated()
-                        .anyRequest().permitAll() // /api/admin과 /api/user 외엔 모두 허용
+                        .requestMatchers("/api/exercise/**").authenticated()
+                        .requestMatchers("/api/study/**").authenticated()
+                        .anyRequest().permitAll() // 나머지는 모두 허용
                 )
 
                 // 401, 403 에러 핸들링

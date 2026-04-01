@@ -1,6 +1,9 @@
 package learntime.backend.domain.user.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.exercise.model.ExerciseRecord;
+import learntime.backend.domain.exercise.model.WeightRecord;
+import learntime.backend.domain.study.model.Study;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -9,14 +12,16 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(uniqueConstraints = {
         @UniqueConstraint(name = "uq_user_email", columnNames = {"email", "deleted_at"}),
-        @UniqueConstraint(name = "uq_user_name", columnNames = {"name", "deleted_at"}), // 닉네임도 탈퇴 후 재사용 가능하도록 복합키로 변경
+        @UniqueConstraint(name = "uq_user_name", columnNames = {"name", "deleted_at"}),
         @UniqueConstraint(name = "uq_social_user", columnNames = {"social_id", "social_provider", "deleted_at"})
 })
-@SQLDelete(sql = "UPDATE users SET deleted_at = NOW() WHERE user_id = ?") // DELECT 수행 시, 삭제 대신 deletedAt에 시간 표시(soft delete)
+@SQLDelete(sql = "UPDATE user SET deleted_at = NOW() WHERE user_id = ?") // DELECT 수행 시, 삭제 대신 deletedAt에 시간 표시(soft delete)
 @SQLRestriction("deleted_at = '1970-01-01 00:00:00'") // 삭제 처리가 안된 데이터만 기본적으로 조회
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,13 +31,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @Column()
     private String password; // OAuth인 경우 null
 
-    @Column(nullable = false, length = 30, unique = true)
+    @Column(nullable = false, length = 30)
     private String name;
 
     @Column(name = "social_id")
@@ -60,10 +65,25 @@ public class User {
 
     // ==================== 연관관계 매핑 ====================
 
-    // 1대1 연쇄삭제로 연결
+    // 진도
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Study> study = new ArrayList<>();
+
+    // 운동 기록
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<ExerciseRecord> exerciseRecords = new ArrayList<>();
+
+    // 신체 분석
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WeightRecord> weightRecord = new ArrayList<>();;
+
+    // 리프레쉬 토큰
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private RefreshToken refreshToken;
 
+    // 토큰 할당량
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PromptQuota promptQuota;
 
     @Builder
     public User(String email, String password, String name, String socialId, AuthProvider socialProvider, Role role) {

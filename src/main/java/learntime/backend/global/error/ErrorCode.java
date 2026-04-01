@@ -5,6 +5,9 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorCode {
+    // 할당량 관령 에러
+    PROMPT_QUOTA_EXCEEDED(HttpStatus.FORBIDDEN, "QUOTA-001", "프롬프트 사용 가능 횟수를 모두 소진했습니다."),
+
     // Study 관련 에러
     AI_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-001", "학습 계획 생성 중 오류가 발생했습니다."),
     AI_RESPONSE_BLOCKED(HttpStatus.BAD_REQUEST, "STUDY-002", "AI 답변이 차단되었습니다. 다른 책으로 시도해주세요."),
@@ -12,6 +15,7 @@ public enum ErrorCode {
     CRAWLING_DOM_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-04", "대상 사이트의 구조에서 정보를 찾을 수 없습니다"),
     INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "STUDY-05", "종료일은 시작일보다 빠를 수 없습니다."),
     INVALID_STUDY_PERIOD(HttpStatus.BAD_REQUEST, "STUDY-06", "학습 기간은 14일 이상 90일 이하만 가능합니다."),
+    STUDY_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-007", "학습 계획을 저장하는 도중 데이터베이스 오류가 발생했습니다."),
 
     //Gemini Exercise 관련 에러
     AI_GENERATION_FAILED_EX(HttpStatus.INTERNAL_SERVER_ERROR, "EX-001", "칼로리 계산 중 오류가 발생했습니다."),

@@ -1,13 +1,11 @@
 package learntime.backend.global.config.security.jwt;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import learntime.backend.global.config.security.CustomUserDetails; // 패키지에 맞게 import
+import learntime.backend.global.dto.CustomUserDetails; // 패키지에 맞게 import
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;

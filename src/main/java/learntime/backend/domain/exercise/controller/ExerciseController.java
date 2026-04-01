@@ -3,15 +3,16 @@ package learntime.backend.domain.exercise.controller;
 import jakarta.validation.Valid;
 import learntime.backend.domain.exercise.dto.request.ExerciseRequestDTO;
 import learntime.backend.domain.exercise.dto.response.ExerciseResponseDTO;
-import learntime.backend.domain.exercise.entity.ExerciseRecord;
+import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.service.ExerciseService;
+import learntime.backend.global.dto.CustomUserDetails;
 import learntime.backend.global.infra.youtube.dto.YoutubeVideoResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -22,23 +23,22 @@ public class ExerciseController {
     private final ExerciseService exerciseService;
 
     @GetMapping("/videos")
-    public ResponseEntity<List<YoutubeVideoResponseDTO>> getVideos(
-            @RequestParam List<String> bodyParts) {
+    public ResponseEntity<List<YoutubeVideoResponseDTO>> getVideos(@RequestParam List<String> bodyParts) {
         List<YoutubeVideoResponseDTO> videos = exerciseService.getRecommendedVideos(bodyParts);
         return ResponseEntity.ok(videos);
     }
 
     @PostMapping("/save")
     public ResponseEntity<ExerciseResponseDTO> saveExercise(
-            Principal principal,
+            @AuthenticationPrincipal CustomUserDetails user,
             @Valid @RequestBody ExerciseRequestDTO request
     ) {
 
-        ExerciseRecord saved = exerciseService.saveExercise(principal.getName(), request);
+        ExerciseRecord saved = exerciseService.saveExercise(user.userId(), request);
 
         // 엔티티를 DTO로 변환
         ExerciseResponseDTO response = ExerciseResponseDTO.builder()
-                .id(saved.getId())
+                .id(saved.getExerciseRecordId())
                 .bodyParts(saved.getBodyParts())
                 .duration(saved.getDuration())
                 .content(saved.getContent())

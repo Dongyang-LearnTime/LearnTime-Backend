@@ -1,4 +1,4 @@
-package learntime.backend.global.config.security;
+package learntime.backend.global.dto;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

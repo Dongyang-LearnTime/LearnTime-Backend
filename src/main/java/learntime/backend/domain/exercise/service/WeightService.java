@@ -1,7 +1,7 @@
 package learntime.backend.domain.exercise.service;
 
 import learntime.backend.domain.exercise.dto.request.WeightRequestDTO;
-import learntime.backend.domain.exercise.entity.WeightRecord;
+import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.exercise.repository.WeightRecordRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
@@ -18,8 +18,8 @@ public class WeightService {
     private final UserRepository userRepository;
 
     @Transactional
-    public WeightRecord saveWeight(String email, WeightRequestDTO request) {
-        User user = userRepository.findByEmail(email)
+    public WeightRecord saveWeight(Long userId, WeightRequestDTO request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         WeightRecord record = WeightRecord.builder()

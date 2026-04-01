@@ -1,5 +1,6 @@
 package learntime.backend.domain.user.controller;
 
+import jakarta.persistence.EntityManager;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,9 @@ class AuthControllerTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private EntityManager em;
 
     @BeforeEach
     void setUp() {
@@ -78,4 +82,5 @@ class AuthControllerTest {
                 .andExpect(cookie().httpOnly("refreshToken", true))
                 .andExpect(cookie().secure("refreshToken", true));
     }
+
 }
