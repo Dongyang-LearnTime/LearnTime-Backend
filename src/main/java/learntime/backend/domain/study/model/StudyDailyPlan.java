@@ -52,7 +52,6 @@ public class StudyDailyPlan {
     }
 
     // --- 비즈니스 로직 --- //
-
     public void startPlan() {
         if (this.progressStatus != ProgressStatus.NOT_STARTED) {
             throw new IllegalStateException("이미 시작되었거나 종료된 계획입니다.");
