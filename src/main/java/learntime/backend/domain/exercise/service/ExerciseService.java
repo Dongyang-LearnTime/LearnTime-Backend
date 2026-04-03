@@ -12,7 +12,7 @@ import learntime.backend.global.error.BusinessException;
 import learntime.backend.global.error.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
 import learntime.backend.global.infra.youtube.YoutubeClient;
-import learntime.backend.global.infra.youtube.dto.YoutubeVideoResponseDTO;
+import learntime.backend.global.dto.YoutubeVideoResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

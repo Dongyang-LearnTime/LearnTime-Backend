@@ -21,6 +21,9 @@ public enum ErrorCode {
     AI_GENERATION_FAILED_EX(HttpStatus.INTERNAL_SERVER_ERROR, "EX-001", "칼로리 계산 중 오류가 발생했습니다."),
     AI_RESPONSE_BLOCKED_EX(HttpStatus.BAD_REQUEST, "EX-002", "AI 답변이 차단되었습니다. 운동과 관련된 내용을 작성해주세요."),
 
+    // Youtube 관련 에러
+    YOUTUBE_API_ERROR(HttpStatus.BAD_GATEWAY, "YOUTUBE-001", "YouTube 응답에 문제가 발생했습니다."),
+
     // 로그인, 인증 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH-001", "사용자를 찾을 수 없습니다."),
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "AUTH-002", "비밀번호가 일치하지 않습니다."),

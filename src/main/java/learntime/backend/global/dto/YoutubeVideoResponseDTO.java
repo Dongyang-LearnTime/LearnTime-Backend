@@ -1,4 +1,4 @@
-package learntime.backend.global.infra.youtube.dto;
+package learntime.backend.global.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

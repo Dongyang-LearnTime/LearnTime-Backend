@@ -36,7 +36,7 @@ public class StudyController {
         return ResponseEntity.ok(result);
     }
 
-    // 책 목록 기반으로 AI가 일정, 진도 생성
+    // 책 정보 기반으로 AI가 일정, 진도 생성
     @PostMapping("/generate")
     public ResponseEntity<StudyPlanResponseDTO> createStudyPlan(@Valid @RequestBody GeminiStudyRequestDTO request,
                                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -56,8 +56,8 @@ public class StudyController {
 
     // AI 진도 재조정 (쉬는 날, 쉬는 요일 등 변경)
     @PutMapping("/{studyId}/replan")
-    public ResponseEntity<StudyPlanResponseDTO> replanStudyPlan(@PathVariable("studyId") Long studyId,
-                                                            @Valid @RequestBody GeminiReplanRequestDTO request,
+    public ResponseEntity<StudyPlanResponseDTO> replanStudyPlan(@PathVariable Long studyId,
+                                                                @Valid @RequestBody GeminiReplanRequestDTO request,
                                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
         String remainingContent = studyCommandService.getRemainingStudyContent(studyId); // 기존 진행 중인 스터디의 '남은 학습 내용'을 합쳐서 문자열로 가져오기
         int remainingDays = studyCommandService.calculateRemainingStudyDays(studyId, request); // 새로 설정된 기간과 휴일을 반영하고 완료된 일수를 제외한 실제 남은 학습 일수 계산

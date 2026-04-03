@@ -6,7 +6,7 @@ import learntime.backend.domain.exercise.dto.response.ExerciseResponseDTO;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.service.ExerciseService;
 import learntime.backend.global.dto.CustomUserDetails;
-import learntime.backend.global.infra.youtube.dto.YoutubeVideoResponseDTO;
+import learntime.backend.global.dto.YoutubeVideoResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
