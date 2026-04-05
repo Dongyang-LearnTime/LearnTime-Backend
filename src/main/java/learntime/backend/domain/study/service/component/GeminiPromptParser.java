@@ -3,8 +3,8 @@ package learntime.backend.domain.study.service.component;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
-import learntime.backend.global.error.BusinessException;
-import learntime.backend.global.error.ErrorCode;
+import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.global.error.code.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

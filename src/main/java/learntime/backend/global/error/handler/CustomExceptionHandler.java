@@ -1,6 +1,8 @@
-package learntime.backend.global.error;
+package learntime.backend.global.error.handler;
 
 import learntime.backend.global.dto.ErrorResponseDTO;
+import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.global.error.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +23,6 @@ public class CustomExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponseDTO> handleBusiness(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
-
-        log.warn("비즈니스 예외 발생: {} - {}", errorCode.getCode(), errorCode.getMessage());
 
         ErrorResponseDTO body = new ErrorResponseDTO(
                 errorCode.getCode(),
@@ -62,7 +62,6 @@ public class CustomExceptionHandler {
                         .build());
     }
 
-
     // @Valid 범위값 오류
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -87,4 +86,5 @@ public class CustomExceptionHandler {
                         .detail(errorMessage)
                         .build());
     }
+
 }

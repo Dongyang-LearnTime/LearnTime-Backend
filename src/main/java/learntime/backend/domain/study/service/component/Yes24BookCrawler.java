@@ -2,8 +2,8 @@ package learntime.backend.domain.study.service.component;
 
 import learntime.backend.domain.study.dto.response.Yes24BookInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.Yes24BookListResponseDTO;
-import learntime.backend.global.error.BusinessException;
-import learntime.backend.global.error.ErrorCode;
+import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.global.error.code.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

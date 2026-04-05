@@ -63,6 +63,14 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime deletedAt = LocalDateTime.of(1970, 1, 1, 0, 0);
 
+    // 비밀번호 틀린 횟수
+    @Column(name = "failed_attempts", nullable = false)
+    private int failedAttempts = 0;
+
+    // 계정 잠금 발생 시간 (NULL이면 잠기지 않은 상태)
+    @Column(name = "locked_at")
+    private LocalDateTime lockedAt;
+
     // ==================== 연관관계 매핑 ====================
 
     // 진도
@@ -97,4 +105,39 @@ public class User {
 
     public enum AuthProvider { LOCAL, GOOGLE, NAVER }
     public enum Role { ROLE_USER, ROLE_ADMIN }
+
+    // ==================== 비밀번호 틀림 관련 로직 ====================
+
+    // 로그인 실패 횟수 1 증가
+    public void incrementFailedAttempts() {
+        this.failedAttempts++;
+    }
+
+    // 로그인 성공 시 실패 횟수 및 잠금 상태 초기화
+    public void resetFailedAttempts() {
+        this.failedAttempts = 0;
+        this.lockedAt = null;
+    }
+
+    // 5회 실패 시 계정 잠금 처리
+    public void lockAccount() {
+        this.lockedAt = LocalDateTime.now();
+    }
+
+    // 현재 계정이 잠겨있는지 확인
+    public boolean isAccountLocked() {
+        final int LOCK_MINUTES = 30; // 잠금 시간 (30분)
+
+        if (this.lockedAt != null) {
+            // 잠금 시간 지났는지 확인
+            if (this.lockedAt.plusMinutes(LOCK_MINUTES).isAfter(LocalDateTime.now())) {
+                return true;
+            } else {
+                resetFailedAttempts();
+                return false;
+            }
+        }
+        return false;
+    }
+
 }

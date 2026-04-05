@@ -1,7 +1,7 @@
 package learntime.backend.domain.study.service.component;
 
-import learntime.backend.global.error.BusinessException;
-import learntime.backend.global.error.ErrorCode;
+import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.global.error.code.ErrorCode;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;

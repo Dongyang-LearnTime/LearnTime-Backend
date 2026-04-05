@@ -1,10 +1,10 @@
-package learntime.backend.global.error;
+package learntime.backend.global.error.code;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public enum ErrorCode {
+public enum ErrorCode implements BaseErrorCode {
     // 할당량 관령 에러
     PROMPT_QUOTA_EXCEEDED(HttpStatus.FORBIDDEN, "QUOTA-001", "프롬프트 사용 가능 횟수를 모두 소진했습니다."),
 
@@ -23,16 +23,6 @@ public enum ErrorCode {
 
     // Youtube 관련 에러
     YOUTUBE_API_ERROR(HttpStatus.BAD_GATEWAY, "YOUTUBE-001", "YouTube 응답에 문제가 발생했습니다."),
-
-    // 로그인, 인증 관련 에러
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH-001", "사용자를 찾을 수 없습니다."),
-    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "AUTH-002", "비밀번호가 일치하지 않습니다."),
-    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH-003", "유효하지 않은 리프레시 토큰입니다."),
-    EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH-004", "리프레시 토큰이 만료되었습니다. 다시 로그인하세요."),
-    INVALID_JWT_SIGNATURE(HttpStatus.UNAUTHORIZED, "AUTH-005", "잘못된 JWT 서명입니다."),
-    EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH-006", "만료된 JWT 토큰입니다."),
-    UNSUPPORTED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH-007", "지원되지 않는 JWT 토큰입니다."),
-    EMPTY_JWT_CLAIM(HttpStatus.UNAUTHORIZED, "AUTH-008", "JWT 토큰이 비어있습니다."),
 
     // 기타 공통 에러
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON-001", "잘못된 입력값입니다.");

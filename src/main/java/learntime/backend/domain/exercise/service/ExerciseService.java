@@ -8,8 +8,10 @@ import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.repository.ExerciseRecordRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
-import learntime.backend.global.error.BusinessException;
-import learntime.backend.global.error.ErrorCode;
+import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.global.error.code.AuthErrorCode;
+import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.infra.gemini.GeminiClient;
 import learntime.backend.global.infra.youtube.YoutubeClient;
 import learntime.backend.global.dto.YoutubeVideoResponseDTO;
@@ -44,7 +46,7 @@ public class ExerciseService {
     public ExerciseRecord saveExercise(Long userId, ExerciseRequestDTO request) {
 
         User user = userRepository.findById(userId).
-                orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         Map<String, Object> requestBody = createGeminiRequest(request);
         try {

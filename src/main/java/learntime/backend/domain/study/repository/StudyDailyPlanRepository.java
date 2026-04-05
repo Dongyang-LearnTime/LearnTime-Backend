@@ -14,6 +14,14 @@ import java.util.List;
 @Repository
 public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, Long> {
 
+    // 일일 공부 일정이 시작 전, 진행 중 이라면 실패로
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE StudyDailyPlan s " +
+            "SET s.progressStatus = 'COMPLETED', s.completionStatus = 'FAILURE' " +
+            "WHERE s.progressStatus IN ('NOT_STARTED', 'IN_PROGRESS') " +
+            "AND s.planDate < :targetDate") // 오늘 5시 기준이므로, '어제'까지의 계획만 타겟팅
+    int bulkFailIncompletePlans(@Param("targetDate") LocalDate targetDate);
+
     // 가장 큰 일차(마지막 일차) 조회
     @Query("""
            SELECT COALESCE(MAX(p.dayNumber), 0)

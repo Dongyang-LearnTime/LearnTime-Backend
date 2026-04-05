@@ -100,7 +100,8 @@ class StudyCommandServiceTest {
         CustomUserDetails userDetails = new CustomUserDetails(
                 testUser.getUserId(),
                 "test@email.com",
-                "ROLE_USER"
+                "ROLE_USER",
+                true
         );
 
         // when: 서비스 로직 실행
