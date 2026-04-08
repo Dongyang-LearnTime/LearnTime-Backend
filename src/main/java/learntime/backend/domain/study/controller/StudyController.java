@@ -5,18 +5,20 @@ import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.request.SavePlanRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
-import learntime.backend.domain.study.dto.response.Yes24BookListResponseDTO;
 import learntime.backend.domain.study.service.GeminiStudyService;
 import learntime.backend.domain.study.service.StudyCommandService;
 import learntime.backend.domain.study.service.StudyService;
+import learntime.backend.domain.study.service.TocExtractionService;
 import learntime.backend.global.dto.CustomUserDetails;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/study")
@@ -26,14 +28,52 @@ public class StudyController {
     private final StudyService studyService;
     private final GeminiStudyService geminiStudyService;
     private final StudyCommandService studyCommandService;
+    private final TocExtractionService tocExtractionService;
 
-    // 책 목록 요청
-    @GetMapping("/book")
-    public ResponseEntity<List<Yes24BookListResponseDTO>> getYes24BookList(@RequestParam("title") String title,
-                                                                           @RequestParam("page") int page) {
-        List<Yes24BookListResponseDTO> result = studyService.getYes24BookList(title, page);
+//    // 책 목록 요청
+//    @GetMapping("/book")
+//    public ResponseEntity<List<Yes24BookListResponseDTO>> getYes24BookList(@RequestParam("title") String title,
+//                                                                           @RequestParam("page") int page) {
+//        List<Yes24BookListResponseDTO> result = studyService.getYes24BookList(title, page);
+//
+//        return ResponseEntity.ok(result);
+//    }
 
-        return ResponseEntity.ok(result);
+
+    @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> extractToc(@RequestParam("image") MultipartFile imageFile) {
+
+        // 1. 실무 최적화: 방어적 프로그래밍 (빈 파일 및 누락 검증)
+        if (imageFile == null || imageFile.isEmpty()) {
+            System.out.println("[TOC Extract] 업로드된 이미지 파일이 없습니다.");
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "이미지 파일을 첨부해주세요."));
+        }
+
+        // 2. MIME 타입 검증 (보안: 이미지 이외의 악성 스크립트 파일 업로드 방지)
+        String contentType = imageFile.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            System.out.println("[TOC Extract] 잘못된 파일 형식 요청: {}" + contentType);
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "이미지 파일(jpg, png 등)만 업로드 가능합니다."));
+        }
+
+        try {
+            // 3. Service 계층 위임 (제미나이 API 호출)
+            String jsonResult = tocExtractionService.extractTocAsJson(imageFile);
+
+            // 4. RESTful 원칙에 따른 응답.
+            // Service에서 파싱된 '순수 JSON 문자열'을 반환하므로 Content-Type을 application/json으로 강제 지정
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(jsonResult);
+
+        } catch (Exception e) {
+            System.out.println("[TOC Extract] 서버 내부 처리 중 예외 발생" + e);
+            // 실무에서는 @RestControllerAdvice 기반의 GlobalExceptionHandler로 이관하는 것이 유지보수에 유리합니다.
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "이미지 분석 중 서버 오류가 발생했습니다."));
+        }
     }
 
     // 책 정보 기반으로 AI가 일정, 진도 생성
