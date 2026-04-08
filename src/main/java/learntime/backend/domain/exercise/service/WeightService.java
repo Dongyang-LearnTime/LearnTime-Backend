@@ -5,8 +5,8 @@ import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.exercise.repository.WeightRecordRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
-import learntime.backend.global.error.BusinessException;
-import learntime.backend.global.error.ErrorCode;
+import learntime.backend.global.error.code.AuthErrorCode;
+import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +20,7 @@ public class WeightService {
     @Transactional
     public WeightRecord saveWeight(Long userId, WeightRequestDTO request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         WeightRecord record = WeightRecord.builder()
                 .user(user)

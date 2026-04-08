@@ -9,8 +9,10 @@ import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.exercise.repository.WeightRecordRepository;
 import learntime.backend.domain.user.repository.UserRepository;
-import learntime.backend.global.error.BusinessException;
-import learntime.backend.global.error.ErrorCode;
+import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.global.error.code.AuthErrorCode;
+import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.infra.gemini.GeminiClient;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +43,7 @@ public class AnalysisService {
         LocalDateTime sevenDaysAgo = now.minusDays(7);
 
         User user = userRepository.findById(userId).
-                orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         // 1. 최근 7일간의 운동 및 체중 데이터 조회
         List<ExerciseRecord> exercises = exerciseRepository.findAllByUserAndCreateAtBetweenOrderByCreateAtAsc(user, sevenDaysAgo, now);

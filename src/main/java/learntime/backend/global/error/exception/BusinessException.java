@@ -1,5 +1,6 @@
-package learntime.backend.global.error;
+package learntime.backend.global.error.exception;
 
+import learntime.backend.global.error.code.ErrorCode;
 import lombok.Getter;
 
 @Getter

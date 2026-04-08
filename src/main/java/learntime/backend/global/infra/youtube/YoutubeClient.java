@@ -2,15 +2,17 @@ package learntime.backend.global.infra.youtube;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import learntime.backend.global.infra.youtube.dto.YoutubeVideoResponseDTO;
+import learntime.backend.global.dto.YoutubeVideoResponseDTO;
+import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.global.error.code.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -37,11 +39,16 @@ public class YoutubeClient {
                             .queryParam("key", apiKey)
                             .build())
                     .retrieve()
+                    .onStatus(HttpStatusCode::isError, (req, res) -> {
+                        throw new BusinessException(ErrorCode.YOUTUBE_API_ERROR);
+                    })
                     .body(String.class);
             return parseYoutubeResponse(rawJson);
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("유튜브 검색 실패: {}", e.getMessage());
-            return Collections.emptyList();
+            log.error("YouTube 시스템 장애: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.YOUTUBE_API_ERROR);
         }
     }
 

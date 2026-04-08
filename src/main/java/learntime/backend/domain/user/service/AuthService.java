@@ -9,10 +9,12 @@ import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.config.security.CustomPasswordEncoder;
 import learntime.backend.global.config.security.jwt.JwtProvider;
-import learntime.backend.global.error.BusinessException;
-import learntime.backend.global.error.ErrorCode;
+import learntime.backend.global.error.code.AuthErrorCode;
+import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,15 +38,31 @@ public class AuthService {
             String refreshToken
     ) {}
 
-    @Transactional
+    @Transactional(noRollbackFor = {BadCredentialsException.class, LockedException.class})
     public TokenPair login(LoginRequestDTO request) {
 
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+
+        // 계정 잠금 여부 확인
+        if (user.isAccountLocked()) {
+            throw new LockedException("비밀번호 5회 오류로 계정이 잠겼습니다.");
+        }
 
         if (!customPasswordEncoder.matches(request.password(), user.getPassword())) {
-            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+            user.incrementFailedAttempts();
+
+            // 증가시킨 횟수가 5회 이상이 되는 순간
+            if (user.getFailedAttempts() >= 5) {
+                user.lockAccount(); // 계정 잠금 시간 기록
+
+                throw new LockedException("비밀번호 5회 오류로 계정이 잠겼습니다. 30분 후 다시 시도해주세요.");
+            }
+
+            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         }
+
+        user.resetFailedAttempts(); // 성공 시 카운트 및 잠금 해제
 
         return generateTokenPair(user);
     }
@@ -53,11 +71,11 @@ public class AuthService {
     public TokenPair refresh(String refreshToken) {
 
         RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN));
 
         if (storedToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             refreshTokenRepository.delete(storedToken);
-            throw new BusinessException(ErrorCode.EXPIRED_REFRESH_TOKEN);
+            throw new AuthException(AuthErrorCode.EXPIRED_REFRESH_TOKEN);
         }
 
         return generateTokenPair(storedToken.getUser());

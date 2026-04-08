@@ -3,8 +3,8 @@ package learntime.backend.domain.study.dto.request;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import learntime.backend.global.error.BusinessException;
-import learntime.backend.global.error.ErrorCode;
+import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.global.error.code.ErrorCode;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

@@ -46,7 +46,7 @@ public class GeminiClient {
                         throw new RuntimeException("Gemini API Error [" + response.getStatusCode() + "] | Body: " + bodyString);
                     }
 
-                    logTokenUsage(bodyString);
+                    logTokenUsage(bodyString); // 토큰량 로그로 찍음
 
                     // 3. 정상 응답 반환
                     return bodyString;

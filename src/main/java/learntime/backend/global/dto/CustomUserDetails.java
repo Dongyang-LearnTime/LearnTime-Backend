@@ -8,7 +8,7 @@ import org.jspecify.annotations.NonNull;
 import java.util.Collection;
 import java.util.Collections;
 
-public record CustomUserDetails(Long userId, String email, String role) implements UserDetails {
+public record CustomUserDetails(Long userId, String email, String role, boolean isLocked) implements UserDetails {
 
     @Override
     public @NonNull Collection<? extends GrantedAuthority> getAuthorities() {
@@ -30,7 +30,9 @@ public record CustomUserDetails(Long userId, String email, String role) implemen
     public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return !isLocked; // 잠겨있지 않아야(true) 로그인이 진행됨
+    }
 
     @Override
     public boolean isCredentialsNonExpired() { return true; }
