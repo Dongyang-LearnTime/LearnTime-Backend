@@ -37,7 +37,7 @@ public class AuthExceptionHandler {
 
 
     @ExceptionHandler(LockedException.class)
-    public ResponseEntity<?> handleLockedException(LockedException e) {
+    public ResponseEntity<ErrorResponseDTO> handleLockedException(LockedException e) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ErrorResponseDTO.builder()

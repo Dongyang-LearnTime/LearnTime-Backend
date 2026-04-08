@@ -33,6 +33,8 @@ public class AuthService {
     private static final long ACCESS_TIME = 1000L * 60 * 30; // 엑세스 토큰 유효기간, 30분
     private static final long REFRESH_TIME = 1000L * 60 * 60 * 24 * 14; // 리프레쉬 토큰 유효기간, 14일
 
+    private static final int MAX_PASSWORD_ATTEMPTS = 5; // 비밀번호 5회 제한
+
     public record TokenPair(
             String accessToken,
             String refreshToken
@@ -53,7 +55,7 @@ public class AuthService {
             user.incrementFailedAttempts();
 
             // 증가시킨 횟수가 5회 이상이 되는 순간
-            if (user.getFailedAttempts() >= 5) {
+            if (user.getFailedAttempts() >= MAX_PASSWORD_ATTEMPTS) {
                 user.lockAccount(); // 계정 잠금 시간 기록
 
                 throw new LockedException("비밀번호 5회 오류로 계정이 잠겼습니다. 30분 후 다시 시도해주세요.");
