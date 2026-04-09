@@ -4,8 +4,6 @@ import jakarta.annotation.PostConstruct;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
-import learntime.backend.domain.study.dto.response.Yes24BookInfoResponseDTO;
-import learntime.backend.domain.study.service.component.Yes24BookCrawler;
 import learntime.backend.domain.study.service.gemini.GeminiPromptParser;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
@@ -20,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -27,7 +26,6 @@ import java.util.Map;
 public class GeminiStudyService {
 
     private final GeminiClient geminiClient;
-    private final Yes24BookCrawler yes24BookCrawler;
     private final GeminiPromptParser promptParser;
     private final PromptQuotaUtil promptQuotaUtil;
 
@@ -53,16 +51,22 @@ public class GeminiStudyService {
 
     @Transactional
     public StudyPlanResponseDTO generateSmartStudyPlan(GeminiStudyRequestDTO request, Long userId) {
-        int periodDays = request.getValidatedStudyDays();
+        int periodDays = request.getValidatedStudyDays(); // 쉬는 날, 요일을 제외한 일수 계산
 
-        Yes24BookInfoResponseDTO crawlingResult =
-                yes24BookCrawler.crawlToc(request.linkUrl());
+        // 목차 정보 프롬프트에 들어가게 문장으로 변환
+        String bookToc = request.tocList().stream()
+                .map(toc -> {
+                    String chapter = (toc.chapter() != null) ? toc.chapter() : "";
+                    String title = (toc.title() != null) ? toc.title() : "";
+                    return String.format("%s %s", chapter, title).trim();
+                })
+                .filter(line -> !line.isEmpty())
+                .collect(Collectors.joining("\n"));
 
         String userPrompt = promptTemplate.formatted(
                 periodDays,
                 request.bookTitle(),
-                crawlingResult.pageCount(),
-                crawlingResult.bookToc()
+                bookToc
         );
 
         return executeGeminiRequest(userPrompt, request, userId);

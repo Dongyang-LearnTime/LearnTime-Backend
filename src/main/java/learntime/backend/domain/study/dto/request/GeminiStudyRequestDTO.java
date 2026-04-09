@@ -1,8 +1,10 @@
 package learntime.backend.domain.study.dto.request;
 
 import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 
@@ -18,15 +20,15 @@ public record GeminiStudyRequestDTO(
         @Size(max = 100, message = "진도 제목은 100자 이하여야 합니다")
         String studyTitle,
 
-        @NotNull(message = "링크는 필수입니다.")
-        String linkUrl,
-
         @NotNull(message = "시작 날짜는 필수입니다.")
         @FutureOrPresent(message = "시작 날짜는 오늘 이후여야 합니다.")
         LocalDate startDate, // yyyy-MM-dd 형식
 
         @NotNull(message = "종료 날짜는 필수입니다.")
         LocalDate endDate,    // yyyy-MM-dd 형식
+
+        @NotEmpty(message = "목차 정보는 최소 한 개 이상 포함되어야 합니다.")
+        List <TocListResponseDTO> tocList,
 
         List<DayOfWeek> restDays, // 쉬는 요일
         List<LocalDate> restDates // 쉬는 날짜
