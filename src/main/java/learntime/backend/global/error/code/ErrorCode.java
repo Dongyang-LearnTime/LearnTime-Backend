@@ -24,6 +24,9 @@ public enum ErrorCode implements BaseErrorCode {
     // Youtube 관련 에러
     YOUTUBE_API_ERROR(HttpStatus.BAD_GATEWAY, "YOUTUBE-001", "YouTube 응답에 문제가 발생했습니다."),
 
+    // 캘린더 관련 에러
+    CALENDAR_NOT_FOUND(HttpStatus.NOT_FOUND, "CALENDAR-001", "해당 일정을 찾을 수 없습니다."),
+
     // 기타 공통 에러
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON-001", "잘못된 입력값입니다.");
 
