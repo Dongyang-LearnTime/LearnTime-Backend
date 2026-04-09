@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.service.component;
+package learntime.backend.domain.study.service.gemini;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +33,7 @@ public class GeminiPromptParser {
         );
     }
 
-    // 응답 파싱
+    // 응답 StudyPlanResponseDTO 으로 파싱
     public StudyPlanResponseDTO parseResponse(String rawJson) throws Exception {
         JsonNode root = objectMapper.readTree(rawJson);
 

@@ -6,7 +6,7 @@ import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.Yes24BookInfoResponseDTO;
 import learntime.backend.domain.study.service.component.Yes24BookCrawler;
-import learntime.backend.domain.study.service.component.GeminiPromptParser;
+import learntime.backend.domain.study.service.gemini.GeminiPromptParser;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;

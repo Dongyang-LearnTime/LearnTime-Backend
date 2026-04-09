@@ -6,7 +6,7 @@ import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
 import learntime.backend.domain.study.service.component.StudyPlanDateCalculator;
-import learntime.backend.domain.study.service.component.StudyRestScheduleManager;
+import learntime.backend.domain.study.service.db.StudyRestScheduleManager;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.exception.BusinessException;
