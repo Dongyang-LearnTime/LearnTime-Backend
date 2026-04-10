@@ -40,21 +40,22 @@ public class AuthExceptionHandler {
     public ResponseEntity<ErrorResponseDTO> handleLockedException(LockedException e) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(ErrorResponseDTO.builder()
-                        .errorCode("403")
-                        .message("비밀번호 5회 오류로 계정이 잠겼습니다.")
-                        .detail(e.getMessage())
-                        .build());
+                .body(new ErrorResponseDTO(
+                        "403",
+                        "비밀번호 5회 오류로 계정이 잠겼습니다.",
+                        e.getMessage()
+                ));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponseDTO> handleBadCredentials(BadCredentialsException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponseDTO.builder()
-                        .errorCode("401")
-                        .message("비밀번호가 일치하지 않습니다.")
-                        .detail(e.getMessage())
-                        .build());
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponseDTO(
+                        "401",
+                        "비밀번호가 일치하지 않습니다.",
+                        e.getMessage()
+                ));
     }
 
 }

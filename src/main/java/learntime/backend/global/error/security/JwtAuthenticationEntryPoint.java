@@ -30,11 +30,10 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        ErrorResponseDTO errorResponse = ErrorResponseDTO.builder()
-                .errorCode("401")
-                .message("로그인이 필요한 서비스입니다.")
-                .detail(authException.getMessage())
-                .build();
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                "401",
+                "로그인이 필요한 서비스입니다.",
+                authException.getMessage());
 
         String json = objectMapper.writeValueAsString(errorResponse);
         response.getWriter().write(json);

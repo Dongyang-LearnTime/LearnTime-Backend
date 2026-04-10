@@ -33,8 +33,8 @@ public class MealService {
     private final FoodApiClient foodApiClient;
 
     @Transactional
-    public MealRecord saveMeal(String email, MealRequestDTO request) {
-        User user = userRepository.findByEmail(email)
+    public MealRecord saveMeal(Long userId, MealRequestDTO request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         Map<String, Object> geminiRequest = createGeminiMealPrompt(request.getContent());
