@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Table(indexes = {
         @Index(name = "idx_user_id", columnList = "userId") // DB 성능 최적화를 위한 인덱스
 })
+@SQLRestriction("is_deleted = false")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -30,6 +32,9 @@ public class PromptQuotas {
 
     @Column()
     private LocalDateTime exhaustedAt; // 할당량 소진 된 시간
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 
     public PromptQuotas(User user, int maxQuota) {
         this.user = user;

@@ -2,7 +2,7 @@ package learntime.backend.global.error.exception;
 
 import learntime.backend.global.error.code.ErrorCode;
 
-public class PromptQuotaException extends BusinessException {
+public class PromptQuotaException extends BaseException {
     public PromptQuotaException(ErrorCode errorCode, String detailMessage) {
         super(errorCode, detailMessage);
     }

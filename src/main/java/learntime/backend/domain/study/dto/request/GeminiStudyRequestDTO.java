@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
-import learntime.backend.global.error.exception.BusinessException;
-import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
+import learntime.backend.domain.study.error.code.StudyErrorCode;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -35,7 +35,7 @@ public record GeminiStudyRequestDTO(
 ) {
     public int getValidatedStudyDays() {
         if (endDate.isBefore(startDate)) {
-            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
+            throw new StudyException(StudyErrorCode.INVALID_DATE_RANGE);
         }
 
         Set<DayOfWeek> restDaySet = (restDays == null || restDays.isEmpty())
@@ -54,7 +54,7 @@ public record GeminiStudyRequestDTO(
 
         // 쉬는 날짜, 쉬는 요일을 뺀 실제 일수에서 계산
         if (actualStudyDays < 14 || actualStudyDays > 90) {
-            throw new BusinessException(ErrorCode.INVALID_STUDY_PERIOD);
+            throw new StudyException(StudyErrorCode.INVALID_STUDY_PERIOD);
         }
 
         return actualStudyDays;

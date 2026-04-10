@@ -3,6 +3,8 @@ package learntime.backend.domain.study.service;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.error.exception.StudyException;
+import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
 import learntime.backend.domain.study.service.component.StudyPlanDateCalculator;
@@ -82,7 +84,7 @@ public class StudyCommandService {
 
         } catch (Exception e) {
             promptQuotaUtil.restorePromptQuota(userId);
-            throw new BusinessException(ErrorCode.STUDY_SAVE_FAILED);
+            throw new StudyException(StudyErrorCode.STUDY_SAVE_FAILED);
         }
     }
 
@@ -134,7 +136,7 @@ public class StudyCommandService {
             throw e;
         } catch (Exception e) {
             promptQuotaUtil.restorePromptQuota(userId);
-            throw new BusinessException(ErrorCode.STUDY_SAVE_FAILED);
+            throw new StudyException(StudyErrorCode.STUDY_SAVE_FAILED);
         }
     }
 

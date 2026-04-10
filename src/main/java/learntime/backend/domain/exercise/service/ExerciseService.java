@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.exercise.dto.request.ExerciseRequestDTO;
 import learntime.backend.domain.exercise.dto.response.ExerciseCalorieResponseDTO;
+import learntime.backend.domain.exercise.error.code.ExerciseErrorCode;
+import learntime.backend.domain.exercise.error.exception.ExerciseException;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.repository.ExerciseRecordRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
-import learntime.backend.global.error.exception.BusinessException;
-import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.infra.gemini.GeminiClient;
@@ -50,7 +51,7 @@ public class ExerciseService {
 
         Map<String, Object> requestBody = createGeminiRequest(request);
         try {
-            String rawJson = geminiClient.sendRequest(requestBody);
+            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
             ExerciseCalorieResponseDTO response = parseCaloriesResponse(rawJson);
 
             ExerciseRecord record = ExerciseRecord.builder()
@@ -65,7 +66,7 @@ public class ExerciseService {
 
         } catch (Exception e) {
             log.error("칼로리 계산 실패: {}", e.getMessage());
-            throw new BusinessException(ErrorCode.AI_GENERATION_FAILED_EX);
+            throw new ExerciseException(ExerciseErrorCode.AI_GENERATION_FAILED_EX);
         }
     }
 
@@ -94,12 +95,12 @@ public class ExerciseService {
     private ExerciseCalorieResponseDTO parseCaloriesResponse(String rawJson) throws Exception {
         JsonNode root = objectMapper.readTree(rawJson);
         if (root.has("error")) {
-            throw new BusinessException(ErrorCode.AI_GENERATION_FAILED_EX);
+            throw new ExerciseException(ExerciseErrorCode.AI_GENERATION_FAILED_EX);
         }
 
         JsonNode candidates = root.path("candidates");
         if (candidates.isMissingNode() || candidates.isEmpty()) {
-            throw new BusinessException(ErrorCode.AI_RESPONSE_BLOCKED_EX);
+            throw new ExerciseException(ExerciseErrorCode.AI_RESPONSE_BLOCKED_EX);
         }
 
         String jsonContent = candidates.get(0).path("content").path("parts").get(0).path("text").asText();

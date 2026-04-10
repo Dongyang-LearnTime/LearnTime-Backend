@@ -3,10 +3,13 @@ package learntime.backend.domain.exercise.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.exercise.dto.request.MealRequestDTO;
+import learntime.backend.domain.exercise.error.code.ExerciseErrorCode;
+import learntime.backend.domain.exercise.error.exception.ExerciseException;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.repository.MealRecordRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.error.exception.BusinessException;
@@ -40,7 +43,7 @@ public class MealService {
         Map<String, Object> geminiRequest = createGeminiMealPrompt(request.getContent());
 
         try {
-            String rawJson = geminiClient.sendRequest(geminiRequest);
+            String rawJson = geminiClient.sendRequest(geminiRequest, GeminiModel.GEMINI_3_1);
             JsonNode analysis = parseGeminiResponse(rawJson);
 
             String searchKeyword = analysis.get("searchKeyword").asText();
@@ -81,7 +84,7 @@ public class MealService {
 
         } catch (Exception e) {
             log.error("식단 분석 실패: {}", e.getMessage());
-            throw new BusinessException(ErrorCode.AI_GENERATION_FAILED_EX);
+            throw new ExerciseException(ExerciseErrorCode.AI_GENERATION_FAILED_EX);
         }
     }
 

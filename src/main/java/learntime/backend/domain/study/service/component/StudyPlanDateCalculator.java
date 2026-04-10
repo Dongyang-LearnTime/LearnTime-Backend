@@ -1,7 +1,7 @@
 package learntime.backend.domain.study.service.component;
 
-import learntime.backend.global.error.exception.BusinessException;
-import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
+import learntime.backend.domain.study.error.code.StudyErrorCode;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -54,7 +54,7 @@ public class StudyPlanDateCalculator {
                                       Set<LocalDate> restDates,
                                       long completedCount) {
         if (startDate == null || endDate == null || startDate.isAfter(endDate)) {
-            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
+            throw new StudyException(StudyErrorCode.INVALID_DATE_RANGE);
         }
 
         int totalDays = 0;
@@ -74,7 +74,8 @@ public class StudyPlanDateCalculator {
         int remaining = totalDays - (int) completedCount;
 
         if (remaining <= 0) {
-            throw new BusinessException(ErrorCode.INVALID_STUDY_PERIOD);
+            throw new StudyException(StudyErrorCode.INVALID_STUDY_PERIOD);
+
         }
 
         return remaining;

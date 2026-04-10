@@ -47,6 +47,8 @@ dependencies {
 
     // XML
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+
+    implementation 'org.apache.tika:tika-core:3.3.0'
 }
 
 tasks.named('test') {

@@ -3,6 +3,7 @@ package learntime.backend.domain.study.service;
 import jakarta.annotation.PostConstruct;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.gemini.GeminiPromptParser;
+import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
@@ -50,7 +51,7 @@ public class TocExtractionService {
 
             Map<String, Object> requestBody = promptParser.createOcrRequestBody(promptTemplate, base64Image, mimeType);
 
-            String rawJson = geminiClient.sendRequest(requestBody); // API 호출
+            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1); // API 호출
 
             return promptParser.parseOcrResponse(rawJson); // DTO 변환
         } catch (IOException e) {

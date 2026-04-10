@@ -60,4 +60,5 @@ public class PromptQuotaUtil {
     public void restorePromptQuota(Long userId) {
         promptQuotaRepository.increaseCountAtomic(userId, maxQuota);
     }
+
 }

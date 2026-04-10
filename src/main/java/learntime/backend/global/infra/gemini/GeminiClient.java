@@ -2,6 +2,8 @@ package learntime.backend.global.infra.gemini;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import learntime.backend.global.common.GeminiModel;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -13,12 +15,8 @@ import java.util.Map;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class GeminiClient {
-
-    // 3.0 버전
-//    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
-
-    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent";
 
     @Value("${gemini.api.key}")
     private String apiKey;
@@ -26,29 +24,24 @@ public class GeminiClient {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    public GeminiClient(RestClient restClient, ObjectMapper objectMapper) {
-        this.restClient = restClient;
-        this.objectMapper = objectMapper;
-    }
-
-    public String sendRequest(Map<String, Object> requestBody) {
+    public String sendRequest(Map<String, Object> requestBody, GeminiModel model) {
         return restClient.post()
-                .uri(GEMINI_URL + "?key=" + apiKey)
+                .uri(model.getEndpoint() + "?key=" + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestBody)
                 .exchange((request, response) -> {
-                    // 1. 응답 바디를 무조건 바이트 배열
+                    // 응답 바디를 무조건 바이트 배열
                     byte[] bodyBytes = response.getBody().readAllBytes();
                     String bodyString = new String(bodyBytes, StandardCharsets.UTF_8);
 
-                    // 2. 에러 발생 시 처리 (4xx, 5xx)
+                    // 에러 발생 시 처리 (4xx, 5xx)
                     if (response.getStatusCode().isError()) {
                         throw new RuntimeException("Gemini API Error [" + response.getStatusCode() + "] | Body: " + bodyString);
                     }
 
                     logTokenUsage(bodyString); // 토큰량 로그로 찍음
 
-                    // 3. 정상 응답 반환
+                    // 정상 응답 반환
                     return bodyString;
                 });
     }

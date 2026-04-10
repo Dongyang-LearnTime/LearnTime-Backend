@@ -11,6 +11,7 @@ import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.exercise.repository.WeightRecordRepository;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.code.AuthErrorCode;
@@ -63,7 +64,7 @@ public class AnalysisService {
 
         try {
             // 4. Gemini API 호출
-            String rawJson = geminiClient.sendRequest(requestBody);
+            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
 
             // 5. 응답 파싱
             return parseAnalysisResponse(rawJson);

@@ -1,7 +1,8 @@
 package learntime.backend.global.error.handler;
 
 import learntime.backend.global.dto.ErrorResponseDTO;
-import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.global.error.code.BaseErrorCode;
+import learntime.backend.global.error.exception.BaseException;
 import learntime.backend.global.error.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,26 +21,10 @@ import java.util.Objects;
 @RestControllerAdvice
 public class CustomExceptionHandler {
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponseDTO> handleBusiness(BusinessException e) {
-        ErrorCode errorCode = e.getErrorCode();
-
-        ErrorResponseDTO response = new ErrorResponseDTO(
-                errorCode.getCode(),
-                e.getMessage(),
-                "Business Logic Error"
-        );
-
-        return ResponseEntity.
-                status(errorCode.getStatus()).
-                body(response);
-    }
-
     // 설정한 예외 외의 모든 예외 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handle(Exception error) {
-        // 서버 내부 로그 (StackTrace 포함)
-        log.error("Unhandled Exception: ", error);
+        log.error("Unhandled Exception: ", error); // 서버 내부 로그 (StackTrace 포함)
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -49,6 +34,23 @@ public class CustomExceptionHandler {
                         error.getMessage()
                 ));
     }
+
+    // 개발자가 만든 에러는 다 여기에
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<ErrorResponseDTO> handleCustomException(BaseException e) {
+        BaseErrorCode errorCode = e.getErrorCode();
+
+        ErrorResponseDTO response = new ErrorResponseDTO(
+                errorCode.getCode(),
+                e.getMessage(),
+                ""
+        );
+
+        return ResponseEntity.
+                status(errorCode.getStatus()).
+                body(response);
+    }
+
 
     // ResponseStatusException 처리 (4xx, 5xx)
     @ExceptionHandler(ResponseStatusException.class)

@@ -6,6 +6,7 @@ import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.gemini.GeminiPromptParser;
+import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
@@ -99,7 +100,7 @@ public class GeminiStudyService {
         Map<String, Object> requestBody = promptParser.createRequestBody(userPrompt);
 
         try {
-            String rawJson = geminiClient.sendRequest(requestBody);
+            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
             return promptParser.parseResponse(rawJson);
 
         } catch (Exception e) {

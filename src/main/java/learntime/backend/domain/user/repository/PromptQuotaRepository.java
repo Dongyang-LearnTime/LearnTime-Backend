@@ -60,4 +60,8 @@ public interface PromptQuotaRepository extends JpaRepository<PromptQuotas, Long>
             @Param("userId") Long userId,
             @Param("maxQuota") int maxQuota
     );
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE PromptQuotas p SET p.isDeleted = true WHERE p.userId = :userId")
+    void softDeleteByUserId(@Param("userId") Long userId);
 }
