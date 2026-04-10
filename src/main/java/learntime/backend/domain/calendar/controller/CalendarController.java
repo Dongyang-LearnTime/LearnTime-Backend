@@ -26,8 +26,7 @@ public class CalendarController {
             @AuthenticationPrincipal CustomUserDetails user,
             @Valid @RequestBody CalendarRequestDTO request) {
 
-        // CustomUserDetails에서 이메일(Username)을 꺼내 서비스에 전달합니다. [cite: 74]
-        CalendarResponseDTO response = calendarService.saveSchedule(user.getUsername(), request);
+        CalendarResponseDTO response = calendarService.saveSchedule(user.userId(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -38,7 +37,7 @@ public class CalendarController {
             @RequestParam(name = "year") int year,
             @RequestParam(name = "month") int month) {
 
-        List<CalendarResponseDTO> response = calendarService.getMonthlySchedules(user.getUsername(), year, month);
+        List<CalendarResponseDTO> response = calendarService.getMonthlySchedules(user.userId(), year, month);
         return ResponseEntity.ok(response);
     }
 

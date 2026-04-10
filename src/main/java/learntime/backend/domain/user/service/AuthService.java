@@ -1,7 +1,7 @@
 package learntime.backend.domain.user.service;
 
 import learntime.backend.domain.user.dto.request.LoginRequestDTO;
-import learntime.backend.domain.user.model.PromptQuota;
+import learntime.backend.domain.user.model.PromptQuotas;
 import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.PromptQuotaRepository;
@@ -13,6 +13,7 @@ import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,11 @@ public class AuthService {
 
     private static final long ACCESS_TIME = 1000L * 60 * 30; // 엑세스 토큰 유효기간, 30분
     private static final long REFRESH_TIME = 1000L * 60 * 60 * 24 * 14; // 리프레쉬 토큰 유효기간, 14일
+
+    private static final int MAX_PASSWORD_ATTEMPTS = 5; // 비밀번호 5회 제한
+
+    @Value("${gemini.api.max-quota}") // 프롬프트 할당량
+    private int maxQuota;
 
     public record TokenPair(
             String accessToken,
@@ -53,7 +59,7 @@ public class AuthService {
             user.incrementFailedAttempts();
 
             // 증가시킨 횟수가 5회 이상이 되는 순간
-            if (user.getFailedAttempts() >= 5) {
+            if (user.getFailedAttempts() >= MAX_PASSWORD_ATTEMPTS) {
                 user.lockAccount(); // 계정 잠금 시간 기록
 
                 throw new LockedException("비밀번호 5회 오류로 계정이 잠겼습니다. 30분 후 다시 시도해주세요.");
@@ -101,7 +107,7 @@ public class AuthService {
         User savedUser = userRepository.save(user);
 
         // 프롬프트 할당량 생성
-        PromptQuota quota = new PromptQuota(savedUser);
+        PromptQuotas quota = new PromptQuotas(savedUser, maxQuota);
         promptQuotaRepository.save(quota);
     }
 

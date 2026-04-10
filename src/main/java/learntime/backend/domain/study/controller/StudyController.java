@@ -5,35 +5,49 @@ import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.request.SavePlanRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
-import learntime.backend.domain.study.dto.response.Yes24BookListResponseDTO;
+import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.GeminiStudyService;
 import learntime.backend.domain.study.service.StudyCommandService;
-import learntime.backend.domain.study.service.StudyService;
+import learntime.backend.domain.study.service.TocExtractionService;
+import learntime.backend.domain.study.service.component.FileValidator;
 import learntime.backend.global.dto.CustomUserDetails;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/study")
 @RequiredArgsConstructor
 public class StudyController {
 
-    private final StudyService studyService;
+    private final FileValidator fileValidator;
     private final GeminiStudyService geminiStudyService;
     private final StudyCommandService studyCommandService;
+    private final TocExtractionService tocExtractionService;
 
-    // 책 목록 요청
-    @GetMapping("/book")
-    public ResponseEntity<List<Yes24BookListResponseDTO>> getYes24BookList(@RequestParam("title") String title,
-                                                                           @RequestParam("page") int page) {
-        List<Yes24BookListResponseDTO> result = studyService.getYes24BookList(title, page);
+    @PostMapping(
+            value = "/extract",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE //  multipart/form-data 요청만 받음
+    )
+    public ResponseEntity<List<TocListResponseDTO>> extractToc(
+            @RequestParam("image") MultipartFile imageFile) { // image라는 이름의 파일만 받음
 
-        return ResponseEntity.ok(result);
+        fileValidator.validateImage(imageFile); // 이미지 파일 검사
+        log.info("[TOC Extract] 파일 검증 완료: {}", imageFile.getOriginalFilename());
+
+        List<TocListResponseDTO> jsonResult = tocExtractionService.extractTocAsJson(imageFile);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(jsonResult);
     }
 
     // 책 정보 기반으로 AI가 일정, 진도 생성

@@ -29,11 +29,10 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        ErrorResponseDTO errorResponse = ErrorResponseDTO.builder()
-                .errorCode("AUTH_403")
-                .message("해당 리소스에 접근할 권한이 없습니다.")
-                .detail(accessDeniedException.getMessage())
-                .build();
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                "AUTH_403",
+                "해당 리소스에 접근할 권한이 없습니다.",
+                accessDeniedException.getMessage());
 
         String json = objectMapper.writeValueAsString(errorResponse);
         response.getWriter().write(json);

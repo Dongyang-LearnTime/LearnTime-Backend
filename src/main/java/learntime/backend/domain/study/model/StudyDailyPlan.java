@@ -1,6 +1,8 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -51,6 +53,8 @@ public class StudyDailyPlan {
 
     // 이해도 점수 (1~5점)
     @Column(name = "understanding_score", columnDefinition = "TINYINT")
+    @Min(value = 1, message = "점수는 1점 이상이어야 합니다.")
+    @Max(value = 5, message = "점수는 최대 5점까지 가능합니다.")
     private Integer understandingScore;
 
     @Builder

@@ -48,8 +48,7 @@ dependencies {
     // XML
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
 
-    // Jsoup
-    implementation 'org.jsoup:jsoup:1.21.1'
+    implementation 'org.apache.tika:tika-core:3.3.0'
 }
 
 tasks.named('test') {

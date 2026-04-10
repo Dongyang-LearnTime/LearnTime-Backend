@@ -1,7 +1,8 @@
 package learntime.backend.global.error.handler;
 
 import learntime.backend.global.dto.ErrorResponseDTO;
-import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.global.error.code.BaseErrorCode;
+import learntime.backend.global.error.exception.BaseException;
 import learntime.backend.global.error.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,46 +21,49 @@ import java.util.Objects;
 @RestControllerAdvice
 public class CustomExceptionHandler {
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponseDTO> handleBusiness(BusinessException e) {
-        ErrorCode errorCode = e.getErrorCode();
+    // 설정한 예외 외의 모든 예외 처리
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDTO> handle(Exception error) {
+        log.error("Unhandled Exception: ", error); // 서버 내부 로그 (StackTrace 포함)
 
-        ErrorResponseDTO body = new ErrorResponseDTO(
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponseDTO(
+                        "500",
+                        "서버 오류입니다. 잠시 후 다시 접속해주세요.",
+                        error.getMessage()
+                ));
+    }
+
+    // 개발자가 만든 에러는 다 여기에
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<ErrorResponseDTO> handleCustomException(BaseException e) {
+        BaseErrorCode errorCode = e.getErrorCode();
+
+        ErrorResponseDTO response = new ErrorResponseDTO(
                 errorCode.getCode(),
-                errorCode.getMessage(),
-                "",
-                LocalDateTime.now()
+                e.getMessage(),
+                ""
         );
 
         return ResponseEntity.
                 status(errorCode.getStatus()).
-                body(body);
+                body(response);
     }
 
-    // 설정한 예외 외의 모든 예외 처리
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handle(Exception error) {
-        log.error("Unhandled Exception: ", error);
-
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponseDTO.builder()
-                        .errorCode("500")
-                        .message("서버 오류입니다. 잠시 후 다시 접속해주세요.")
-                        .detail(error.getMessage())
-                        .build());
-    }
 
     // ResponseStatusException 처리 (4xx, 5xx)
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponseDTO> handleStatus(ResponseStatusException e) {
         return ResponseEntity
                 .status(e.getStatusCode())
-                .body(ErrorResponseDTO.builder()
-                        .errorCode(String.valueOf(e.getStatusCode().value()))
-                        .message(e.getReason() != null ? e.getReason() : "요청 처리 중 오류가 발생했습니다.")
-                        .detail("")
-                        .build());
+                .body(new ErrorResponseDTO(
+                        String.valueOf(e.getStatusCode().value()),
+                        e.getReason() != null
+                                ? e.getReason()
+                                : "요청 처리 중 오류가 발생했습니다.",
+                        e.getMessage()
+                ));
     }
 
     // @Valid 범위값 오류
@@ -80,11 +84,11 @@ public class CustomExceptionHandler {
         // 2. HTTP 400에 맞는 규격화된 응답 반환
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponseDTO.builder()
-                        .errorCode("400")
-                        .message("잘못된 요청입니다. 입력값을 확인해주세요.")
-                        .detail(errorMessage)
-                        .build());
+                .body(new ErrorResponseDTO(
+                        "400",
+                        "잘못된 요청입니다. 입력값을 확인해주세요.",
+                        errorMessage
+                ));
     }
 
 }

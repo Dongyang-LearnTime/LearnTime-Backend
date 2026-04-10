@@ -2,10 +2,14 @@ package learntime.backend.domain.calendar.service;
 
 import learntime.backend.domain.calendar.dto.request.CalendarRequestDTO;
 import learntime.backend.domain.calendar.dto.response.CalendarResponseDTO;
+import learntime.backend.domain.calendar.error.code.CalenderErrorCode;
+import learntime.backend.domain.calendar.error.exception.CalenderException;
 import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.calendar.repository.CalendarRecordRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.global.error.code.AuthErrorCode;
+import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +30,9 @@ public class CalendarService {
 
     // 일정 등록
     @Transactional
-    public CalendarResponseDTO saveSchedule(String email, CalendarRequestDTO request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.CALENDAR_NOT_FOUND));
+    public CalendarResponseDTO saveSchedule(Long userId, CalendarRequestDTO request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         CalendarRecord record = CalendarRecord.builder()
                 .user(user)
@@ -46,10 +50,9 @@ public class CalendarService {
 
     // 월별 일정 조회
     @Transactional(readOnly = true)
-    public List<CalendarResponseDTO> getMonthlySchedules(String email, int year, int month) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.CALENDAR_NOT_FOUND));
-
+    public List<CalendarResponseDTO> getMonthlySchedules(Long userId, int year, int month) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         // 해당 월의 시작일과 종료일 계산
         LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0, 0);
@@ -67,7 +70,7 @@ public class CalendarService {
     @Transactional
     public CalendarResponseDTO updateSchedule(Long calendarRecordId, CalendarRequestDTO request) {
         CalendarRecord record = calendarRecordRepository.findById(calendarRecordId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.CALENDAR_NOT_FOUND));
+                .orElseThrow(() -> new CalenderException(CalenderErrorCode.CALENDAR_NOT_FOUND));
 
         record.update(
                 request.title(),
@@ -83,7 +86,7 @@ public class CalendarService {
     @Transactional
     public void deleteSchedule(Long calendarRecordId) {
         if (!calendarRecordRepository.existsById(calendarRecordId)) {
-            throw new BusinessException(ErrorCode.CALENDAR_NOT_FOUND);
+            throw new CalenderException(CalenderErrorCode.CALENDAR_NOT_FOUND);
         }
         calendarRecordRepository.deleteById(calendarRecordId);
         log.info("일정이 삭제되었습니다: ID={}", calendarRecordId);

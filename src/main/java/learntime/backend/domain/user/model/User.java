@@ -1,7 +1,9 @@
 package learntime.backend.domain.user.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
+import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.study.model.Study;
 import lombok.*;
@@ -85,13 +87,21 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WeightRecord> weightRecord = new ArrayList<>();;
 
+    // 식단
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MealRecord> mealRecord = new ArrayList<>();
+
+    // 캘린더
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CalendarRecord> calendarRecord = new ArrayList<>();
+
     // 리프레쉬 토큰
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private RefreshToken refreshToken;
 
     // 토큰 할당량
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private PromptQuota promptQuota;
+    private PromptQuotas promptQuotas;
 
     @Builder
     public User(String email, String password, String name, String socialId, AuthProvider socialProvider, Role role) {

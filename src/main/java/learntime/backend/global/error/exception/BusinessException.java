@@ -1,14 +1,13 @@
 package learntime.backend.global.error.exception;
 
 import learntime.backend.global.error.code.ErrorCode;
-import lombok.Getter;
 
-@Getter
-public class BusinessException extends RuntimeException {
-    private final ErrorCode errorCode;
-
+public class BusinessException extends BaseException {
     public BusinessException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
+        super(errorCode);
+    }
+
+    public BusinessException(ErrorCode errorCode, String detailMessage) {
+        super(errorCode, detailMessage);
     }
 }

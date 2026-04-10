@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.service.component;
+package learntime.backend.domain.study.service.db;
 
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyRestDate;
