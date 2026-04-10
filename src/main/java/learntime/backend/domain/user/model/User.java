@@ -91,7 +91,7 @@ public class User {
 
     // 토큰 할당량
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private PromptQuota promptQuota;
+    private PromptQuotas promptQuotas;
 
     @Builder
     public User(String email, String password, String name, String socialId, AuthProvider socialProvider, Role role) {

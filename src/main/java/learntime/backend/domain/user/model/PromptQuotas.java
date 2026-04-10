@@ -5,11 +5,15 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "prompt_quotas")
+@Table(indexes = {
+        @Index(name = "idx_user_id", columnList = "userId") // DB 성능 최적화를 위한 인덱스
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PromptQuota {
+public class PromptQuotas {
 
     @Id
     private Long userId;
@@ -22,9 +26,12 @@ public class PromptQuota {
     @Column(nullable = false, columnDefinition = "INT DEFAULT 5")
     private int remainingCount;
 
-    public PromptQuota(User user) {
+    @Column()
+    private LocalDateTime exhaustedAt; // 할당량 소진 된 시간
+
+    public PromptQuotas(User user, int maxQuota) {
         this.user = user;
-        this.remainingCount = 5; // 할당량 기본 5
+        this.remainingCount = maxQuota;
     }
 
 }

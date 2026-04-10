@@ -33,8 +33,12 @@ public class StudyController {
     private final StudyCommandService studyCommandService;
     private final TocExtractionService tocExtractionService;
 
-    @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<TocListResponseDTO>> extractToc(@RequestParam("image") MultipartFile imageFile) {
+    @PostMapping(
+            value = "/extract",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE //  multipart/form-data 요청만 받음
+    )
+    public ResponseEntity<List<TocListResponseDTO>> extractToc(
+            @RequestParam("image") MultipartFile imageFile) { // image라는 이름의 파일만 받음
 
         fileValidator.validateImage(imageFile); // 이미지 파일 검사
         log.info("[TOC Extract] 파일 검증 완료: {}", imageFile.getOriginalFilename());
