@@ -20,11 +20,7 @@ import java.util.List;
 
 // 향후 프런트에서 로그인, 회원가입 기능 구현 후, user 테이블과 1대N 연결
 @Entity
-@Table(name = "study", indexes = {
-        @Index(name = "idx_study_user_id", columnList = "user_id") // Soft Delete 벌크 연산 및 조회 성능 최적화
-})
-@SQLDelete(sql = "UPDATE study SET is_deleted = true WHERE study_id = ?")
-@SQLRestriction("is_deleted = false")
+@Table(name = "study")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -57,9 +53,6 @@ public class Study {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
 
     // 일차별 진도 내용
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
