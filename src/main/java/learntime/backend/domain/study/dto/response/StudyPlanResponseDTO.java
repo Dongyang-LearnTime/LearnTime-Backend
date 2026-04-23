@@ -15,7 +15,7 @@ public record StudyPlanResponseDTO(
         List<DailyPlan> dailyPlans
 ) {
     public record DailyPlan(
-            int day,
+            Integer day,
             String tasks
     ) {}
 
@@ -27,7 +27,7 @@ public record StudyPlanResponseDTO(
 
             for (JsonNode dayNode : root) {
                 // 배열 형태(Tuple)의 JSON 노드를 인덱스로 파싱: [ [1, "할일"], [2, "할일"] ]
-                int day = dayNode.get(0).asInt();
+                Integer day = dayNode.get(0).asInt();
                 String tasks = dayNode.get(1).asText();
 
                 plans.add(new DailyPlan(day, tasks));

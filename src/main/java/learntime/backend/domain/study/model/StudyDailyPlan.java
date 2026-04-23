@@ -32,7 +32,7 @@ public class StudyDailyPlan {
     private Study study;
 
     @Column(name = "day_number", nullable = false)
-    private int dayNumber; // DTO의 day
+    private Integer dayNumber; // DTO의 day
 
     // 계획 날짜
     @Column(name = "plan_date", nullable = false)
@@ -58,7 +58,7 @@ public class StudyDailyPlan {
     private Integer understandingScore;
 
     @Builder
-    public StudyDailyPlan(Study study, int dayNumber, LocalDate planDate, String planContent) {
+    public StudyDailyPlan(Study study, Integer dayNumber, LocalDate planDate, String planContent) {
         this.study = study;
         this.dayNumber = dayNumber;
         this.planDate = planDate;

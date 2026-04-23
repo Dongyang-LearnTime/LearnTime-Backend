@@ -67,7 +67,7 @@ public class User {
 
     // 비밀번호 틀린 횟수
     @Column(name = "failed_attempts", nullable = false)
-    private int failedAttempts = 0;
+    private Integer failedAttempts = 0;
 
     // 계정 잠금 발생 시간 (NULL이면 잠기지 않은 상태)
     @Column(name = "locked_at")
@@ -135,8 +135,8 @@ public class User {
     }
 
     // 현재 계정이 잠겨있는지 확인
-    public boolean isAccountLocked() {
-        final int LOCK_MINUTES = 30; // 잠금 시간 (30분)
+    public Boolean isAccountLocked() {
+        final Integer LOCK_MINUTES = 30; // 잠금 시간 (30분)
 
         if (this.lockedAt != null) {
             // 잠금 시간 지났는지 확인

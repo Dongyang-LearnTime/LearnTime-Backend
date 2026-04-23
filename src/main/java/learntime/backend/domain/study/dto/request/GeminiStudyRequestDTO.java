@@ -33,7 +33,7 @@ public record GeminiStudyRequestDTO(
         List<DayOfWeek> restDays, // 쉬는 요일
         List<LocalDate> restDates // 쉬는 날짜
 ) {
-    public int getValidatedStudyDays() {
+    public Integer getValidatedStudyDays() {
         if (endDate.isBefore(startDate)) {
             throw new StudyException(StudyErrorCode.INVALID_DATE_RANGE);
         }
@@ -47,7 +47,7 @@ public record GeminiStudyRequestDTO(
                 : new HashSet<>(restDates);
 
         // 실제 공부 일수 계산 (Stream API 활용)
-        int actualStudyDays = (int) startDate.datesUntil(endDate.plusDays(1))
+        Integer actualStudyDays = (int) startDate.datesUntil(endDate.plusDays(1))
                 .filter(date -> !restDaySet.contains(date.getDayOfWeek())) // 요일 제거
                 .filter(date -> !restDateSet.contains(date)) // 날짜 제거
                 .count();
