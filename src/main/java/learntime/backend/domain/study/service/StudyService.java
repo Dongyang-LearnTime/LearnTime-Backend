@@ -15,6 +15,6 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new IllegalArgumentException("공부 진도를 찾을 수 없습니다."));
 
-        studyRepository.hardDeleteById(study.getStudyId());
+        studyRepository.deleteById(studyId);
     }
 }

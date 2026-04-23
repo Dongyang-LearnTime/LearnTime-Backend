@@ -28,15 +28,15 @@ public class PromptQuotas {
     private User user;
 
     @Column(nullable = false, columnDefinition = "INT DEFAULT 5")
-    private int remainingCount;
+    private Integer remainingCount;
 
     @Column()
     private LocalDateTime exhaustedAt; // 할당량 소진 된 시간
 
     @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
+    private Boolean isDeleted = false;
 
-    public PromptQuotas(User user, int maxQuota) {
+    public PromptQuotas(User user, Integer maxQuota) {
         this.user = user;
         this.remainingCount = maxQuota;
     }

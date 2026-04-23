@@ -67,7 +67,7 @@ public class User {
 
     // 비밀번호 틀린 횟수
     @Column(name = "failed_attempts", nullable = false)
-    private int failedAttempts = 0;
+    private Integer failedAttempts = 0;
 
     // 계정 잠금 발생 시간 (NULL이면 잠기지 않은 상태)
     @Column(name = "locked_at")
@@ -84,15 +84,15 @@ public class User {
     private List<ExerciseRecord> exerciseRecords = new ArrayList<>();
 
     // 신체 분석
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<WeightRecord> weightRecord = new ArrayList<>();;
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<WeightRecord> weightRecord = new ArrayList<>();
 
     // 식단
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<MealRecord> mealRecord = new ArrayList<>();
 
     // 캘린더
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<CalendarRecord> calendarRecord = new ArrayList<>();
 
     // 리프레쉬 토큰
@@ -100,7 +100,7 @@ public class User {
     private RefreshToken refreshToken;
 
     // 토큰 할당량
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private PromptQuotas promptQuotas;
 
     @Builder
@@ -135,8 +135,8 @@ public class User {
     }
 
     // 현재 계정이 잠겨있는지 확인
-    public boolean isAccountLocked() {
-        final int LOCK_MINUTES = 30; // 잠금 시간 (30분)
+    public Boolean isAccountLocked() {
+        final Integer LOCK_MINUTES = 30; // 잠금 시간 (30분)
 
         if (this.lockedAt != null) {
             // 잠금 시간 지났는지 확인
