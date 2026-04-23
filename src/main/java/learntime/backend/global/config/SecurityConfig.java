@@ -37,11 +37,9 @@ public class SecurityConfig {
 
                 // 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/user/**").authenticated()
-                        .requestMatchers("/api/exercise/**").authenticated()
-                        .requestMatchers("/api/study/**").authenticated()
-                        .anyRequest().permitAll() // 나머지는 모두 허용
+                        .requestMatchers("/api/auth/**").permitAll()       // 인증 예외 처리
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한 검증
+                        .anyRequest().authenticated()                      // 나머지 모든 요청은 인증(JWT) 필수
                 )
 
                 // 401, 403 에러 핸들링

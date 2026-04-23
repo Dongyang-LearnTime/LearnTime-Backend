@@ -84,15 +84,15 @@ public class User {
     private List<ExerciseRecord> exerciseRecords = new ArrayList<>();
 
     // 신체 분석
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<WeightRecord> weightRecord = new ArrayList<>();;
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<WeightRecord> weightRecord = new ArrayList<>();
 
     // 식단
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<MealRecord> mealRecord = new ArrayList<>();
 
     // 캘린더
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<CalendarRecord> calendarRecord = new ArrayList<>();
 
     // 리프레쉬 토큰
@@ -100,7 +100,7 @@ public class User {
     private RefreshToken refreshToken;
 
     // 토큰 할당량
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private PromptQuotas promptQuotas;
 
     @Builder
