@@ -37,6 +37,12 @@ public class SecurityConfig {
 
                 // 권한 설정
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers( // swagger는 허용
+                                "/v3/api-docs/**",    // OpenAPI spec 경로
+                                "/swagger-ui/**",      // Swagger UI HTML/JS/CSS
+                                "/swagger-ui.html",    // Swagger UI 메인 페이지
+                                "/api-docs/**"         // 커스텀 docs 경로가 있을 경우
+                        ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()       // 인증 예외 처리
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한 검증
                         .anyRequest().authenticated()                      // 나머지 모든 요청은 인증(JWT) 필수
