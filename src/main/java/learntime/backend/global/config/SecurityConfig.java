@@ -6,6 +6,7 @@ import learntime.backend.global.error.security.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -13,6 +14,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Objects;
 
 @Configuration
 @EnableWebSecurity
@@ -37,12 +40,21 @@ public class SecurityConfig {
 
                 // 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers( // swagger는 허용
-                                "/v3/api-docs/**",    // OpenAPI spec 경로
-                                "/swagger-ui/**",      // Swagger UI HTML/JS/CSS
-                                "/swagger-ui.html",    // Swagger UI 메인 페이지
-                                "/api-docs/**"         // 커스텀 docs 경로가 있을 경우
-                        ).permitAll()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).access((authentication, context) -> {
+                            String ip = Objects.requireNonNull(context)
+                                    .getRequest()
+                                    .getRemoteAddr();
+
+                            // 로컬 IP만 허용
+                            boolean isLocal =
+                                    ip.equals("127.0.0.1") ||
+                                            ip.equals("0:0:0:0:0:0:0:1");
+
+                            return new AuthorizationDecision(isLocal);
+                        })
                         .requestMatchers("/api/auth/**").permitAll()       // 인증 예외 처리
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한 검증
                         .anyRequest().authenticated()                      // 나머지 모든 요청은 인증(JWT) 필수
