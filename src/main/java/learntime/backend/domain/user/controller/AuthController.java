@@ -1,5 +1,7 @@
 package learntime.backend.domain.user.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import learntime.backend.domain.user.dto.request.LoginRequestDTO;
@@ -19,14 +21,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "사용자 인증 API", description = "로그인, 로그아웃, 회원가입 등을 관리하는 인증 API (JWT 필요 없음)")
 public class AuthController {
 
     private final AuthService authService;
 
     private static final long REFRESH_TIME = 60 * 60 * 24 * 14; // 초 단위, 14일
 
-    // 로그인
     @PostMapping("/login")
+    @Operation(summary = "로그인", description = "이메일, 비밀번호를 받아 검증 후 JWT 토큰을 쿠키와 반환값으로 줌.")
     public ResponseEntity<TokenResponseDTO> login(
             @RequestBody LoginRequestDTO request,
             HttpServletResponse response
@@ -50,8 +53,8 @@ public class AuthController {
     }
 
 
-    // AccessToken 재발급
     @PostMapping("/refresh")
+    @Operation(summary = "토큰 재발급", description = "DB의 리프레쉬 토큰을 확인하여 토큰을 재발급함.")
     public ResponseEntity<TokenResponseDTO> refresh(
             @CookieValue(value = "refreshToken", required = false) String refreshToken) {
 
@@ -78,9 +81,8 @@ public class AuthController {
         }
     }
 
-
-    // 로그아웃
     @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "DB에 리프레쉬 토큰 및 쿠키를 삭제함.")
     public ResponseEntity<?> logout(
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response
@@ -102,8 +104,8 @@ public class AuthController {
         return ResponseEntity.ok("logout success");
     }
 
-    // 회원가입
     @PostMapping("/signup")
+    @Operation(summary = "회원가입", description = "계정을 생성함.")
     public ResponseEntity<String> signupUser(@Valid @RequestBody SignUpRequestDTO request) {
         authService.createUser(request.userName(), request.email(), request.password());
         log.info("{} 회원가입 성공!", request.userName());

@@ -1,7 +1,9 @@
 package learntime.backend.domain.user.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
+@Schema(description = "회원가입 요청 정보를 담은 DTO")
 public record SignUpRequestDTO (
     @NotBlank(message = "이름은 필수 입력 항목입니다.")
     @Size(min = 2, max = 25, message = "이름은 2~25자 사이여야 합니다.")

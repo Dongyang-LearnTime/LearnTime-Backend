@@ -1,8 +1,10 @@
 package learntime.backend.domain.user.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+@Schema(description = "로그인 요청 정보를 담은 DTO")
 public record LoginRequestDTO(
         @Email(message = "올바른 이메일 형식이 아닙니다.")
         @NotBlank(message = "이메일은 필수입니다.")

@@ -5,12 +5,14 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonDeserialize(using = StudyPlanResponseDTO.TupleDeserializer.class)
+@Schema(description = "Gemini 응답 Tuple 데이터를 JSON으로 바꿀때 쓰는 DTO")
 public record StudyPlanResponseDTO(
         List<DailyPlan> dailyPlans
 ) {
