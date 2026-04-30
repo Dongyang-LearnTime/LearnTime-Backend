@@ -6,6 +6,7 @@ import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.model.*;
@@ -122,7 +123,7 @@ public class StudyCommandService {
             studyRestScheduleManager.saveRestDays(study, request.restDays());
 
             // 완료되지 않은 일정만 삭제
-            studyDailyPlanRepository.deleteUncompletedPlans(study, StudyDailyPlan.ProgressStatus.COMPLETED);
+            studyDailyPlanRepository.deleteUncompletedPlans(study, ProgressStatus.COMPLETED);
 
             int lastDayNumber = studyDailyPlanRepository.findMaxDayNumberByStudy(study);
 
@@ -163,7 +164,7 @@ public class StudyCommandService {
 
         return String.join("\n", studyDailyPlanRepository.findRemainingContents(
                 study,
-                StudyDailyPlan.ProgressStatus.COMPLETED
+                ProgressStatus.COMPLETED
         ));
     }
 
@@ -185,7 +186,7 @@ public class StudyCommandService {
         // DB에서 완료된 학습 계획 개수 조회
         long completedCount = studyDailyPlanRepository.countCompletedPlansByStudyAndDateRange(
                 study,
-                StudyDailyPlan.ProgressStatus.COMPLETED,
+                ProgressStatus.COMPLETED,
                 request.startDate(),
                 request.endDate()
         );

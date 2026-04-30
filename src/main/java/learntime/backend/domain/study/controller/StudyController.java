@@ -5,10 +5,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.GeminiStudyService;
 import learntime.backend.domain.study.service.StudyCommandService;
+import learntime.backend.domain.study.service.StudyDailyPlanService;
 import learntime.backend.domain.study.service.TocExtractionService;
 import learntime.backend.domain.study.service.component.FileValidator;
 import learntime.backend.global.dto.CustomUserDetails;
@@ -34,6 +36,7 @@ public class StudyController {
     private final GeminiStudyService geminiStudyService;
     private final StudyCommandService studyCommandService;
     private final TocExtractionService tocExtractionService;
+    private final StudyDailyPlanService studyDailyPlanService;
 
     @PostMapping(
             value = "/extract",
@@ -80,5 +83,14 @@ public class StudyController {
 
         return ResponseEntity.ok(result);
     }
+
+    @PatchMapping("/plan/completion")
+    @Operation(summary = "일일 진도 완료", description = "공부 일일진도를 완료로 바꾸고 성공/실패 여부를 판단 후 포인트를 지급함.")
+    public ResponseEntity<Void> completePlan(@RequestBody PlanCompleteRequestDTO request,
+                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyDailyPlanService.completeStudyDailyPlan(request, userDetails.userId());
+        return ResponseEntity.noContent().build();
+    }
+
 
 }

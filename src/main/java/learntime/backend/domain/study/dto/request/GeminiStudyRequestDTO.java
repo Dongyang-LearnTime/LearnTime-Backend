@@ -50,7 +50,7 @@ public record GeminiStudyRequestDTO(
                 : new HashSet<>(restDates);
 
         // 실제 공부 일수 계산 (Stream API 활용)
-        Integer actualStudyDays = (int) startDate.datesUntil(endDate.plusDays(1))
+        int actualStudyDays = (int) startDate.datesUntil(endDate.plusDays(1))
                 .filter(date -> !restDaySet.contains(date.getDayOfWeek())) // 요일 제거
                 .filter(date -> !restDateSet.contains(date)) // 날짜 제거
                 .count();

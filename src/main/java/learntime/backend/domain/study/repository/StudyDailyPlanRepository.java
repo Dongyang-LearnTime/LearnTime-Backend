@@ -1,5 +1,6 @@
 package learntime.backend.domain.study.repository;
 
+import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,7 +39,7 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
              AND p.progressStatus <> :completedStatus
            """)
     int deleteUncompletedPlans(@Param("study") Study study,
-                               @Param("completedStatus") StudyDailyPlan.ProgressStatus completedStatus);
+                               @Param("completedStatus") ProgressStatus completedStatus);
 
     // 특정 Study의 기간 내 완료된(COMPLETED) 학습 계획 개수를 조회한다.
     @Query("""
@@ -49,7 +50,7 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
              AND p.planDate BETWEEN :startDate AND :endDate
            """)
     long countCompletedPlansByStudyAndDateRange(@Param("study") Study study,
-                                                @Param("completedStatus") StudyDailyPlan.ProgressStatus completedStatus,
+                                                @Param("completedStatus") ProgressStatus completedStatus,
                                                 @Param("startDate") LocalDate startDate,
                                                 @Param("endDate") LocalDate endDate);
 
@@ -62,5 +63,5 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
            ORDER BY p.dayNumber ASC
            """)
     List<String> findRemainingContents(@Param("study") Study study,
-                                       @Param("completedStatus") StudyDailyPlan.ProgressStatus completedStatus);
+                                       @Param("completedStatus") ProgressStatus completedStatus);
 }

@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PointPolicy {
 
-    // 증가만
     STUDY_PLAN_CREATED(10, "공부 일정 생성"),
-    STUDY_COMPLETED(10, "일일 진도 완료");
+    STUDY_COMPLETED_SUCCESS(10, "일일 진도 완료 (성공)"),
+    STUDY_COMPLETED_FAILURE(2, "일일 진도 완료 (실패)"); // 실패 시 지급할 최소 격려 포인트 추가
 
     private final int amount;
     private final String description;
