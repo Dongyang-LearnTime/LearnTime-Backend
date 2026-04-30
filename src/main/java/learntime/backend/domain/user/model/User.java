@@ -5,6 +5,7 @@ import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
+import learntime.backend.domain.point.model.PointHistory;
 import learntime.backend.domain.study.model.Study;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -97,6 +98,10 @@ public class User {
     // 캘린더
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<CalendarRecord> calendarRecord = new ArrayList<>();
+
+    // 포인트 내역
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<PointHistory> pointHistories = new ArrayList<>();
 
     // 리프레쉬 토큰
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
