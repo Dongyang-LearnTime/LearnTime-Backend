@@ -1,6 +1,7 @@
 package learntime.backend.domain.user.service;
 
 import learntime.backend.domain.user.dto.request.LoginRequestDTO;
+import learntime.backend.domain.user.enums.Role;
 import learntime.backend.domain.user.model.PromptQuotas;
 import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
@@ -102,7 +103,7 @@ public class AuthService {
                 .name(userName)
                 .email(email)
                 .password(encodedPassword)
-                .role(User.Role.ROLE_USER) // 관리자는 ROLE_ADMIN, 유저는 ROLE_USER
+                .role(Role.ROLE_USER) // 관리자는 ROLE_ADMIN, 유저는 ROLE_USER
                 .build();
         User savedUser = userRepository.save(user);
 

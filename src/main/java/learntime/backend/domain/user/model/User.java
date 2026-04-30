@@ -7,6 +7,8 @@ import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.point.model.PointHistory;
 import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.user.enums.AuthProvider;
+import learntime.backend.domain.user.enums.Role;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -120,9 +122,6 @@ public class User {
         this.socialProvider = (socialProvider == null) ? AuthProvider.LOCAL : socialProvider;
         this.role = (role == null) ? Role.ROLE_USER : role;
     }
-
-    public enum AuthProvider { LOCAL, GOOGLE, NAVER }
-    public enum Role { ROLE_USER, ROLE_ADMIN }
 
     // ==================== 비밀번호 틀림 관련 로직 ====================
 
