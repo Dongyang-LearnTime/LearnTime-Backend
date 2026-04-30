@@ -5,6 +5,7 @@ import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
+import learntime.backend.domain.point.model.PointHistory;
 import learntime.backend.domain.study.model.Study;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -36,11 +37,14 @@ public class User {
     @Column(nullable = false)
     private String email;
 
-    @Column()
+    @Column(nullable = false)
     private String password; // OAuth인 경우 null
 
     @Column(nullable = false, length = 30)
     private String name;
+
+    @Column(nullable = false, columnDefinition = "INT DEFAULT 0 CHECK (point >= 0)")
+    private Integer point = 0;
 
     @Column(name = "social_id")
     private String socialId; // OAuth에서 제공하는 Id (사이트 가입인 경우 null)
@@ -94,6 +98,10 @@ public class User {
     // 캘린더
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<CalendarRecord> calendarRecord = new ArrayList<>();
+
+    // 포인트 내역
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<PointHistory> pointHistories = new ArrayList<>();
 
     // 리프레쉬 토큰
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -31,7 +31,7 @@ public class CustomExceptionHandler {
                 .body(new ErrorResponseDTO(
                         "500",
                         "서버 오류입니다. 잠시 후 다시 접속해주세요.",
-                        error.getMessage()
+                        ""
                 ));
     }
 
@@ -78,8 +78,6 @@ public class CustomExceptionHandler {
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse("유효하지 않은 입력값입니다.");
-
-        log.warn("Validation 예외 발생: {}", errorMessage);
 
         // 2. HTTP 400에 맞는 규격화된 응답 반환
         return ResponseEntity

@@ -40,6 +40,9 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 
+    // Retry
+    implementation 'org.springframework.retry:spring-retry:2.0.5'
+
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
@@ -53,6 +56,9 @@ dependencies {
     // Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:3.0.1'
+
+    // thumbnailator
+    implementation 'net.coobird:thumbnailator:0.4.20'
 }
 
 tasks.named('test') {

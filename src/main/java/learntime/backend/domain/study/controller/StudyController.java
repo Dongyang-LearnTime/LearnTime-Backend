@@ -1,9 +1,10 @@
 package learntime.backend.domain.study.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
-import learntime.backend.domain.study.dto.request.SavePlanRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.GeminiStudyService;
@@ -26,6 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/study")
 @RequiredArgsConstructor
+@Tag(name = "공부 진도 API", description = "AI를 활용한 진도 생성, 수정 등의 API임 (JWT 필요)")
 public class StudyController {
 
     private final FileValidator fileValidator;
@@ -37,6 +39,7 @@ public class StudyController {
             value = "/extract",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE //  multipart/form-data 요청만 받음
     )
+    @Operation(summary = "사진 인식", description = "사진 파일을 받아 AI를 호출하여 목차 정보를 추출함.")
     public ResponseEntity<List<TocListResponseDTO>> extractToc(
             @RequestParam("image") MultipartFile imageFile) { // image라는 이름의 파일만 받음
 
@@ -50,26 +53,21 @@ public class StudyController {
                 .body(jsonResult);
     }
 
-    // 책 정보 기반으로 AI가 일정, 진도 생성
+
     @PostMapping("/generate")
+    @Operation(summary = "공부 진도 생성", description = "목차 정보를 기반으로 공부 진도를 생성 후 DB에 저장함.")
     public ResponseEntity<StudyPlanResponseDTO> createStudyPlan(@Valid @RequestBody GeminiStudyRequestDTO request,
                                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
-        StudyPlanResponseDTO result = geminiStudyService.generateSmartStudyPlan(request, userDetails.userId());
-
-        return ResponseEntity.ok(result);
-    }
-
-    // 공부 진도 db에 저장
-    @PostMapping("/save")
-    public ResponseEntity<Void> saveStudyPlan(@RequestBody SavePlanRequestDTO request,
-                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        studyCommandService.saveStudyPlan(request.planInfo(), request.planGeminiResult(), userDetails.userId());
+        StudyPlanResponseDTO geminiResult =
+                geminiStudyService.generateSmartStudyPlan(request, userDetails.userId());
+        studyCommandService.
+                saveStudyPlan(request, geminiResult, userDetails.userId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    // AI 진도 재조정 (쉬는 날, 쉬는 요일 등 변경)
+
     @PutMapping("/{studyId}/replan")
+    @Operation(summary = "공부 진도 재생성", description = "AI 진도 재조정 (쉬는 날, 쉬는 요일 등 변경)")
     public ResponseEntity<StudyPlanResponseDTO> replanStudyPlan(@PathVariable Long studyId,
                                                                 @Valid @RequestBody GeminiReplanRequestDTO request,
                                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {

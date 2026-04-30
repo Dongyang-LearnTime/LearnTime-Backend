@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import net.coobird.thumbnailator.Thumbnails;
+import java.io.ByteArrayOutputStream;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,18 +47,25 @@ public class TocExtractionService {
 
     public List<TocListResponseDTO> extractTocAsJson(MultipartFile imageFile) {
         try {
-            // 이미지를 Base64로 인코딩
-            String base64Image = Base64.getEncoder().encodeToString(imageFile.getBytes());
-            String mimeType = imageFile.getContentType() != null ? imageFile.getContentType() : "image/jpeg";
+            // 메모리 최적화: MultipartFile의 Stream을 바로 읽어 리사이징 후 ByteArrayOutputStream에 저장
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            Thumbnails.of(imageFile.getInputStream())
+                    .size(1024, 1024) // Gemini Vision 처리 권장 해상도 수준으로 축소
+                    .outputFormat("jpg")
+                    .outputQuality(0.7) // 품질 70% 압축
+                    .toOutputStream(os);
+
+            // Base64 인코딩: 압축된 바이트 배열을 사용하여 페이로드 크기 대폭 감소
+            String base64Image = Base64.getEncoder().encodeToString(os.toByteArray());
+            String mimeType = "image/jpeg"; // 압축 포맷 고정
 
             Map<String, Object> requestBody = promptParser.createOcrRequestBody(promptTemplate, base64Image, mimeType);
+            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
 
-            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1); // API 호출
-
-            return promptParser.parseOcrResponse(rawJson); // DTO 변환
+            return promptParser.parseOcrResponse(rawJson);
         } catch (IOException e) {
-            log.error("OCR 이미지 파일 읽기 실패", e);
-            throw new RuntimeException("이미지 파일 읽기 실패");
+            log.error("OCR 이미지 파일 리사이징/읽기 실패", e);
+            throw new RuntimeException("이미지 파일 처리 실패");
         } catch (Exception e) {
             log.error("AI 목차 추출 실패", e);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED);

@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.annotation.Backoff;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -24,7 +26,10 @@ public class GeminiClient {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
+    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000))
     public String sendRequest(Map<String, Object> requestBody, GeminiModel model) {
+        long startTime = System.nanoTime(); // 시간 측정 시작
+
         return restClient.post()
                 .uri(model.getEndpoint() + "?key=" + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -34,19 +39,21 @@ public class GeminiClient {
                     byte[] bodyBytes = response.getBody().readAllBytes();
                     String bodyString = new String(bodyBytes, StandardCharsets.UTF_8);
 
+                    long durationMs = (System.nanoTime() - startTime) / 1_000_000; // 측정 종료
+
                     // 에러 발생 시 처리 (4xx, 5xx)
                     if (response.getStatusCode().isError()) {
                         throw new RuntimeException("Gemini API Error [" + response.getStatusCode() + "] | Body: " + bodyString);
                     }
 
-                    logTokenUsage(bodyString); // 토큰량 로그로 찍음
+                    logTokenUsage(bodyString, durationMs); // 토큰량, 시간 로그로 찍음
 
                     // 정상 응답 반환
                     return bodyString;
                 });
     }
 
-    private void logTokenUsage(String responseBody) {
+    private void logTokenUsage(String responseBody, long durationMs) {
         try {
             JsonNode root = objectMapper.readTree(responseBody);
             JsonNode usage = root.path("usageMetadata");
@@ -60,8 +67,8 @@ public class GeminiClient {
 
                 int totalTokens = usage.path("totalTokenCount").asInt(0);
 
-                log.info("[Gemini Token Usage] Prompt: {} (Cached: {}), Candidate: {} (Thoughts: {}), Total: {}",
-                        promptTokens, cachedTokens, candidateTokens, thoughtsTokens, totalTokens);
+                log.info("[Gemini API] Latency: {}ms | Tokens - Prompt: {} (Cached: {}), Candidate: {} (Thoughts: {}), Total: {}",
+                        durationMs, promptTokens, cachedTokens, candidateTokens, thoughtsTokens, totalTokens);
             }
         } catch (Exception e) {
             log.warn("Failed to parse token usage metadata", e);

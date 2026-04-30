@@ -1,5 +1,6 @@
 package learntime.backend.domain.study.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -12,8 +13,10 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 
+@Schema(description = "공부 진도 메타데이터와 목차 정보를 담은 요청 DTO")
 public record GeminiStudyRequestDTO(
         @NotNull(message = "책 제목은 필수입니다.")
+        @Size(max = 150, message = "책 제목은 150자 이하여야 합니다")
         String bookTitle,
 
         @NotNull(message = "공부 진도 제목은 필수입니다.")
