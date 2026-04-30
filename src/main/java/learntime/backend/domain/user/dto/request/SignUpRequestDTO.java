@@ -2,6 +2,9 @@ package learntime.backend.domain.user.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import learntime.backend.domain.user.enums.Terms;
+
+import java.util.Map;
 
 @Schema(description = "회원가입 요청 정보를 담은 DTO")
 public record SignUpRequestDTO (
@@ -18,5 +21,8 @@ public record SignUpRequestDTO (
             regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[\\W_])(?!.*(.)\\1\\1).{8,30}$",
             message = "비밀번호는 8~30자, 영문/숫자/특수문자를 포함하고 같은 문자를 3번 연속 사용할 수 없습니다."
     )
-    String password
+    String password,
+
+    @Schema(description = "약관 동의 여부를 Map으로 (enum)")
+    Map<Terms, Boolean> termsAgreements
 ) { }

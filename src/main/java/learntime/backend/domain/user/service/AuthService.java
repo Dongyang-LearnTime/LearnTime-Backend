@@ -1,13 +1,17 @@
 package learntime.backend.domain.user.service;
 
 import learntime.backend.domain.user.dto.request.LoginRequestDTO;
+import learntime.backend.domain.user.dto.request.SignUpRequestDTO;
 import learntime.backend.domain.user.enums.Role;
+import learntime.backend.domain.user.enums.Terms;
 import learntime.backend.domain.user.model.PromptQuotas;
 import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
+import learntime.backend.domain.user.model.UserTerms;
 import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.domain.user.repository.UserTermsRepository;
 import learntime.backend.global.config.security.CustomPasswordEncoder;
 import learntime.backend.global.config.security.jwt.JwtProvider;
 import learntime.backend.global.error.code.AuthErrorCode;
@@ -21,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +34,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PromptQuotaRepository promptQuotaRepository;
+    private final UserTermsRepository userTermsRepository;
+
     private final JwtProvider jwtProvider;
     private final CustomPasswordEncoder customPasswordEncoder;
 
@@ -96,16 +103,39 @@ public class AuthService {
 
     // 회원가입
     @Transactional
-    public void createUser(String userName, String email, String password) {
-        String encodedPassword = customPasswordEncoder.encode(password); // 비밀번호 암호화
+    public void createUser(SignUpRequestDTO signUpData) {
+        // 필수 약관 동의 여부 확인
+        for (Terms term : Terms.values()) {
+            if (term.isRequired()) {
+                // Map에서 해당 약관의 동의 여부를 확인, Map에 없으면 false로 간주
+                boolean isAgreed = signUpData.termsAgreements().getOrDefault(term, false);
+                if (!isAgreed) {
+                    throw new AuthException(AuthErrorCode.TERMS_NOT_AGREED);
+                }
+            }
+        }
+
+        // 비밀번호 암호화
+        String encodedPassword = customPasswordEncoder.encode(signUpData.password());
 
         User user = User.builder()
-                .name(userName)
-                .email(email)
+                .name(signUpData.userName())
+                .email(signUpData.email())
                 .password(encodedPassword)
                 .role(Role.ROLE_USER) // 관리자는 ROLE_ADMIN, 유저는 ROLE_USER
                 .build();
         User savedUser = userRepository.save(user);
+
+        // 클라이언트가 보낸 약관 Map을 순회하며 UserTerms 엔티티 리스트 생성 후 저장
+        List<UserTerms> userTermsList = signUpData.termsAgreements().entrySet().stream()
+                .map(entry -> UserTerms.builder()
+                        .user(savedUser)
+                        .terms(entry.getKey())
+                        .agreed(entry.getValue())
+                        .agreedAt(LocalDateTime.now()) // 동의한 시점 기록
+                        .build())
+                .toList();
+        userTermsRepository.saveAll(userTermsList);
 
         // 프롬프트 할당량 생성
         PromptQuotas quota = new PromptQuotas(savedUser, maxQuota);

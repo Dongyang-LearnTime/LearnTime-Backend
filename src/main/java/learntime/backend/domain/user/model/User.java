@@ -113,6 +113,10 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private PromptQuotas promptQuotas;
 
+    // 약관 동의 여부
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserTerms> userTerms = new ArrayList<>();
+
     @Builder
     public User(String email, String password, String name, String socialId, AuthProvider socialProvider, Role role) {
         this.email = email;

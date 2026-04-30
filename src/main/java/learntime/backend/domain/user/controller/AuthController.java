@@ -107,7 +107,7 @@ public class AuthController {
     @PostMapping("/signup")
     @Operation(summary = "회원가입", description = "계정을 생성함.")
     public ResponseEntity<String> signupUser(@Valid @RequestBody SignUpRequestDTO request) {
-        authService.createUser(request.userName(), request.email(), request.password());
+        authService.createUser(request);
         log.info("{} 회원가입 성공!", request.userName());
         return ResponseEntity.ok().build();
     }
