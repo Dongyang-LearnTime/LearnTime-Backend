@@ -36,11 +36,14 @@ public class User {
     @Column(nullable = false)
     private String email;
 
-    @Column()
+    @Column(nullable = false)
     private String password; // OAuth인 경우 null
 
     @Column(nullable = false, length = 30)
     private String name;
+
+    @Column(nullable = false, columnDefinition = "INT DEFAULT 0 CHECK (point >= 0)")
+    private Integer point = 0;
 
     @Column(name = "social_id")
     private String socialId; // OAuth에서 제공하는 Id (사이트 가입인 경우 null)

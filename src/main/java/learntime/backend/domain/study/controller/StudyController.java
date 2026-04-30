@@ -53,6 +53,7 @@ public class StudyController {
                 .body(jsonResult);
     }
 
+
     @PostMapping("/generate")
     @Operation(summary = "공부 진도 생성", description = "목차 정보를 기반으로 공부 진도를 생성 후 DB에 저장함.")
     public ResponseEntity<StudyPlanResponseDTO> createStudyPlan(@Valid @RequestBody GeminiStudyRequestDTO request,
@@ -63,6 +64,7 @@ public class StudyController {
                 saveStudyPlan(request, geminiResult, userDetails.userId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
 
     @PutMapping("/{studyId}/replan")
     @Operation(summary = "공부 진도 재생성", description = "AI 진도 재조정 (쉬는 날, 쉬는 요일 등 변경)")

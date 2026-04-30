@@ -27,8 +27,8 @@ public class PromptQuotas {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, columnDefinition = "INT DEFAULT 5")
-    private Integer remainingCount;
+    @Column(nullable = false, columnDefinition = "INT DEFAULT 10 CHECK (remaining_count >= 0)")
+    private Integer remainingCount = 10;
 
     @Column()
     private LocalDateTime exhaustedAt; // 할당량 소진 된 시간

@@ -1,5 +1,8 @@
 package learntime.backend.domain.study.service;
 
+import learntime.backend.domain.point.dto.PointEventDTO;
+import learntime.backend.domain.point.enums.PointPolicy;
+import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
@@ -17,6 +20,7 @@ import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +39,8 @@ public class StudyCommandService {
     private final StudyRestScheduleManager studyRestScheduleManager;
     private final PromptQuotaUtil promptQuotaUtil;
     private final StudyPlanDateCalculator studyPlanDateCalculator;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void saveStudyPlan(GeminiStudyRequestDTO request,
@@ -81,6 +87,15 @@ public class StudyCommandService {
             }
 
             studyDailyPlanRepository.saveAll(dailyPlans);
+
+            // 포인트 지급
+            eventPublisher.publishEvent(
+                    new PointEventDTO(userId,
+                            PointPolicy.STUDY_PLAN_CREATED.getAmount(), // 포인트
+                            PointType.EARN,
+                            PointPolicy.STUDY_PLAN_CREATED.getDescription() // 설명
+                    )
+            );
 
         } catch (Exception e) {
             promptQuotaUtil.restorePromptQuota(userId);
