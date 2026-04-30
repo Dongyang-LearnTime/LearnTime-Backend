@@ -50,7 +50,7 @@ public class PointEventListener {
             case CANCEL -> "취소";
         };
 
-        log.info("[Point Event] {} (Email: {}) - {}p {} 완료 (사유: {})",
+        log.info("[Point Event] {} (email: {}) 에게 {}p {} 완료 (사유: {})",
                 userProxy.getName(), userProxy.getEmail(), Math.abs(event.amount()), action, event.description());
     }
 
