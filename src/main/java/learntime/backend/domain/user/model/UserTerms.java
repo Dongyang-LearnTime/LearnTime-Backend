@@ -26,8 +26,10 @@ public class UserTerms {
     @Column(name = "terms_type", nullable = false)
     private Terms terms;
 
+    @Column(nullable = false)
     private Boolean agreed; // 동의 여부
 
+    @Column(nullable = false)
     private LocalDateTime agreedAt; // 동의 시점
 
     @Builder
