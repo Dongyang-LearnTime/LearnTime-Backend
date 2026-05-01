@@ -25,7 +25,7 @@ public class StudyDailyPlanService {
     private static final int UNDERSTANDING_SCORE_WEIGHT = 2;
 
     @Transactional
-    public void completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
+    public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
                 .orElseThrow(() -> new IllegalArgumentException("공부 일일 진도를 찾을 수 없습니다."));
 
@@ -45,6 +45,8 @@ public class StudyDailyPlanService {
                 PointType.EARN,
                 description
         ));
+
+        return calculatedPoint;
     }
 
     private int calculatePoint(CompletionStatus status, int understandingScore) {

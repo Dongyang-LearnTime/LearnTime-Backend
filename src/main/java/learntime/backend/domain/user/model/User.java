@@ -39,7 +39,7 @@ public class User {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @Column
     private String password; // OAuth인 경우 null
 
     @Column(nullable = false, length = 30)
@@ -147,7 +147,7 @@ public class User {
 
     // 현재 계정이 잠겨있는지 확인
     public Boolean isAccountLocked() {
-        final Integer LOCK_MINUTES = 30; // 잠금 시간 (30분)
+        final int LOCK_MINUTES = 30; // 잠금 시간 (30분)
 
         if (this.lockedAt != null) {
             // 잠금 시간 지났는지 확인

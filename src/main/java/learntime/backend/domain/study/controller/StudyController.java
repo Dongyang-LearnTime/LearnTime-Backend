@@ -86,11 +86,10 @@ public class StudyController {
 
     @PatchMapping("/plan/completion")
     @Operation(summary = "일일 진도 완료", description = "공부 일일진도를 완료로 바꾸고 성공/실패 여부를 판단 후 포인트를 지급함.")
-    public ResponseEntity<Void> completePlan(@RequestBody PlanCompleteRequestDTO request,
+    public ResponseEntity<String> completePlan(@RequestBody PlanCompleteRequestDTO request,
                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
-        studyDailyPlanService.completeStudyDailyPlan(request, userDetails.userId());
-        return ResponseEntity.noContent().build();
+        int resultPoint = studyDailyPlanService.completeStudyDailyPlan(request, userDetails.userId());
+        return ResponseEntity.ok("포인트 " + resultPoint + "지급 완료!");
     }
-
 
 }

@@ -33,7 +33,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 "401",
                 "로그인이 필요한 서비스입니다.",
-                authException.getMessage());
+                "");
 
         String json = objectMapper.writeValueAsString(errorResponse);
         response.getWriter().write(json);
