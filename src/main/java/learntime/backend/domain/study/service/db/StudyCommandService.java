@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.service;
+package learntime.backend.domain.study.service.db;
 
 import learntime.backend.domain.point.dto.PointEventDTO;
 import learntime.backend.domain.point.enums.PointPolicy;
@@ -12,7 +12,6 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
 import learntime.backend.domain.study.service.component.StudyPlanDateCalculator;
-import learntime.backend.domain.study.service.db.StudyRestScheduleManager;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.exception.BusinessException;

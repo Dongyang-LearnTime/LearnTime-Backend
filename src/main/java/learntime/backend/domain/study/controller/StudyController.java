@@ -9,7 +9,7 @@ import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.GeminiStudyService;
-import learntime.backend.domain.study.service.StudyCommandService;
+import learntime.backend.domain.study.service.db.StudyCommandService;
 import learntime.backend.domain.study.service.StudyDailyPlanService;
 import learntime.backend.domain.study.service.TocExtractionService;
 import learntime.backend.domain.study.service.component.FileValidator;

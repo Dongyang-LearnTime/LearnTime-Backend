@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
@@ -65,6 +67,10 @@ public class Study {
     // 쉬는 날
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyRestDate> restDates = new ArrayList<>();
+
+    // 필기 (SET NULL)
+    @OneToMany(mappedBy = "study")
+    private List<StudyNotes> studyNotes = new ArrayList<>();
 
     @Builder
     public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate, User user) {

@@ -1,0 +1,49 @@
+package learntime.backend.domain.study.model;
+
+import jakarta.persistence.*;
+import learntime.backend.global.common.BaseTimeEntity;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.springframework.data.annotation.LastModifiedDate;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "study_notes")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class StudyNotes extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "study_notes_id")
+    private Long studyNotesId;
+
+    // SET NULL로 연결
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "study_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Study study;
+
+    @Column(name = "notes_title", nullable = false)
+    private String noteTitle;
+
+    @Column(nullable = false, columnDefinition = "MEDIUMTEXT")
+    private String noteContents;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Builder
+    public StudyNotes(String noteTitle, String noteContents, Study study) {
+        this.noteTitle = noteTitle;
+        this.noteContents = noteContents;
+        this.study = study;
+    }
+
+}
