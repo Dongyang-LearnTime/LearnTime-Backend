@@ -30,7 +30,7 @@ public class StudyQuiz extends BaseTimeEntity {
     @JoinColumn(name = "study_id", nullable = false)
     private Study study;
 
-    @Column(name = "quiz_title", nullable = false)
+    @Column(name = "quiz_title", nullable = false, length = 100)
     private String quizTitle;
 
     @Enumerated(EnumType.STRING)
