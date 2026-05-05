@@ -79,4 +79,17 @@ public class StudyQuizConverter {
                 .quizType(quizAnswer.getQuizQuestion().getQuizType())
                 .build();
     }
+
+    public static StudyQuizResultResponseDTO toStudyQuizResultResponseDTO(QuizHistory quizHistory, Integer earnedPoints) {
+        List<StudyQuizResultResponseDTO.QuizDetailResponseDTO> quizResults = quizHistory.getAnswers().stream()
+                .map(StudyQuizConverter::toQuizDetailResponseDTO)
+                .toList();
+
+        return StudyQuizResultResponseDTO.builder()
+                .totalQuestionCount(quizHistory.getAnswers().size())
+                .correctQuestionCount(quizHistory.getCorrectCount())
+                .earnedPoints(earnedPoints)
+                .quizResults(quizResults)
+                .build();
+    }
 }

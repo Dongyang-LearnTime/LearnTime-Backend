@@ -4,6 +4,7 @@ import learntime.backend.domain.point.dto.PointEventDTO;
 import learntime.backend.domain.point.enums.PointPolicy;
 import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.dto.request.QuizSolveRequestDTO;
+import learntime.backend.domain.study.dto.request.UpdateQuizTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.QuizQuestionResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResultResponseDTO;
@@ -39,15 +40,6 @@ public class StudyQuizService {
     private final ApplicationEventPublisher eventPublisher;
 
     private static final int CORRECT_ANSWER_BONUS = 5; // 정답 하나 당 추가 포인트
-
-    @Transactional(readOnly = true)
-    public StudyQuizResponseDTO getStudyQuizWithQuestions(Long studyQuizId) {
-        // 퀴즈, 퀴즈 문항 정보 같이 가져옴
-        StudyQuiz studyQuiz = studyQuizRepository.findByIdWithQuestions(studyQuizId)
-                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
-
-        return StudyQuizConverter.toResponseDTO(studyQuiz, studyQuiz.getQuestions());
-    }
 
     @Transactional
     public Long saveStudyQuiz(Study study, List<QuizQuestionResponseDTO> questionDos) {
@@ -108,11 +100,6 @@ public class StudyQuizService {
         quizHistory.getAnswers().addAll(quizAnswers);
         quizHistoryRepository.save(quizHistory);
 
-        // dto 변환
-        List<StudyQuizResultResponseDTO.QuizDetailResponseDTO> result = quizAnswers.stream()
-                .map(StudyQuizConverter::toQuizDetailResponseDTO)
-                .toList();
-
         int quizSolvePoint = 0;
         // 푼 횟수가 1인(처음 푸는) 경우에만 포인트 지급 (completeQuiz() 호출 후이므로 1일때 처음 푼 것임)
         if (isFirstTime) {
@@ -128,11 +115,18 @@ public class StudyQuizService {
             ));
         }
 
-        return StudyQuizResultResponseDTO.builder()
-                .totalQuestionCount(questions.size())
-                .correctQuestionCount(correctCount)
-                .earnedPoints(quizSolvePoint)
-                .quizResults(result)
-                .build();
+        return StudyQuizConverter.
+                toStudyQuizResultResponseDTO(quizHistory, quizSolvePoint);
     }
+
+    @Transactional(readOnly = true)
+    public StudyQuizResultResponseDTO getQuizResult(Long studyQuizId) {
+        QuizHistory quizHistory = quizHistoryRepository
+                .findFirstByStudyQuiz_StudyQuizIdOrderByAttemptNumberDesc(studyQuizId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_HISTORY_NOT_FOUND));
+
+        return StudyQuizConverter.
+                toStudyQuizResultResponseDTO(quizHistory, null);
+    }
+
 }

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.QuizCreateRequestDTO;
 import learntime.backend.domain.study.dto.request.QuizSolveRequestDTO;
+import learntime.backend.domain.study.dto.request.UpdateQuizTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.study.service.facade.StudyQuizFacade;
@@ -32,7 +33,17 @@ public class StudyQuizController {
             summary = "퀴즈 조회",
             description = "생성된 퀴즈 정보와 퀴즈 문제를 조회함.")
     public ResponseEntity<StudyQuizResponseDTO> getStudyQuiz (@PathVariable Long studyQuizId) {
-        StudyQuizResponseDTO result = studyQuizFacade.getStudyQuizDetail(studyQuizId);
+        StudyQuizResponseDTO result = studyQuizFacade.getStudyQuizWithQuestions(studyQuizId);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{studyQuizId}/result")
+    @Operation(
+            summary = "퀴즈 풀이 결과 조회",
+            description = "퀴즈 문제, 사용자가 제출한 답안, 실제 정답 및 정답 여부 등을 조회함."
+    )
+    public ResponseEntity<StudyQuizResultResponseDTO> getStudyQuizResult(@PathVariable Long studyQuizId) {
+        StudyQuizResultResponseDTO result = studyQuizFacade.getQuizResult(studyQuizId);
         return ResponseEntity.ok(result);
     }
 
@@ -54,6 +65,15 @@ public class StudyQuizController {
                                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
         StudyQuizResultResponseDTO result = studyQuizFacade.solveStudyQuiz(request, userDetails.userId());
         return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping("/title")
+    @Operation(summary = "퀴즈 제목 변경", description = "퀴즈 제목 변경 후 DB에 저장함.")
+    public ResponseEntity<Void> changeTitle(
+            @Valid @RequestBody UpdateQuizTitleRequestDTO request
+    ) {
+        studyQuizFacade.updateTitle(request);
+        return ResponseEntity.noContent().build();
     }
 
 }

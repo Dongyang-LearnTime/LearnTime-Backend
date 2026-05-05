@@ -30,7 +30,7 @@ public class StudyQuiz extends BaseTimeEntity {
     @JoinColumn(name = "study_id", nullable = false)
     private Study study;
 
-    @Column(name = "quiz_title", nullable = false, length = 100)
+    @Column(name = "quiz_title", nullable = false, length = 120)
     private String quizTitle;
 
     @Enumerated(EnumType.STRING)
@@ -58,6 +58,10 @@ public class StudyQuiz extends BaseTimeEntity {
     public void completeQuiz() {
         this.quizStatus = QuizStatus.COMPLETED;
         this.completedCount++;
+    }
+
+    public void setTitle(String quizTitle) {
+        this.quizTitle = quizTitle;
     }
 
 }

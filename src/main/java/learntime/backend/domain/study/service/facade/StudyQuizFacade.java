@@ -1,7 +1,10 @@
 package learntime.backend.domain.study.service.facade;
 
+import jakarta.validation.Valid;
+import learntime.backend.domain.study.converter.StudyQuizConverter;
 import learntime.backend.domain.study.dto.request.QuizCreateRequestDTO;
 import learntime.backend.domain.study.dto.request.QuizSolveRequestDTO;
+import learntime.backend.domain.study.dto.request.UpdateQuizTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.QuizQuestionResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResultResponseDTO;
@@ -9,7 +12,9 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyNotes;
+import learntime.backend.domain.study.model.StudyQuiz;
 import learntime.backend.domain.study.repository.StudyNotesRepository;
+import learntime.backend.domain.study.repository.StudyQuizRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.service.ai.GeminiQuizService;
 import learntime.backend.domain.study.service.core.StudyQuizService;
@@ -19,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -28,6 +34,7 @@ import java.util.List;
 public class StudyQuizFacade {
 
     private final StudyRepository studyRepository;
+    private final StudyQuizRepository studyQuizRepository;
     private final StudyNotesRepository studyNotesRepository;
     private final GeminiQuizService geminiQuizService;
     private final StudyQuizService studyQuizService;
@@ -36,8 +43,18 @@ public class StudyQuizFacade {
     private static final int OX_COUNT = 2; // OX 퀴즈 문제 개수
     private static final int MULTIPLE_COUNT = 2; // 4지선다 문제 개수
 
-    public StudyQuizResponseDTO getStudyQuizDetail(Long studyQuizId) {
-        return studyQuizService.getStudyQuizWithQuestions(studyQuizId);
+    @Transactional(readOnly = true)
+    public StudyQuizResponseDTO getStudyQuizWithQuestions(Long studyQuizId) {
+        // 퀴즈, 퀴즈 문항 정보 같이 가져옴
+        StudyQuiz studyQuiz = studyQuizRepository.findByIdWithQuestions(studyQuizId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
+
+        return StudyQuizConverter.toResponseDTO(studyQuiz, studyQuiz.getQuestions());
+    }
+
+    @Transactional(readOnly = true)
+    public StudyQuizResultResponseDTO getQuizResult(Long studyQuizId) {
+        return studyQuizService.getQuizResult(studyQuizId);
     }
 
     // 필기를 기반으로 퀴즈 추출
@@ -67,6 +84,15 @@ public class StudyQuizFacade {
 
     public StudyQuizResultResponseDTO solveStudyQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
         return studyQuizService.solveQuiz(requests, userId);
+    }
+
+
+    @Transactional
+    public void updateTitle(UpdateQuizTitleRequestDTO request) {
+        StudyQuiz studyQuiz = studyQuizRepository.findById(request.studyQuizId())
+                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
+
+        studyQuiz.setTitle(request.quizTitle());
     }
 
     // 필기 내용에서 HTML 태그를 뺀 문장만 추출
