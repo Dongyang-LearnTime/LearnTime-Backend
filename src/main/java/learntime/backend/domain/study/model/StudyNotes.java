@@ -46,4 +46,8 @@ public class StudyNotes extends BaseTimeEntity {
         this.study = study;
     }
 
+    public void update(String noteTitle, String noteContents) {
+        this.noteTitle = noteTitle;
+        this.noteContents = noteContents;
+    }
 }
