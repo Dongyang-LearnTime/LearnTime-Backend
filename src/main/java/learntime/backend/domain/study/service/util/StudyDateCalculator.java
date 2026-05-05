@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.service.component;
+package learntime.backend.domain.study.service.util;
 
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
@@ -9,10 +9,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
+// 학습 계획 날짜 계산 유틸리티
 @Component
-public class StudyPlanDateCalculator {
+public class StudyDateCalculator {
 
-    // 시작일 기준으로, 쉬는 요일/쉬는 날짜를 건너뛰고 실제 학습 가능한 가장 빠른 날짜를 찾음
     public LocalDate getNextValidPlanDate(LocalDate startDate,
                                           Set<DayOfWeek> restDays,
                                           Set<LocalDate> restDates) {
@@ -30,7 +30,6 @@ public class StudyPlanDateCalculator {
         }
     }
 
-    //  계획 목록을 실제 날짜에 매핑해서 반환
     public List<LocalDate> buildPlanDates(LocalDate startDate,
                                           int planCount,
                                           Set<DayOfWeek> restDays,
@@ -47,7 +46,6 @@ public class StudyPlanDateCalculator {
         return planDates;
     }
 
-    // 남은 학습일 수를 계산한다 (총 가능한 날짜 수에서 완료된 계획 수 뺌)
     public int calculateRemainingDays(LocalDate startDate,
                                       LocalDate endDate,
                                       Set<DayOfWeek> restDays,
@@ -75,7 +73,6 @@ public class StudyPlanDateCalculator {
 
         if (remaining <= 0) {
             throw new StudyException(StudyErrorCode.INVALID_STUDY_PERIOD);
-
         }
 
         return remaining;

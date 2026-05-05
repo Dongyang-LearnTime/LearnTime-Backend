@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.StudyNoteRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyNotesUpdateRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyNotesResponseDTO;
-import learntime.backend.domain.study.service.StudyNotesService;
+import learntime.backend.domain.study.service.core.StudyNotesService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/study/notes")
 @RequiredArgsConstructor
-@Tag(name = "공부 필기 API", description = "공부 필기 관련 API임 (JWT 필요)")
+@Tag(name = "공부 필기 API", description = "공부 필기(Notes) 관련 CRUD API (JWT 필요)")
 public class StudyNotesController {
 
     private final StudyNotesService studyNotesService;
@@ -43,7 +43,7 @@ public class StudyNotesController {
     }
 
     @PostMapping
-    @Operation(summary = "공부 필기 저장", description = "공부 필기를 저장")
+    @Operation(summary = "공부 필기 저장", description = "새로운 공부 필기를 저장합니다.")
     public ResponseEntity<Long> saveStudyNotes(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody StudyNoteRequestDTO request) {

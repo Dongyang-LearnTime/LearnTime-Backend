@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.service;
+package learntime.backend.domain.study.service.core;
 
 import learntime.backend.domain.study.dto.request.StudyNoteRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyNotesUpdateRequestDTO;
@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// 학습 필기(Notes) CRUD 비즈니스 로직 담당 서비스
 @Service
 @RequiredArgsConstructor
 public class StudyNotesService {
@@ -29,7 +30,6 @@ public class StudyNotesService {
         }
     }
 
-    // 필기 상세 조회
     @Transactional(readOnly = true)
     public StudyNotesResponseDTO getNote(Long studyNotesId, Long userId) {
         StudyNotes studyNotes = studyNotesRepository.findById(studyNotesId)
@@ -40,7 +40,6 @@ public class StudyNotesService {
         return StudyNotesResponseDTO.from(studyNotes);
     }
 
-    // 특정 Study에 속한 모든 필기 조회
     @Transactional(readOnly = true)
     public List<StudyNotesResponseDTO> getNotesByStudyId(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
@@ -54,7 +53,6 @@ public class StudyNotesService {
                 .collect(Collectors.toList());
     }
 
-    // 필기 생성
     @Transactional
     public Long create(StudyNoteRequestDTO request, Long userId) {
         Study study = studyRepository.findById(request.studyId())
@@ -73,7 +71,6 @@ public class StudyNotesService {
         return saveNotes.getStudyNotesId();
     }
 
-    // 필기 수정
     @Transactional
     public void update(Long studyNotesId, StudyNotesUpdateRequestDTO request, Long userId) {
         StudyNotes studyNotes = studyNotesRepository.findById(studyNotesId)
@@ -84,7 +81,6 @@ public class StudyNotesService {
         studyNotes.update(request.title(), request.content());
     }
 
-    // 필기 삭제
     @Transactional
     public void delete(Long studyNotesId, Long userId) {
         StudyNotes studyNotes = studyNotesRepository.findById(studyNotesId)

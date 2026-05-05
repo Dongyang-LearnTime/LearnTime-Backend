@@ -6,6 +6,7 @@ import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.StudyDailyPlan;
 import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
+import learntime.backend.domain.study.service.core.StudyDailyService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,10 +27,10 @@ import static org.mockito.Mockito.verify;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
-class StudyDailyPlanServiceTest {
+class StudyDailyServiceTest {
 
     @InjectMocks
-    private StudyDailyPlanService studyDailyPlanService;
+    private StudyDailyService studyDailyService;
 
     @Mock
     private StudyDailyPlanRepository studyDailyPlanRepository;
@@ -53,7 +54,7 @@ class StudyDailyPlanServiceTest {
         given(studyDailyPlanRepository.findById(planId)).willReturn(Optional.of(studyDailyPlan));
 
         // when
-        studyDailyPlanService.completeStudyDailyPlan(request, userId);
+        studyDailyService.completeStudyDailyPlan(request, userId);
 
         // then
         // 1. 엔티티 상태 검증
@@ -87,7 +88,7 @@ class StudyDailyPlanServiceTest {
         given(studyDailyPlanRepository.findById(planId)).willReturn(Optional.of(studyDailyPlan));
 
         // when
-        studyDailyPlanService.completeStudyDailyPlan(request, userId);
+        studyDailyService.completeStudyDailyPlan(request, userId);
 
         // then
         ArgumentCaptor<PointEventDTO> eventCaptor = ArgumentCaptor.forClass(PointEventDTO.class);
