@@ -28,7 +28,7 @@ public class StudyDailyPlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long studyDailyPlanId;
 
-    @ManyToOne(fetch = FetchType.LAZY) // N+1 문제 방지를 위한 지연 로딩 필수
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id", nullable = false)
     private Study study;
 

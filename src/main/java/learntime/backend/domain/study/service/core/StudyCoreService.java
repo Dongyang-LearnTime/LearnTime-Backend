@@ -7,6 +7,7 @@ import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.enums.ProgressStatus;
+import learntime.backend.domain.study.converter.StudyConverter;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.model.*;
@@ -51,13 +52,7 @@ public class StudyCoreService {
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         try {
-            Study study = Study.builder()
-                    .studyTitle(request.studyTitle())
-                    .bookTitle(request.bookTitle())
-                    .startDate(request.startDate())
-                    .endDate(request.endDate())
-                    .user(user)
-                    .build();
+            Study study = StudyConverter.toStudyEntity(request, user);
 
             studyRepository.save(study);
 
@@ -77,13 +72,7 @@ public class StudyCoreService {
 
             for (int i = 0; i < geminiResult.dailyPlans().size(); i++) {
                 var planDto = geminiResult.dailyPlans().get(i);
-
-                dailyPlans.add(StudyDailyPlan.builder()
-                        .study(study)
-                        .dayNumber(planDto.day())
-                        .planDate(planDates.get(i))
-                        .planContent(planDto.tasks())
-                        .build());
+                dailyPlans.add(StudyConverter.toStudyDailyPlanEntity(study, planDto, planDates.get(i)));
             }
 
             studyDailyPlanRepository.saveAll(dailyPlans);
@@ -134,13 +123,7 @@ public class StudyCoreService {
 
             for (int i = 0; i < geminiResult.dailyPlans().size(); i++) {
                 var planDto = geminiResult.dailyPlans().get(i);
-
-                newDailyPlans.add(StudyDailyPlan.builder()
-                        .study(study)
-                        .dayNumber(lastDayNumber + planDto.day())
-                        .planDate(planDates.get(i))
-                        .planContent(planDto.tasks())
-                        .build());
+                newDailyPlans.add(StudyConverter.toStudyDailyPlanEntity(study, planDto, planDates.get(i), lastDayNumber));
             }
 
             studyDailyPlanRepository.saveAll(newDailyPlans);

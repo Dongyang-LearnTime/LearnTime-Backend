@@ -2,6 +2,7 @@ package learntime.backend.domain.study.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.service.core.StudyDailyService;
 import learntime.backend.global.dto.CustomUserDetails;
@@ -23,7 +24,7 @@ public class StudyDailyController {
 
     @PatchMapping("/completion")
     @Operation(summary = "일일 진도 완료", description = "공부 일일진도를 완료로 변경하고 포인트를 지급합니다.")
-    public ResponseEntity<String> completePlan(@RequestBody PlanCompleteRequestDTO request,
+    public ResponseEntity<String> completePlan(@Valid @RequestBody PlanCompleteRequestDTO request,
                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
         int resultPoint = studyDailyService.completeStudyDailyPlan(request, userDetails.userId());
         return ResponseEntity.ok("포인트 " + resultPoint + "지급 완료!");

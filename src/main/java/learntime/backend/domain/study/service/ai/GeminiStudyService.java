@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -33,6 +34,12 @@ public class GeminiStudyService {
     private final GeminiPromptParser promptParser;
     private final PromptQuotaUtil promptQuotaUtil;
 
+    private static final Map<String, Object> STUDY_SYSTEM_INSTRUCTION = Map.of(
+            "parts", List.of(Map.of("text", "너는 도서의 커리큘럼을 짜는 학습 계획 전문가야."))
+    );
+
+    private static final double STUDY_AI_TEMPERATURE = 0.2;
+
     @Value("classpath:prompts/study-plan-prompt.txt")
     private Resource promptResource;
 
@@ -41,6 +48,7 @@ public class GeminiStudyService {
 
     private String promptTemplate;
     private String replanPromptTemplate;
+
 
     @PostConstruct
     public void init() {
@@ -91,14 +99,18 @@ public class GeminiStudyService {
     private StudyPlanResponseDTO executeGeminiRequest(String userPrompt, Object requestDto, Long userId) {
         promptQuotaUtil.decreasePromptQuota(userId);
 
-        Map<String, Object> requestBody = promptParser.createRequestBody(userPrompt);
+        Map<String, Object> requestBody = promptParser.createRequestBody(
+                userPrompt,
+                STUDY_SYSTEM_INSTRUCTION,
+                STUDY_AI_TEMPERATURE
+        );
 
         try {
             String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
             return promptParser.parseResponse(rawJson);
 
         } catch (Exception e) {
-            log.error("AI 학습 계획 생성 실패. Request: {}", requestDto, e);
+            log.error("AI 학습 계획 생성 실패.", e);
             promptQuotaUtil.restorePromptQuota(userId);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED);
         }

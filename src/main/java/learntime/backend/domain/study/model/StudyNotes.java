@@ -20,7 +20,6 @@ public class StudyNotes extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "study_notes_id")
     private Long studyNotesId;
 
     // SET NULL로 연결

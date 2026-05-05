@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
+import learntime.backend.domain.study.dto.response.QuizQuestionResponseDTO;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -21,19 +22,19 @@ public class GeminiPromptParser {
 
     private final ObjectMapper objectMapper;
 
-    private static final Map<String, Object> STUDY_SYSTEM_INSTRUCTION = Map.of(
-            "parts", List.of(Map.of("text", "너는 도서의 커리큘럼을 짜는 학습 계획 전문가야."))
-    );
-
     private static final Map<String, Object> OCR_SYSTEM_INSTRUCTION = Map.of(
             "parts", List.of(Map.of("text", "너는 OCR(광학 문자 인식) 및 데이터 구조화 전문가야."))
     );
 
-    public Map<String, Object> createRequestBody(String userPrompt) {
+    public Map<String, Object> createRequestBody(
+            String userPrompt,
+            Map<String, Object> systemInstruction,
+            double temperature) {
+
         return buildBaseRequest(
                 List.of(Map.of("text", userPrompt)),
-                STUDY_SYSTEM_INSTRUCTION,
-                0.2
+                systemInstruction,
+                temperature
         );
     }
 
@@ -67,6 +68,11 @@ public class GeminiPromptParser {
     public List<TocListResponseDTO> parseOcrResponse(String rawJson) throws Exception {
         String jsonContent = extractJsonContent(rawJson);
         return objectMapper.readValue(jsonContent, new TypeReference<List<TocListResponseDTO>>() {});
+    }
+    
+    public List<QuizQuestionResponseDTO> parseQuizResponse(String rawJson) throws Exception {
+        String jsonContent = extractJsonContent(rawJson);
+        return objectMapper.readValue(jsonContent, new TypeReference<List<QuizQuestionResponseDTO>>() {});
     }
 
     private String extractJsonContent(String rawJson) throws JsonProcessingException {

@@ -3,6 +3,7 @@ package learntime.backend.domain.study.service.core;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyRestDate;
 import learntime.backend.domain.study.model.StudyRestDay;
+import learntime.backend.domain.study.converter.StudyConverter;
 import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.domain.study.repository.StudyRestDayRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,10 +31,7 @@ public class StudyRestManager {
         }
 
         List<StudyRestDate> studyRestDates = restDates.stream()
-                .map(date -> StudyRestDate.builder()
-                        .study(study)
-                        .restDate(date)
-                        .build())
+                .map(date -> StudyConverter.toStudyRestDateEntity(study, date))
                 .toList();
 
         studyRestDateRepository.saveAll(studyRestDates);
@@ -47,10 +45,7 @@ public class StudyRestManager {
         }
 
         List<StudyRestDay> studyRestDays = restDays.stream()
-                .map(dayOfWeek -> StudyRestDay.builder()
-                        .study(study)
-                        .dayOfWeek(dayOfWeek)
-                        .build())
+                .map(dayOfWeek -> StudyConverter.toStudyRestDayEntity(study, dayOfWeek))
                 .toList();
 
         studyRestDayRepository.saveAll(studyRestDays);

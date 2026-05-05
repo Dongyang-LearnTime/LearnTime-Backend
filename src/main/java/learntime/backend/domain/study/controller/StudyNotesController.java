@@ -43,7 +43,7 @@ public class StudyNotesController {
     }
 
     @PostMapping
-    @Operation(summary = "공부 필기 저장", description = "새로운 공부 필기를 저장합니다.")
+    @Operation(summary = "공부 필기 저장", description = "새로운 공부 필기를 저장하고 ID를 반환합니다.")
     public ResponseEntity<Long> saveStudyNotes(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody StudyNoteRequestDTO request) {

@@ -68,6 +68,10 @@ public class Study {
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyRestDate> restDates = new ArrayList<>();
 
+    // 퀴즈
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudyQuiz> studyQuizs = new ArrayList<>();
+
     // 필기 (SET NULL)
     @OneToMany(mappedBy = "study")
     private List<StudyNotes> studyNotes = new ArrayList<>();

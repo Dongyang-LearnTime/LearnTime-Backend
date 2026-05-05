@@ -23,7 +23,7 @@ public class StudyDailyService {
     private final StudyDailyPlanRepository studyDailyPlanRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    private static final int UNDERSTANDING_SCORE_WEIGHT = 2;
+    private static final int UNDERSTANDING_SCORE_WEIGHT = 2; // 이해도에 따른 가중치 (이해도 2면 10*2)
 
     @Transactional
     public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {

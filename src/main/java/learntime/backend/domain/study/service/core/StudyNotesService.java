@@ -7,6 +7,7 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyNotes;
+import learntime.backend.domain.study.converter.StudyNotesConverter;
 import learntime.backend.domain.study.repository.StudyNotesRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
@@ -60,11 +61,7 @@ public class StudyNotesService {
 
         validateOwnership(study, userId);
 
-        StudyNotes studyNotes = StudyNotes.builder()
-                .study(study)
-                .noteContents(request.content())
-                .noteTitle(request.title())
-                .build();
+        StudyNotes studyNotes = StudyNotesConverter.toStudyNotesEntity(study, request.title(), request.content());
 
         StudyNotes saveNotes = studyNotesRepository.save(studyNotes);
 
