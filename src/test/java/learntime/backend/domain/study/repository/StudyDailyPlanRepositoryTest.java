@@ -1,8 +1,9 @@
 package learntime.backend.domain.study.repository;
 
+import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
-import learntime.backend.domain.study.model.StudyDailyPlan.CompletionStatus;
+import learntime.backend.domain.user.enums.Role;
 import learntime.backend.domain.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,7 @@ class StudyDailyPlanRepositoryTest {
                 .email("test@test.com")
                 .password("password123")
                 .name("테스터")
-                .role(User.Role.ROLE_USER) // null 입력 시 생성자 로직에 의해 기본값 할당됨
+                .role(Role.ROLE_USER) // null 입력 시 생성자 로직에 의해 기본값 할당됨
                 .build();
 
         entityManager.persist(testUser); // 부모 엔티티 우선 영속화

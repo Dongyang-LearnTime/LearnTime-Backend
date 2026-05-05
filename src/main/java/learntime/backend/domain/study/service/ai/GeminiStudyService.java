@@ -1,11 +1,10 @@
-package learntime.backend.domain.study.service;
+package learntime.backend.domain.study.service.ai;
 
 import jakarta.annotation.PostConstruct;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
-import learntime.backend.domain.study.service.gemini.GeminiPromptParser;
 import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
@@ -19,11 +18,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+// Gemini 모델을 이용한 학습 계획 생성 서비스
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,19 +34,25 @@ public class GeminiStudyService {
     private final GeminiPromptParser promptParser;
     private final PromptQuotaUtil promptQuotaUtil;
 
+    private static final Map<String, Object> STUDY_SYSTEM_INSTRUCTION = Map.of(
+            "parts", List.of(Map.of("text", "너는 도서의 커리큘럼을 짜는 학습 계획 전문가야."))
+    );
+
+    private static final double STUDY_AI_TEMPERATURE = 0.2;
+
     @Value("classpath:prompts/study-plan-prompt.txt")
-    private Resource promptResource; // 진도 프롬프트
+    private Resource promptResource;
 
     @Value("classpath:prompts/replan-study-prompt.txt")
-    private Resource replanPromptResource; // 진도 재설계 프롬프트
+    private Resource replanPromptResource;
 
     private String promptTemplate;
     private String replanPromptTemplate;
 
+
     @PostConstruct
     public void init() {
         try {
-            // 파일 → 메모리 캐싱
             this.promptTemplate = promptResource.getContentAsString(StandardCharsets.UTF_8);
             this.replanPromptTemplate = replanPromptResource.getContentAsString(StandardCharsets.UTF_8);
         } catch (Exception e) {
@@ -55,23 +62,19 @@ public class GeminiStudyService {
 
     @Transactional
     public StudyPlanResponseDTO generateSmartStudyPlan(GeminiStudyRequestDTO request, Long userId) {
-        int periodDays = request.getValidatedStudyDays(); // 쉬는 날, 요일을 제외한 일수 계산
+        int periodDays = request.getValidatedStudyDays();
 
-        // 목차 정보 프롬프트에 들어가게 문장으로 변환
         String bookToc = IntStream.range(0, request.tocList().size())
                 .mapToObj(i -> {
                     TocListResponseDTO current = request.tocList().get(i);
-
-                    // 챕터 / 제목이 없을 수도 있으므로 빈 문자열로 처리
                     String chapter = Objects.toString(current.chapter(), "");
                     String title = Objects.toString(current.title(), "");
+                    String weightSuffix = buildWeightSuffix(request, i);
 
-                    String weightSuffix = buildWeightSuffix(request, i); // 다음 목차와 페이지 차이를 계산해서 분량 정보 추가
-
-                    return (chapter + " " + title + weightSuffix).trim(); // "챕터 제목 (페이지차)" 형태로 한 줄 생성
+                    return (chapter + " " + title + weightSuffix).trim();
                 })
-                .filter(line -> !line.isEmpty()) // 챕터/제목 모두 없는 빈 줄 제거
-                .collect(Collectors.joining("\n")); // 줄바꿈으로 이어붙임
+                .filter(line -> !line.isEmpty())
+                .collect(Collectors.joining("\n"));
 
         String userPrompt = promptTemplate.formatted(
                 periodDays,
@@ -94,39 +97,35 @@ public class GeminiStudyService {
     }
 
     private StudyPlanResponseDTO executeGeminiRequest(String userPrompt, Object requestDto, Long userId) {
-        // Gemini 이용량 차감
         promptQuotaUtil.decreasePromptQuota(userId);
 
-        Map<String, Object> requestBody = promptParser.createRequestBody(userPrompt);
+        Map<String, Object> requestBody = promptParser.createRequestBody(
+                userPrompt,
+                STUDY_SYSTEM_INSTRUCTION,
+                STUDY_AI_TEMPERATURE
+        );
 
         try {
             String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
             return promptParser.parseResponse(rawJson);
 
         } catch (Exception e) {
-            log.error("AI 학습 계획 생성 실패. Request: {}", requestDto, e);
+            log.error("AI 학습 계획 생성 실패.", e);
             promptQuotaUtil.restorePromptQuota(userId);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED);
         }
     }
 
-    // 페이지 차이(분량) 계산
     private String buildWeightSuffix(GeminiStudyRequestDTO request, int index) {
         TocListResponseDTO current = request.tocList().get(index);
-
         Integer currentPage = current.page();
 
-        // 현재 목차에 페이지 정보가 없거나 마지막이면 공백
-        if (currentPage == null) return "";
-        if (index >= request.tocList().size() - 1) return "";
+        if (currentPage == null || index >= request.tocList().size() - 1) return "";
 
         Integer nextPage = request.tocList().get(index + 1).page();
+        if (nextPage == null || nextPage <= currentPage) return "";
 
-        // 다음 페이지가 없거나 잘못된 순서면 무시
-        if (nextPage == null || nextPage <= currentPage) return ""; // 다음 페이지가 없거나 잘못된 순서면 공백
-
-        int diff = nextPage - currentPage; // 현재 목차가 차지하는 페이지 수 계산
-
+        int diff = nextPage - currentPage;
         return String.format(" (%dp)", diff);
     }
 

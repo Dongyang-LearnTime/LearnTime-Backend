@@ -32,7 +32,7 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 "AUTH_403",
                 "해당 리소스에 접근할 권한이 없습니다.",
-                accessDeniedException.getMessage());
+                "");
 
         String json = objectMapper.writeValueAsString(errorResponse);
         response.getWriter().write(json);

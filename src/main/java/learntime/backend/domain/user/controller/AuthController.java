@@ -31,7 +31,7 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "이메일, 비밀번호를 받아 검증 후 JWT 토큰을 쿠키와 반환값으로 줌.")
     public ResponseEntity<TokenResponseDTO> login(
-            @RequestBody LoginRequestDTO request,
+            @Valid @RequestBody LoginRequestDTO request,
             HttpServletResponse response
     ) {
         AuthService.TokenPair token = authService.login(request);
@@ -107,7 +107,7 @@ public class AuthController {
     @PostMapping("/signup")
     @Operation(summary = "회원가입", description = "계정을 생성함.")
     public ResponseEntity<String> signupUser(@Valid @RequestBody SignUpRequestDTO request) {
-        authService.createUser(request.userName(), request.email(), request.password());
+        authService.createUser(request);
         log.info("{} 회원가입 성공!", request.userName());
         return ResponseEntity.ok().build();
     }

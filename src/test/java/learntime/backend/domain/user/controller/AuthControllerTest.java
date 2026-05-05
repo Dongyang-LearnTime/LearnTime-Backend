@@ -1,6 +1,7 @@
 package learntime.backend.domain.user.controller;
 
 import jakarta.persistence.EntityManager;
+import learntime.backend.domain.user.enums.Role;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +47,7 @@ class AuthControllerTest {
                 .email("test123@example.com")
                 .password(passwordEncoder.encode("learntime123!!!!"))
                 .name("TestUser")
-                .role(User.Role.ROLE_USER)
+                .role(Role.ROLE_USER)
                 .build();
 
         userRepository.save(testUser);

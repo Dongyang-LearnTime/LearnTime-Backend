@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.service.component;
+package learntime.backend.domain.study.service.util;
 
 import learntime.backend.domain.study.error.code.FileErrorCode;
 import learntime.backend.domain.study.error.exception.FileException;
@@ -11,8 +11,9 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
+//학습 관련 파일 검증 유틸리티
 @Component
-public class FileValidator {
+public class StudyFileValidator {
 
     private final Tika tika = new Tika();
 
@@ -27,27 +28,23 @@ public class FileValidator {
             throw new FileException(FileErrorCode.FILE_SIZE_EXCEEDED);
         }
 
-        // 파일명에 "../" 등을 포함시켜 상위 디렉토리로 접근하는 해킹 방지
         String originalFilename = file.getOriginalFilename();
         if (StringUtils.hasText(originalFilename) && originalFilename.contains("..")) {
             throw new FileException(FileErrorCode.FILE_NAME_INVALID);
         }
 
-        // 1차 MIME 타입 검증 (
         String clientContentType = file.getContentType();
         if (clientContentType == null || !ALLOWED_TYPES.contains(clientContentType)) {
             throw new FileException(FileErrorCode.INVALID_FILE_FORMAT);
         }
 
-        // File Signature (Magic Number) 기반 실제 포맷 검증
         try (InputStream inputStream = file.getInputStream()) {
-            String actualMimeType = tika.detect(inputStream);  // Tika가 파일의 실제 헤더 바이트를 분석하여 진짜 MIME 타입을 반환
+            String actualMimeType = tika.detect(inputStream);
 
             if (!ALLOWED_TYPES.contains(actualMimeType)) {
                 throw new FileException(FileErrorCode.FILE_CONTENT_MISMATCH);
             }
         } catch (IOException e) {
-            // 스트림 읽기 실패 등 네트워크/I/O 예외 처리
             throw new FileException(FileErrorCode.FILE_READ_ERROR);
         }
     }

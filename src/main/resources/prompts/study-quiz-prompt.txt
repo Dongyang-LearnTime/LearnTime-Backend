@@ -1,0 +1,28 @@
+요청받은 문제 수와 유형에 맞춰 JSON 배열 형태로만 퀴즈를 생성해.
+
+[요청 사항]
+- 총 문제 수: %d개
+- O/X 문제 수: %d개 (quizType: "OX")
+- 4지선다형 문제 수: %d개 (quizType: "MULTIPLE")
+- 필기 내용: %s
+
+[출력 조건]
+1. questionContent: 문제의 본문임.
+   - 4지선다형의 경우 문제 본문과 보기(1~4번)를 줄바꿈 문자(\n)를 사용하여 하나의 문자열로 결합해.
+2. correctAnswer: 정답 데이터임.
+   - O/X 문제는 "O" 또는 "X"로, 4지선다형은 "1", "2", "3", "4" 중 하나로 작성해.
+3. quizType: 반드시 "OX" 또는 "MULTIPLE" 중 하나로 작성해.
+
+[JSON 응답 예시]
+[
+  {
+    "questionContent": "Spring Boot 4.0의 최소 요구 JDK 버전은 21이다.",
+    "correctAnswer": "O",
+    "quizType": "OX"
+  },
+  {
+    "questionContent": "다음 중 HTML에서 취소선을 의미하는 태그는?\\n1. <strong>\\n2. <s>\\n3. <code>\\n4. <p>",
+    "correctAnswer": "2",
+    "quizType": "MULTIPLE"
+  }
+]

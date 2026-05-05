@@ -1,8 +1,7 @@
-package learntime.backend.domain.study.service;
+package learntime.backend.domain.study.service.ai;
 
 import jakarta.annotation.PostConstruct;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
-import learntime.backend.domain.study.service.gemini.GeminiPromptParser;
 import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
@@ -22,6 +21,9 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * AI 이미지 분석(OCR)을 이용한 목차 추출 서비스
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,7 +32,6 @@ public class TocExtractionService {
     private final GeminiClient geminiClient;
     private final GeminiPromptParser promptParser;
 
-    // 프롬프트 폴더에서 OCR 지시문 주입
     @Value("classpath:prompts/toc-extract-prompt.txt")
     private Resource promptResource;
 
@@ -47,17 +48,15 @@ public class TocExtractionService {
 
     public List<TocListResponseDTO> extractTocAsJson(MultipartFile imageFile) {
         try {
-            // 메모리 최적화: MultipartFile의 Stream을 바로 읽어 리사이징 후 ByteArrayOutputStream에 저장
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             Thumbnails.of(imageFile.getInputStream())
-                    .size(1024, 1024) // Gemini Vision 처리 권장 해상도 수준으로 축소
+                    .size(1024, 1024)
                     .outputFormat("jpg")
-                    .outputQuality(0.7) // 품질 70% 압축
+                    .outputQuality(0.7)
                     .toOutputStream(os);
 
-            // Base64 인코딩: 압축된 바이트 배열을 사용하여 페이로드 크기 대폭 감소
             String base64Image = Base64.getEncoder().encodeToString(os.toByteArray());
-            String mimeType = "image/jpeg"; // 압축 포맷 고정
+            String mimeType = "image/jpeg";
 
             Map<String, Object> requestBody = promptParser.createOcrRequestBody(promptTemplate, base64Image, mimeType);
             String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);

@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.service;
+package learntime.backend.domain.study.service.core;
 
 import learntime.backend.domain.point.dto.PointEventDTO;
 import learntime.backend.domain.point.enums.PointPolicy;
@@ -6,12 +6,13 @@ import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.enums.ProgressStatus;
+import learntime.backend.domain.study.converter.StudyConverter;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
-import learntime.backend.domain.study.service.component.StudyPlanDateCalculator;
-import learntime.backend.domain.study.service.db.StudyRestScheduleManager;
+import learntime.backend.domain.study.service.util.StudyDateCalculator;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.exception.BusinessException;
@@ -29,16 +30,17 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
+// 학습 도메인의 핵심 비즈니스 로직 및 DB 연산을 담당하는 서비스
 @Service
 @RequiredArgsConstructor
-public class StudyCommandService {
+public class StudyCoreService {
 
     private final StudyRepository studyRepository;
     private final StudyDailyPlanRepository studyDailyPlanRepository;
     private final UserRepository userRepository;
-    private final StudyRestScheduleManager studyRestScheduleManager;
+    private final StudyRestManager studyRestManager;
     private final PromptQuotaUtil promptQuotaUtil;
-    private final StudyPlanDateCalculator studyPlanDateCalculator;
+    private final StudyDateCalculator studyDateCalculator;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -50,19 +52,13 @@ public class StudyCommandService {
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         try {
-            Study study = Study.builder()
-                    .studyTitle(request.studyTitle())
-                    .bookTitle(request.bookTitle())
-                    .startDate(request.startDate())
-                    .endDate(request.endDate())
-                    .user(user)
-                    .build();
+            Study study = StudyConverter.toStudyEntity(request, user);
 
             studyRepository.save(study);
 
             // 쉬는 날짜 정보 저장
-            studyRestScheduleManager.saveRestDates(study, request.restDates());
-            studyRestScheduleManager.saveRestDays(study, request.restDays());
+            studyRestManager.saveRestDates(study, request.restDates());
+            studyRestManager.saveRestDays(study, request.restDays());
 
             // 쉬는 날짜를 제외한 학습 가능한 날짜 계산
             List<LocalDate> planDates = buildPlanDatesFromRequest(
@@ -74,26 +70,18 @@ public class StudyCommandService {
 
             List<StudyDailyPlan> dailyPlans = new java.util.ArrayList<>(geminiResult.dailyPlans().size());
 
-            // DTO를 반복문를 돌며 엔티티로 변환
             for (int i = 0; i < geminiResult.dailyPlans().size(); i++) {
                 var planDto = geminiResult.dailyPlans().get(i);
-
-                dailyPlans.add(StudyDailyPlan.builder()
-                        .study(study)
-                        .dayNumber(planDto.day())
-                        .planDate(planDates.get(i))
-                        .planContent(planDto.tasks())
-                        .build());
+                dailyPlans.add(StudyConverter.toStudyDailyPlanEntity(study, planDto, planDates.get(i)));
             }
 
             studyDailyPlanRepository.saveAll(dailyPlans);
 
-            // 포인트 지급
             eventPublisher.publishEvent(
                     new PointEventDTO(userId,
-                            PointPolicy.STUDY_PLAN_CREATED.getAmount(), // 포인트
+                            PointPolicy.STUDY_PLAN_CREATED.getAmount(),
                             PointType.EARN,
-                            PointPolicy.STUDY_PLAN_CREATED.getDescription() // 설명
+                            PointPolicy.STUDY_PLAN_CREATED.getDescription()
                     )
             );
 
@@ -112,17 +100,15 @@ public class StudyCommandService {
             Study study = studyRepository.findById(studyId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
 
-            // 학습 기본 정보 수정
             study.updateStudyInfo(request.studyTitle(), request.startDate(), request.endDate());
 
             study.getRestDates().clear();
             study.getRestDays().clear();
 
-            studyRestScheduleManager.saveRestDates(study, request.restDates());
-            studyRestScheduleManager.saveRestDays(study, request.restDays());
+            studyRestManager.saveRestDates(study, request.restDates());
+            studyRestManager.saveRestDays(study, request.restDays());
 
-            // 완료되지 않은 일정만 삭제
-            studyDailyPlanRepository.deleteUncompletedPlans(study, StudyDailyPlan.ProgressStatus.COMPLETED);
+            studyDailyPlanRepository.deleteUncompletedPlans(study, ProgressStatus.COMPLETED);
 
             int lastDayNumber = studyDailyPlanRepository.findMaxDayNumberByStudy(study);
 
@@ -137,13 +123,7 @@ public class StudyCommandService {
 
             for (int i = 0; i < geminiResult.dailyPlans().size(); i++) {
                 var planDto = geminiResult.dailyPlans().get(i);
-
-                newDailyPlans.add(StudyDailyPlan.builder()
-                        .study(study)
-                        .dayNumber(lastDayNumber + planDto.day())
-                        .planDate(planDates.get(i))
-                        .planContent(planDto.tasks())
-                        .build());
+                newDailyPlans.add(StudyConverter.toStudyDailyPlanEntity(study, planDto, planDates.get(i), lastDayNumber));
             }
 
             studyDailyPlanRepository.saveAll(newDailyPlans);
@@ -155,7 +135,6 @@ public class StudyCommandService {
         }
     }
 
-    // 남은 학습 내용을 합쳐서 문자열로
     @Transactional(readOnly = true)
     public String getRemainingStudyContent(Long studyId) {
         Study study = studyRepository.findById(studyId)
@@ -163,35 +142,32 @@ public class StudyCommandService {
 
         return String.join("\n", studyDailyPlanRepository.findRemainingContents(
                 study,
-                StudyDailyPlan.ProgressStatus.COMPLETED
+                ProgressStatus.COMPLETED
         ));
     }
 
+    // 쉬는 날, 쉬는 요일 추출
     @Transactional(readOnly = true)
     public int calculateRemainingStudyDays(Long studyId, GeminiReplanRequestDTO request) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
 
-        // 쉬는 날짜를 Set 으로 변환
         Set<DayOfWeek> restDays = request.restDays() == null
                 ? Set.of()
                 : Set.copyOf(request.restDays());
 
-        // 쉬는 요일 Set으로 변환
         Set<LocalDate> restDates = request.restDates() == null
                 ? Set.of()
                 : Set.copyOf(request.restDates());
 
-        // DB에서 완료된 학습 계획 개수 조회
         long completedCount = studyDailyPlanRepository.countCompletedPlansByStudyAndDateRange(
                 study,
-                StudyDailyPlan.ProgressStatus.COMPLETED,
+                ProgressStatus.COMPLETED,
                 request.startDate(),
                 request.endDate()
         );
 
-        // 남은 학습 일수 계산
-        return studyPlanDateCalculator.calculateRemainingDays(
+        return studyDateCalculator.calculateRemainingDays(
                 request.startDate(),
                 request.endDate(),
                 restDays,
@@ -200,21 +176,27 @@ public class StudyCommandService {
         );
     }
 
+    @Transactional
+    public void deleteStudy(Long studyId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new IllegalArgumentException("공부 진도를 찾을 수 없습니다."));
+
+        studyRepository.deleteById(studyId);
+    }
+
     private List<LocalDate> buildPlanDatesFromRequest(
             LocalDate startDate,
             int planSize,
             List<DayOfWeek> restDays,
             List<LocalDate> restDates
     ) {
-        // List → Set 변환
         Set<DayOfWeek> restDaysSet =
                 restDays == null ? Set.of() : Set.copyOf(restDays);
 
         Set<LocalDate> restDatesSet =
                 restDates == null ? Set.of() : Set.copyOf(restDates);
 
-        // 날짜 계산 위임
-        return studyPlanDateCalculator.buildPlanDates(
+        return studyDateCalculator.buildPlanDates(
                 startDate,
                 planSize,
                 restDaysSet,

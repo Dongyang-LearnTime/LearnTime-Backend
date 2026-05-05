@@ -3,6 +3,7 @@ package learntime.backend.domain.user.service;
 import jakarta.persistence.EntityManager;
 import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.user.enums.Role;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +34,7 @@ class UserServiceTest {
                 .email("test@test.com")
                 .password("1234")
                 .name("tester")
-                .role(User.Role.ROLE_USER)
+                .role(Role.ROLE_USER)
                 .build();
 
         // WeightRecord

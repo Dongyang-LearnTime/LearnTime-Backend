@@ -3,12 +3,12 @@ package learntime.backend.domain.study.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import learntime.backend.domain.study.enums.CompletionStatus;
+import learntime.backend.domain.study.enums.ProgressStatus;
+import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -21,13 +21,14 @@ import java.time.LocalDate;
         }
 )
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StudyDailyPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long studyDailyPlanId;
 
-    @ManyToOne(fetch = FetchType.LAZY) // N+1 문제 방지를 위한 지연 로딩 필수
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id", nullable = false)
     private Study study;
 
@@ -57,6 +58,8 @@ public class StudyDailyPlan {
     @Max(value = 5, message = "점수는 최대 5점까지 가능합니다.")
     private Integer understandingScore;
 
+    private LocalDateTime completionDate; // 완료 날짜
+
     @Builder
     public StudyDailyPlan(Study study, Integer dayNumber, LocalDate planDate, String planContent) {
         this.study = study;
@@ -85,14 +88,5 @@ public class StudyDailyPlan {
         this.understandingScore = understandingScore;
     }
 
-    public enum ProgressStatus {
-        NOT_STARTED,  // 시작 전
-        IN_PROGRESS,  // 진행 중
-        COMPLETED     // 완료
-    }
 
-    public enum CompletionStatus {
-        SUCCESS,      // 완료 (성공)
-        FAILURE       // 실패 (미달성 등)
-    }
 }

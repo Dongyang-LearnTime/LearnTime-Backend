@@ -59,6 +59,9 @@ dependencies {
 
     // thumbnailator
     implementation 'net.coobird:thumbnailator:0.4.20'
+
+    // Jsoup
+    implementation 'org.jsoup:jsoup:1.17.2'
 }
 
 tasks.named('test') {
