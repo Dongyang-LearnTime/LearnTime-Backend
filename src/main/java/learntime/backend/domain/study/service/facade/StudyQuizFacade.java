@@ -109,8 +109,8 @@ public class StudyQuizFacade {
         }
     }
 
-    public StudyQuizResultResponseDTO solveStudyQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
-        return studyQuizService.solveQuiz(requests, userId);
+    public void solveStudyQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
+        studyQuizService.solveQuiz(requests, userId);
     }
 
 

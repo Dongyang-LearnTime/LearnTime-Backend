@@ -85,10 +85,10 @@ public class StudyQuizController {
     @Operation(
             summary = "퀴즈 풀이",
             description = "퀴즈 정답을 받아서 DB에 저장하고, 결과에 따라 포인트를 지급함.")
-    public ResponseEntity<StudyQuizResultResponseDTO> solveStudyQuiz(@Valid @RequestBody List<QuizSolveRequestDTO> request,
+    public ResponseEntity<Void> solveStudyQuiz(@Valid @RequestBody List<QuizSolveRequestDTO> request,
                                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
-        StudyQuizResultResponseDTO result = studyQuizFacade.solveStudyQuiz(request, userDetails.userId());
-        return ResponseEntity.ok(result);
+        studyQuizFacade.solveStudyQuiz(request, userDetails.userId());
+        return ResponseEntity.ok().build();
     }
 
 

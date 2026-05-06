@@ -72,7 +72,7 @@ public class StudyQuizService {
     }
 
     @Transactional
-    public StudyQuizResultResponseDTO solveQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
+    public void solveQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
         List<Long> questionIds = requests.stream()
                 .map(QuizSolveRequestDTO::quizQuestionId)
                 .toList();
@@ -128,9 +128,6 @@ public class StudyQuizService {
                     eventDescription
             ));
         }
-
-        return StudyQuizConverter.
-                toStudyQuizResultResponseDTO(quizHistory, quizSolvePoint);
     }
 
     @Transactional(readOnly = true)
