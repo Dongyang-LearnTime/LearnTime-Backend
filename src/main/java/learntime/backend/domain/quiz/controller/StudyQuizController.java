@@ -1,16 +1,16 @@
-package learntime.backend.domain.study.controller;
+package learntime.backend.domain.quiz.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import learntime.backend.domain.study.dto.request.QuizCreateRequestDTO;
-import learntime.backend.domain.study.dto.request.QuizSolveRequestDTO;
-import learntime.backend.domain.study.dto.request.UpdateQuizTitleRequestDTO;
-import learntime.backend.domain.study.dto.response.QuizHistoryListResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyQuizListResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyQuizResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyQuizResultResponseDTO;
-import learntime.backend.domain.study.service.facade.StudyQuizFacade;
+import learntime.backend.domain.quiz.dto.request.QuizCreateRequestDTO;
+import learntime.backend.domain.quiz.dto.request.QuizSolveRequestDTO;
+import learntime.backend.domain.quiz.dto.request.UpdateQuizTitleRequestDTO;
+import learntime.backend.domain.quiz.dto.response.QuizHistoryListResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizListResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizResultResponseDTO;
+import learntime.backend.domain.quiz.service.StudyQuizFacade;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,14 +58,14 @@ public class StudyQuizController {
     }
 
 
-    @GetMapping("/{studyQuizId}/result")
+    @GetMapping("/history/{quizHistoryId}/result")
     @Operation(
             summary = "퀴즈 풀이 결과 조회",
             description = "퀴즈 문제, 사용자가 제출한 답안, 실제 정답 및 정답 여부 등을 조회함."
     )
-    public ResponseEntity<StudyQuizResultResponseDTO> getStudyQuizResult(@PathVariable Long studyQuizId,
+    public ResponseEntity<StudyQuizResultResponseDTO> getStudyQuizResult(@PathVariable Long quizHistoryId,
                                                                          @AuthenticationPrincipal CustomUserDetails userDetails) {
-        StudyQuizResultResponseDTO result = studyQuizFacade.getQuizResult(studyQuizId, userDetails.userId());
+        StudyQuizResultResponseDTO result = studyQuizFacade.getQuizResult(quizHistoryId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
 
@@ -85,10 +85,10 @@ public class StudyQuizController {
     @Operation(
             summary = "퀴즈 풀이",
             description = "퀴즈 정답을 받아서 DB에 저장하고, 결과에 따라 포인트를 지급함.")
-    public ResponseEntity<Void> solveStudyQuiz(@Valid @RequestBody List<QuizSolveRequestDTO> request,
+    public ResponseEntity<Long> solveStudyQuiz(@Valid @RequestBody List<QuizSolveRequestDTO> request,
                                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
-        studyQuizFacade.solveStudyQuiz(request, userDetails.userId());
-        return ResponseEntity.ok().build();
+        Long quizHistoryId = studyQuizFacade.solveStudyQuiz(request, userDetails.userId());
+        return ResponseEntity.ok(quizHistoryId);
     }
 
 

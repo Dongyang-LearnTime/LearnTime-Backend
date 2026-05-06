@@ -11,20 +11,20 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/user/me")
 @RequiredArgsConstructor
 public class MyPageController {
 
     private final UserService userService;
 
      // 마이페이지 정보 조회
-    @GetMapping("/me")
+    @GetMapping
     public ResponseEntity<MyPageResponseDTO> getMyPage(@AuthenticationPrincipal CustomUserDetails user) {
         return ResponseEntity.ok(userService.getMyInfo(user.getUsername()));
     }
 
     // 마이페이지 정보 수정
-    @PutMapping("/me")
+    @PutMapping
     public ResponseEntity<MyPageResponseDTO> updateMyPage(
             @AuthenticationPrincipal CustomUserDetails user,
             @Valid @RequestBody SignUpRequestDTO request) { // 기존 DTO 재사용

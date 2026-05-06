@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.enums;
+package learntime.backend.domain.quiz.enums;
 
 public enum QuizStatus {
     NOT_STARTED, // 안 푼 상태

@@ -1,7 +1,7 @@
-package learntime.backend.domain.study.model;
+package learntime.backend.domain.quiz.model;
 
 import jakarta.persistence.*;
-import learntime.backend.domain.study.enums.QuizType;
+import learntime.backend.domain.quiz.enums.QuizType;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

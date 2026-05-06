@@ -1,23 +1,21 @@
-package learntime.backend.domain.study.service.core;
+package learntime.backend.domain.quiz.service;
 
 import learntime.backend.domain.point.dto.PointEventDTO;
 import learntime.backend.domain.point.enums.PointPolicy;
 import learntime.backend.domain.point.enums.PointType;
-import learntime.backend.domain.study.dto.request.QuizSolveRequestDTO;
-import learntime.backend.domain.study.dto.request.UpdateQuizTitleRequestDTO;
-import learntime.backend.domain.study.dto.response.QuizHistoryListResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyQuizListResponseDTO;
-import learntime.backend.domain.study.dto.response.QuizQuestionResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyQuizResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyQuizResultResponseDTO;
+import learntime.backend.domain.quiz.dto.request.QuizSolveRequestDTO;
+import learntime.backend.domain.quiz.dto.response.QuizHistoryListResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizListResponseDTO;
+import learntime.backend.domain.quiz.dto.response.QuizQuestionResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
-import learntime.backend.domain.study.model.StudyQuiz;
-import learntime.backend.domain.study.model.QuizQuestion;
-import learntime.backend.domain.study.converter.StudyQuizConverter;
-import learntime.backend.domain.study.repository.QuizQuestionRepository;
-import learntime.backend.domain.study.repository.StudyQuizRepository;
+import learntime.backend.domain.quiz.model.StudyQuiz;
+import learntime.backend.domain.quiz.model.QuizQuestion;
+import learntime.backend.domain.quiz.converter.StudyQuizConverter;
+import learntime.backend.domain.quiz.repository.QuizQuestionRepository;
+import learntime.backend.domain.quiz.repository.StudyQuizRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -28,9 +26,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import learntime.backend.domain.study.model.QuizAnswer;
-import learntime.backend.domain.study.model.QuizHistory;
-import learntime.backend.domain.study.repository.QuizHistoryRepository;
+import learntime.backend.domain.quiz.model.QuizAnswer;
+import learntime.backend.domain.quiz.model.QuizHistory;
+import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -55,6 +53,15 @@ public class StudyQuizService {
         return StudyQuizConverter.toQuizHistoryListResponseDTO(histories);
     }
 
+    @Transactional(readOnly = true)
+    public StudyQuizResultResponseDTO getQuizResult(Long quizHistoryId) {
+        QuizHistory quizHistory = quizHistoryRepository.findById(quizHistoryId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_HISTORY_NOT_FOUND));
+
+        return StudyQuizConverter.
+                toStudyQuizResultResponseDTO(quizHistory, null);
+    }
+
     @Transactional
     public Long saveStudyQuiz(Study study, List<QuizQuestionResponseDTO> questionDos) {
         String quizTitle = study.getStudyTitle() + " 퀴즈 " + UUID.randomUUID().toString().substring(0, 8);
@@ -72,7 +79,7 @@ public class StudyQuizService {
     }
 
     @Transactional
-    public void solveQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
+    public Long solveQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
         List<Long> questionIds = requests.stream()
                 .map(QuizSolveRequestDTO::quizQuestionId)
                 .toList();
@@ -133,16 +140,8 @@ public class StudyQuizService {
                     eventDescription
             ));
         }
-    }
 
-    @Transactional(readOnly = true)
-    public StudyQuizResultResponseDTO getQuizResult(Long studyQuizId) {
-        QuizHistory quizHistory = quizHistoryRepository
-                .findFirstByStudyQuiz_StudyQuizIdOrderByAttemptNumberDesc(studyQuizId)
-                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_HISTORY_NOT_FOUND));
-
-        return StudyQuizConverter.
-                toStudyQuizResultResponseDTO(quizHistory, null);
+        return quizHistory.getQuizHistoryId();
     }
 
 }

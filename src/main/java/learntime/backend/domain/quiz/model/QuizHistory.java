@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.model;
+package learntime.backend.domain.quiz.model;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

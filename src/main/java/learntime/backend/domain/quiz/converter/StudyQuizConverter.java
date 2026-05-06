@@ -1,15 +1,15 @@
-package learntime.backend.domain.study.converter;
+package learntime.backend.domain.quiz.converter;
 
-import learntime.backend.domain.study.dto.response.QuizQuestionResponseDTO;
-import learntime.backend.domain.study.dto.response.QuizHistoryListResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyQuizListResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyQuizResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyQuizResultResponseDTO;
-import learntime.backend.domain.study.model.QuizAnswer;
-import learntime.backend.domain.study.model.QuizHistory;
-import learntime.backend.domain.study.model.QuizQuestion;
+import learntime.backend.domain.quiz.dto.response.QuizQuestionResponseDTO;
+import learntime.backend.domain.quiz.dto.response.QuizHistoryListResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizListResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizResultResponseDTO;
+import learntime.backend.domain.quiz.model.QuizAnswer;
+import learntime.backend.domain.quiz.model.QuizHistory;
+import learntime.backend.domain.quiz.model.QuizQuestion;
 import learntime.backend.domain.study.model.Study;
-import learntime.backend.domain.study.model.StudyQuiz;
+import learntime.backend.domain.quiz.model.StudyQuiz;
 
 import java.util.List;
 

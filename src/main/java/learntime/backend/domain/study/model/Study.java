@@ -1,6 +1,7 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.quiz.model.StudyQuiz;
 import learntime.backend.domain.user.model.User;
 import lombok.AccessLevel;
 import lombok.Builder;

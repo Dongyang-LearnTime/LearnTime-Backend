@@ -1,6 +1,6 @@
-package learntime.backend.domain.study.repository;
+package learntime.backend.domain.quiz.repository;
 
-import learntime.backend.domain.study.model.QuizHistory;
+import learntime.backend.domain.quiz.model.QuizHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

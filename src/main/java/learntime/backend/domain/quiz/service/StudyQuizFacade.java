@@ -1,23 +1,20 @@
-package learntime.backend.domain.study.service.facade;
+package learntime.backend.domain.quiz.service;
 
-import jakarta.validation.Valid;
-import learntime.backend.domain.study.converter.StudyQuizConverter;
-import learntime.backend.domain.study.dto.request.QuizCreateRequestDTO;
-import learntime.backend.domain.study.dto.request.QuizSolveRequestDTO;
-import learntime.backend.domain.study.dto.request.UpdateQuizTitleRequestDTO;
-import learntime.backend.domain.study.dto.response.*;
+import learntime.backend.domain.quiz.dto.request.QuizSolveRequestDTO;
+import learntime.backend.domain.quiz.dto.request.UpdateQuizTitleRequestDTO;
+import learntime.backend.domain.quiz.dto.response.*;
+import learntime.backend.domain.quiz.converter.StudyQuizConverter;
+import learntime.backend.domain.quiz.dto.request.QuizCreateRequestDTO;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
-import learntime.backend.domain.study.model.QuizHistory;
+import learntime.backend.domain.quiz.model.QuizHistory;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyNotes;
-import learntime.backend.domain.study.model.StudyQuiz;
-import learntime.backend.domain.study.repository.QuizHistoryRepository;
+import learntime.backend.domain.quiz.model.StudyQuiz;
+import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
 import learntime.backend.domain.study.repository.StudyNotesRepository;
-import learntime.backend.domain.study.repository.StudyQuizRepository;
+import learntime.backend.domain.quiz.repository.StudyQuizRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
-import learntime.backend.domain.study.service.ai.GeminiQuizService;
-import learntime.backend.domain.study.service.core.StudyQuizService;
 import learntime.backend.global.utils.AuthorizationUtil;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
@@ -73,11 +70,11 @@ public class StudyQuizFacade {
     }
 
     @Transactional(readOnly = true)
-    public StudyQuizResultResponseDTO getQuizResult(Long studyQuizId, Long userId) {
-        StudyQuiz studyQuiz = studyQuizRepository.findById(studyQuizId)
-                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
-        AuthorizationUtil.verifyOwnership(userId, studyQuiz.getStudy().getUser().getUserId());
-        return studyQuizService.getQuizResult(studyQuizId);
+    public StudyQuizResultResponseDTO getQuizResult(Long quizHistoryId, Long userId) {
+        QuizHistory quizHistory = quizHistoryRepository.findById(quizHistoryId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_HISTORY_NOT_FOUND));
+        AuthorizationUtil.verifyOwnership(userId, quizHistory.getStudyQuiz().getStudy().getUser().getUserId());
+        return studyQuizService.getQuizResult(quizHistoryId);
     }
 
     // 필기를 기반으로 퀴즈 추출
@@ -109,8 +106,8 @@ public class StudyQuizFacade {
         }
     }
 
-    public void solveStudyQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
-        studyQuizService.solveQuiz(requests, userId);
+    public Long solveStudyQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
+        return studyQuizService.solveQuiz(requests, userId);
     }
 
 

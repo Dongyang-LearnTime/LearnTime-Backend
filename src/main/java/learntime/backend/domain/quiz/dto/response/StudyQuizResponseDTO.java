@@ -1,7 +1,7 @@
-package learntime.backend.domain.study.dto.response;
+package learntime.backend.domain.quiz.dto.response;
 
-import learntime.backend.domain.study.enums.QuizStatus;
-import learntime.backend.domain.study.enums.QuizType;
+import learntime.backend.domain.quiz.enums.QuizStatus;
+import learntime.backend.domain.quiz.enums.QuizType;
 import lombok.Builder;
 
 import java.util.List;

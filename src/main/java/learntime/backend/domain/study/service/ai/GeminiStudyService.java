@@ -9,6 +9,7 @@ import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
+import learntime.backend.global.utils.GeminiPromptParser;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

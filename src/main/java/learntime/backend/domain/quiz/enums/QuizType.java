@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.enums;
+package learntime.backend.domain.quiz.enums;
 
 public enum QuizType {
     OX,        // O/X 문제

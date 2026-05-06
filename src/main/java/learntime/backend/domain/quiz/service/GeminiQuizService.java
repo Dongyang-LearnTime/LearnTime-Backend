@@ -1,7 +1,8 @@
-package learntime.backend.domain.study.service.ai;
+package learntime.backend.domain.quiz.service;
 
 import jakarta.annotation.PostConstruct;
-import learntime.backend.domain.study.dto.response.QuizQuestionResponseDTO;
+import learntime.backend.domain.quiz.dto.response.QuizQuestionResponseDTO;
+import learntime.backend.global.utils.GeminiPromptParser;
 import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;

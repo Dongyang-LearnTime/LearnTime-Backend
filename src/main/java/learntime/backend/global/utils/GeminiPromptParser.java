@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.service.ai;
+package learntime.backend.global.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
-import learntime.backend.domain.study.dto.response.QuizQuestionResponseDTO;
+import learntime.backend.domain.quiz.dto.response.QuizQuestionResponseDTO;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import lombok.RequiredArgsConstructor;

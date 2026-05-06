@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.dto.response;
+package learntime.backend.domain.quiz.dto.response;
 
 import lombok.Builder;
 
