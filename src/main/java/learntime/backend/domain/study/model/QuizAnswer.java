@@ -24,7 +24,7 @@ public class QuizAnswer {
     @JoinColumn(name = "quiz_question_id", nullable = false)
     private QuizQuestion quizQuestion;
 
-    @Column(length = 255)
+    @Column(length = 255, nullable = false)
     private String userAnswer;
 
     @Column(columnDefinition = "TINYINT(1)", nullable = false)

@@ -8,6 +8,7 @@ import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.StudyDailyPlan;
 import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
+import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,8 @@ public class StudyDailyService {
     public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
                 .orElseThrow(() -> new IllegalArgumentException("공부 일일 진도를 찾을 수 없습니다."));
+
+        AuthorizationUtil.verifyOwnership(userId, studyDailyPlan.getStudy().getUser().getUserId());
 
         studyDailyPlan.setProgressStatus(ProgressStatus.COMPLETED);
         studyDailyPlan.setCompletionStatus(request.completionStatus());

@@ -15,6 +15,9 @@ public enum ErrorCode implements BaseErrorCode {
     // Youtube 관련 에러
     YOUTUBE_API_ERROR(HttpStatus.BAD_GATEWAY, "YOUTUBE-001", "YouTube 응답에 문제가 발생했습니다."),
 
+    // 신체 데이터 암호화 관련 에러
+    ENCRYPTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON-500", "데이터 암/복호화 중 오류가 발생했습니다."),
+
     // 기타 공통 에러
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON-001", "잘못된 입력값입니다.");
 

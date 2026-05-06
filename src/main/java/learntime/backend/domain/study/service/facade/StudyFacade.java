@@ -44,8 +44,8 @@ public class StudyFacade {
      * 기존 학습 계획 재설계 및 업데이트
      */
     public StudyPlanResponseDTO replanAndSaveStudy(Long studyId, GeminiReplanRequestDTO request, Long userId) {
-        String remainingContent = studyCoreService.getRemainingStudyContent(studyId);
-        int remainingDays = studyCoreService.calculateRemainingStudyDays(studyId, request);
+        String remainingContent = studyCoreService.getRemainingStudyContent(studyId, userId);
+        int remainingDays = studyCoreService.calculateRemainingStudyDays(studyId, request, userId);
 
         StudyPlanResponseDTO result = geminiStudyService.generateReplan(request, remainingContent, remainingDays, userId);
         studyCoreService.replanStudy(studyId, request, result, userId);

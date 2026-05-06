@@ -161,4 +161,18 @@ public class User {
         return false;
     }
 
+    // 닉네임(이름) 정보 수정
+    public void updateInfo(String name) {
+        if (name != null && !name.isBlank()) {
+            this.name = name;
+        }
+    }
+
+    //비밀번호 수정 (암호화된 비밀번호를 인자로 받음)
+    public void updatePassword(String encodedPassword) {
+        if (encodedPassword != null && !encodedPassword.isBlank()) {
+            this.password = encodedPassword;
+        }
+    }
+
 }

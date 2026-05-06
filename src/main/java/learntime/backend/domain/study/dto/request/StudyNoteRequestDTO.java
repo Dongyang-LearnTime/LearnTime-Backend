@@ -1,11 +1,13 @@
 package learntime.backend.domain.study.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
 @Builder
+@Schema(description = "공부 필기 저장 요청 DTO")
 public record StudyNoteRequestDTO(
         @NotNull(message = "공부 ID는 필수입니다.")
         Long studyId,

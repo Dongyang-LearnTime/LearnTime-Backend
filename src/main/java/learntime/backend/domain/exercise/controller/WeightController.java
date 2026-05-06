@@ -31,7 +31,7 @@ public class WeightController {
                 .id(saved.getWeightRecordId())
                 .weight(saved.getWeight())
                 .bodyFat(saved.getBodyFat())
-                .createAt(saved.getCreateAt())
+                .createdAt(saved.getCreatedAt())
                 .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

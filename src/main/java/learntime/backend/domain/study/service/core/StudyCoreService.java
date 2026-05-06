@@ -19,6 +19,7 @@ import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
+import learntime.backend.global.utils.AuthorizationUtil;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -99,6 +100,8 @@ public class StudyCoreService {
         try {
             Study study = studyRepository.findById(studyId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+                    
+            AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
 
             study.updateStudyInfo(request.studyTitle(), request.startDate(), request.endDate());
 
@@ -136,9 +139,11 @@ public class StudyCoreService {
     }
 
     @Transactional(readOnly = true)
-    public String getRemainingStudyContent(Long studyId) {
+    public String getRemainingStudyContent(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+
+        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
 
         return String.join("\n", studyDailyPlanRepository.findRemainingContents(
                 study,
@@ -148,9 +153,11 @@ public class StudyCoreService {
 
     // 쉬는 날, 쉬는 요일 추출
     @Transactional(readOnly = true)
-    public int calculateRemainingStudyDays(Long studyId, GeminiReplanRequestDTO request) {
+    public int calculateRemainingStudyDays(Long studyId, GeminiReplanRequestDTO request, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+
+        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
 
         Set<DayOfWeek> restDays = request.restDays() == null
                 ? Set.of()
@@ -177,9 +184,11 @@ public class StudyCoreService {
     }
 
     @Transactional
-    public void deleteStudy(Long studyId) {
+    public void deleteStudy(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new IllegalArgumentException("공부 진도를 찾을 수 없습니다."));
+
+        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
 
         studyRepository.deleteById(studyId);
     }

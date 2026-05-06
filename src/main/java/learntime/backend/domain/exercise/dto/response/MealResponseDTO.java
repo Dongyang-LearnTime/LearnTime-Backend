@@ -13,5 +13,5 @@ public class MealResponseDTO {
     private Integer calories;
     private Double protein;
     private Boolean isEstimated;
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 }

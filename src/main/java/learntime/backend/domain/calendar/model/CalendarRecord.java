@@ -37,7 +37,7 @@ public class CalendarRecord {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime createAt; // 생성 시간
+    private LocalDateTime createdAt; // 생성 시간
 
     // 일정 수정 기능을 위한 편의 메서드
     public void update(String title, String content, LocalDateTime targetDate, Boolean isCompleted) {

@@ -10,6 +10,7 @@ import learntime.backend.domain.study.model.StudyNotes;
 import learntime.backend.domain.study.converter.StudyNotesConverter;
 import learntime.backend.domain.study.repository.StudyNotesRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
+import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,18 +26,12 @@ public class StudyNotesService {
     private final StudyRepository studyRepository;
     private final StudyNotesRepository studyNotesRepository;
 
-    private void validateOwnership(Study study, Long userId) {
-        if (study == null || !study.getUser().getUserId().equals(userId)) {
-            throw new StudyException(StudyErrorCode.STUDY_UNAUTHORIZED_ACCESS);
-        }
-    }
-
     @Transactional(readOnly = true)
     public StudyNotesResponseDTO getNote(Long studyNotesId, Long userId) {
         StudyNotes studyNotes = studyNotesRepository.findById(studyNotesId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOTE_NOT_FOUND));
 
-        validateOwnership(studyNotes.getStudy(), userId);
+        AuthorizationUtil.verifyOwnership(userId, studyNotes.getStudy().getUser().getUserId());
 
         return StudyNotesResponseDTO.from(studyNotes);
     }
@@ -46,7 +41,7 @@ public class StudyNotesService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
                 
-        validateOwnership(study, userId);
+        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
         
         List<StudyNotes> notes = studyNotesRepository.findByStudy_StudyId(studyId);
         return notes.stream()
@@ -59,7 +54,7 @@ public class StudyNotesService {
         Study study = studyRepository.findById(request.studyId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
-        validateOwnership(study, userId);
+        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
 
         StudyNotes studyNotes = StudyNotesConverter.toStudyNotesEntity(study, request.title(), request.content());
 
@@ -73,7 +68,7 @@ public class StudyNotesService {
         StudyNotes studyNotes = studyNotesRepository.findById(studyNotesId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOTE_NOT_FOUND));
                 
-        validateOwnership(studyNotes.getStudy(), userId);
+        AuthorizationUtil.verifyOwnership(userId, studyNotes.getStudy().getUser().getUserId());
                 
         studyNotes.update(request.title(), request.content());
     }
@@ -83,7 +78,7 @@ public class StudyNotesService {
         StudyNotes studyNotes = studyNotesRepository.findById(studyNotesId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOTE_NOT_FOUND));
                 
-        validateOwnership(studyNotes.getStudy(), userId);
+        AuthorizationUtil.verifyOwnership(userId, studyNotes.getStudy().getUser().getUserId());
                 
         studyNotesRepository.delete(studyNotes);
     }

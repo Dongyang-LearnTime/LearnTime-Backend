@@ -13,6 +13,9 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
+    boolean existsByName(String name);
+    boolean existsByEmail(String email);
+
     @Modifying(clearAutomatically = true)
     @Query("UPDATE User u SET u.point = u.point + :amount WHERE u.userId = :userId")
     void updatePoint(@Param("userId") Long userId, @Param("amount") int amount);

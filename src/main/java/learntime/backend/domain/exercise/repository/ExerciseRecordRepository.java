@@ -15,7 +15,7 @@ import java.util.List;
 public interface ExerciseRecordRepository extends JpaRepository<ExerciseRecord, Long> {
 
     // 특정 사용자의 최근 7일 운동 내역 조회
-    List<ExerciseRecord> findAllByUserAndCreateAtBetweenOrderByCreateAtAsc(
+    List<ExerciseRecord> findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(
             User user, LocalDateTime start, LocalDateTime end);
 
     // 자식 테이블(exercise_parts) 선행 삭제

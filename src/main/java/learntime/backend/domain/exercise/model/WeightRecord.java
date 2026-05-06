@@ -3,6 +3,7 @@ package learntime.backend.domain.exercise.model;
 import jakarta.persistence.*;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.common.BaseTimeEntity;
+import learntime.backend.global.common.WeightConverter;
 import lombok.*;
 
 @Entity
@@ -21,6 +22,9 @@ public class WeightRecord extends BaseTimeEntity {
     private User user;
 
     @Column(nullable = false)
+    @Convert(converter = WeightConverter.class)
     private Double weight; // 체중 (kg)
+
+    @Convert(converter = WeightConverter.class)
     private Double bodyFat; // 체지방률 (%)
 }
