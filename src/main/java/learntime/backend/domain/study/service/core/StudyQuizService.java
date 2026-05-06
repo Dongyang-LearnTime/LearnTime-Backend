@@ -114,6 +114,11 @@ public class StudyQuizService {
         quizHistory.getAnswers().addAll(quizAnswers);
         quizHistoryRepository.save(quizHistory);
 
+        // dto 변환
+        List<StudyQuizResultResponseDTO.QuizDetailResponseDTO> result = quizAnswers.stream()
+                .map(StudyQuizConverter::toQuizDetailResponseDTO)
+                .toList();
+
         int quizSolvePoint = 0;
         // 푼 횟수가 1인(처음 푸는) 경우에만 포인트 지급 (completeQuiz() 호출 후이므로 1일때 처음 푼 것임)
         if (isFirstTime) {
