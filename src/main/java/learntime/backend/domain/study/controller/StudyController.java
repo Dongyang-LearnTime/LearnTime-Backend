@@ -66,8 +66,9 @@ public class StudyController {
 
     @DeleteMapping("/{studyId}")
     @Operation(summary = "공부 진도 삭제", description = "특정 공부 진도 계획을 삭제합니다.")
-    public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId) {
-        studyCoreService.deleteStudy(studyId);
+    public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId,
+                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyCoreService.deleteStudy(studyId, userDetails.userId());
         return ResponseEntity.noContent().build();
     }
 

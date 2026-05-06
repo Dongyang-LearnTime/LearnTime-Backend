@@ -50,9 +50,9 @@ public class AnalysisService {
                 orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         // 1. 최근 7일간의 데이터 수집 (운동, 체중, 식단)
-        List<ExerciseRecord> exercises = exerciseRepository.findAllByUserAndCreateAtBetweenOrderByCreateAtAsc(user, sevenDaysAgo, now);
-        List<WeightRecord> weights = weightRepository.findAllByUserAndCreateAtBetweenOrderByCreateAtAsc(user, sevenDaysAgo, now);
-        List<MealRecord> meals = mealRepository.findAllByUserAndCreateAtBetweenOrderByCreateAtAsc(user, sevenDaysAgo, now);
+        List<ExerciseRecord> exercises = exerciseRepository.findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(user, sevenDaysAgo, now);
+        List<WeightRecord> weights = weightRepository.findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(user, sevenDaysAgo, now);
+        List<MealRecord> meals = mealRepository.findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(user, sevenDaysAgo, now);
 
         // 2. AI에게 전달할 데이터 요약 생성
         String dataSummary = buildDataSummary(exercises, weights, meals);
@@ -82,7 +82,7 @@ public class AnalysisService {
                 .collect(Collectors.joining("\n"));
 
         String weightInfo = weights.stream()
-                .map(w -> String.format("- %s: %.1fkg(체지방 %.1f%%)", w.getCreateAt().toLocalDate(), w.getWeight(), w.getBodyFat()))
+                .map(w -> String.format("- %s: %.1fkg(체지방 %.1f%%)", w.getCreatedAt().toLocalDate(), w.getWeight(), w.getBodyFat()))
                 .collect(Collectors.joining("\n"));
 
         String mealInfo = meals.stream()

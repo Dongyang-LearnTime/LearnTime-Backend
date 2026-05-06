@@ -13,7 +13,8 @@ public enum AuthErrorCode implements BaseErrorCode {
     EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH-005", "만료된 JWT 토큰입니다."),
     UNSUPPORTED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH-006", "지원되지 않는 JWT 토큰입니다."),
     EMPTY_JWT_CLAIM(HttpStatus.UNAUTHORIZED, "AUTH-007", "JWT 토큰이 비어있습니다."),
-    TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "AUTH-008", "필수 약관에 동의해야 합니다.");
+    TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "AUTH-008", "필수 약관에 동의해야 합니다."),
+    UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "AUTH-009", "해당 자원에 대한 접근 권한이 없습니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -12,6 +12,6 @@ import java.util.List;
 public interface WeightRecordRepository extends JpaRepository<WeightRecord, Long> {
 
     // 특정 사용자의 최근 7일 데이터를 생성일 순으로 조회 -> 몸무게 및 체지방량
-    List<WeightRecord> findAllByUserAndCreateAtBetweenOrderByCreateAtAsc(
+    List<WeightRecord> findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(
             User user, LocalDateTime start, LocalDateTime end);
 }

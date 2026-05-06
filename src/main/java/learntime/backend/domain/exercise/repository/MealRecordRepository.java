@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
 
-    List<MealRecord> findAllByUserAndCreateAtBetweenOrderByCreateAtAsc(
+    List<MealRecord> findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(
             User user, LocalDateTime start, LocalDateTime end);
 }

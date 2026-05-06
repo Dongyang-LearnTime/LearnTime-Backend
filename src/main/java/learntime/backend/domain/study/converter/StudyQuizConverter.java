@@ -1,6 +1,8 @@
 package learntime.backend.domain.study.converter;
 
 import learntime.backend.domain.study.dto.response.QuizQuestionResponseDTO;
+import learntime.backend.domain.study.dto.response.QuizHistoryListResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyQuizListResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.study.model.QuizAnswer;
@@ -90,6 +92,38 @@ public class StudyQuizConverter {
                 .correctQuestionCount(quizHistory.getCorrectCount())
                 .earnedPoints(earnedPoints)
                 .quizResults(quizResults)
+                .build();
+    }
+
+    public static StudyQuizListResponseDTO toStudyQuizListResponseDTO(List<StudyQuiz> studyQuizzes) {
+        List<StudyQuizListResponseDTO.StudyQuizInfoDTO> quizDTOs = studyQuizzes.stream()
+                .map(quiz -> StudyQuizListResponseDTO.StudyQuizInfoDTO.builder()
+                        .studyQuizId(quiz.getStudyQuizId())
+                        .quizTitle(quiz.getQuizTitle())
+                        .quizStatus(quiz.getQuizStatus())
+                        .completedCount(quiz.getCompletedCount())
+                        .createdAt(quiz.getCreatedAt())
+                        .build())
+                .toList();
+
+        return StudyQuizListResponseDTO.builder()
+                .quizzes(quizDTOs)
+                .build();
+    }
+
+    public static QuizHistoryListResponseDTO toQuizHistoryListResponseDTO(List<QuizHistory> quizHistories) {
+        List<QuizHistoryListResponseDTO.QuizHistoryInfoDTO> historyDTOs = quizHistories.stream()
+                .map(history -> QuizHistoryListResponseDTO.QuizHistoryInfoDTO.builder()
+                        .quizHistoryId(history.getQuizHistoryId())
+                        .attemptNumber(history.getAttemptNumber())
+                        .correctCount(history.getCorrectCount())
+                        .totalQuestionCount(history.getAnswers().size())
+                        .submittedAt(history.getSubmittedAt())
+                        .build())
+                .toList();
+
+        return QuizHistoryListResponseDTO.builder()
+                .histories(historyDTOs)
                 .build();
     }
 }

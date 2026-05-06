@@ -37,7 +37,7 @@ public class MealController {
                 .calories(saved.getCalories())
                 .protein(saved.getProtein())
                 .isEstimated(saved.getIsEstimated())
-                .createAt(saved.getCreateAt())
+                .createdAt(saved.getCreatedAt())
                 .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

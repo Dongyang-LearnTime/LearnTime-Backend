@@ -16,5 +16,5 @@ public class ExerciseResponseDTO {
     private Integer duration;
     private String content;
     private Integer calories; // AI가 계산한 결과 포함
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 }

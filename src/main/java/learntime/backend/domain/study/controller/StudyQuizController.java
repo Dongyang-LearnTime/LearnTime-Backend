@@ -6,6 +6,8 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.QuizCreateRequestDTO;
 import learntime.backend.domain.study.dto.request.QuizSolveRequestDTO;
 import learntime.backend.domain.study.dto.request.UpdateQuizTitleRequestDTO;
+import learntime.backend.domain.study.dto.response.QuizHistoryListResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyQuizListResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.study.service.facade.StudyQuizFacade;
@@ -31,21 +33,42 @@ public class StudyQuizController {
     @GetMapping("/{studyQuizId}")
     @Operation(
             summary = "퀴즈 조회",
-            description = "생성된 퀴즈 정보와 퀴즈 문제를 조회함.")
-    public ResponseEntity<StudyQuizResponseDTO> getStudyQuiz (@PathVariable Long studyQuizId) {
-        StudyQuizResponseDTO result = studyQuizFacade.getStudyQuizWithQuestions(studyQuizId);
+            description = "생성된 퀴즈 정보와 퀴즈 문항을 조회함.")
+    public ResponseEntity<StudyQuizResponseDTO> getStudyQuiz (@PathVariable Long studyQuizId,
+                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
+        StudyQuizResponseDTO result = studyQuizFacade.getStudyQuizWithQuestions(studyQuizId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
+
+
+    @GetMapping("/list/{studyId}")
+    @Operation(summary = "퀴즈 목록 조회", description = "특정 스터디의 퀴즈 목록을 조회함.")
+    public ResponseEntity<StudyQuizListResponseDTO> getStudyQuizList(@PathVariable Long studyId,
+                                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
+        StudyQuizListResponseDTO result = studyQuizFacade.getStudyQuizList(studyId, userDetails.userId());
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{studyQuizId}/history/list")
+    @Operation(summary = "퀴즈 풀이 이력 목록 조회", description = "특정 퀴즈의 풀이 이력 목록을 조회함.")
+    public ResponseEntity<QuizHistoryListResponseDTO> getQuizHistoryList(@PathVariable Long studyQuizId,
+                                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
+        QuizHistoryListResponseDTO result = studyQuizFacade.getQuizHistoryList(studyQuizId, userDetails.userId());
+        return ResponseEntity.ok(result);
+    }
+
 
     @GetMapping("/{studyQuizId}/result")
     @Operation(
             summary = "퀴즈 풀이 결과 조회",
             description = "퀴즈 문제, 사용자가 제출한 답안, 실제 정답 및 정답 여부 등을 조회함."
     )
-    public ResponseEntity<StudyQuizResultResponseDTO> getStudyQuizResult(@PathVariable Long studyQuizId) {
-        StudyQuizResultResponseDTO result = studyQuizFacade.getQuizResult(studyQuizId);
+    public ResponseEntity<StudyQuizResultResponseDTO> getStudyQuizResult(@PathVariable Long studyQuizId,
+                                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
+        StudyQuizResultResponseDTO result = studyQuizFacade.getQuizResult(studyQuizId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
+
 
     @PostMapping("/generate")
     @Operation(
@@ -57,6 +80,7 @@ public class StudyQuizController {
         return ResponseEntity.status(HttpStatus.CREATED).body(studyQuizId);
     }
 
+
     @PostMapping("/solve")
     @Operation(
             summary = "퀴즈 풀이",
@@ -67,13 +91,33 @@ public class StudyQuizController {
         return ResponseEntity.ok(result);
     }
 
+
     @PatchMapping("/title")
     @Operation(summary = "퀴즈 제목 변경", description = "퀴즈 제목 변경 후 DB에 저장함.")
     public ResponseEntity<Void> changeTitle(
-            @Valid @RequestBody UpdateQuizTitleRequestDTO request
+            @Valid @RequestBody UpdateQuizTitleRequestDTO request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        studyQuizFacade.updateTitle(request);
+        studyQuizFacade.updateTitle(request, userDetails.userId());
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{studyQuizId}")
+    @Operation(summary = "퀴즈 삭제", description = "공부 퀴즈와 하위 테이블을 DB에서 삭제함.")
+    public ResponseEntity<Void> deleteStudyQuiz(@PathVariable Long studyQuizId,
+                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyQuizFacade.deleteStudyQuiz(studyQuizId, userDetails.userId());
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @DeleteMapping("/history/{quizHistoryId}")
+    @Operation(summary = "퀴즈 이력 삭제", description = "퀴즈 풀이 이력, 사용자 답안을 DB에서 삭제함.")
+    public ResponseEntity<Void> deleteQuizHistory(@PathVariable Long quizHistoryId,
+                                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyQuizFacade.deleteQuizHistory(quizHistoryId, userDetails.userId());
+        return ResponseEntity.noContent().build();
+    }
+
 
 }

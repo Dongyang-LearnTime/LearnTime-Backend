@@ -33,7 +33,7 @@ public record StudyNotesResponseDTO(
                 .studyId(studyNotes.getStudy() != null ? studyNotes.getStudy().getStudyId() : null)
                 .title(studyNotes.getNoteTitle())
                 .content(studyNotes.getNoteContents())
-                .createdAt(studyNotes.getCreateAt())
+                .createdAt(studyNotes.getCreatedAt())
                 .updatedAt(studyNotes.getUpdatedAt())
                 .build();
     }

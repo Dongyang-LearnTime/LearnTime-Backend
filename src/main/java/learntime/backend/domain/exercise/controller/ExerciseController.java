@@ -43,7 +43,7 @@ public class ExerciseController {
                 .duration(saved.getDuration())
                 .content(saved.getContent())
                 .calories(saved.getCalories())
-                .createAt(saved.getCreateAt())
+                .createdAt(saved.getCreatedAt())
                 .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

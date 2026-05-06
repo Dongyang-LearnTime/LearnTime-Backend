@@ -5,6 +5,8 @@ import learntime.backend.domain.point.enums.PointPolicy;
 import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.dto.request.QuizSolveRequestDTO;
 import learntime.backend.domain.study.dto.request.UpdateQuizTitleRequestDTO;
+import learntime.backend.domain.study.dto.response.QuizHistoryListResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyQuizListResponseDTO;
 import learntime.backend.domain.study.dto.response.QuizQuestionResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyQuizResultResponseDTO;
@@ -40,6 +42,18 @@ public class StudyQuizService {
     private final ApplicationEventPublisher eventPublisher;
 
     private static final int CORRECT_ANSWER_BONUS = 5; // 정답 하나 당 추가 포인트
+
+    @Transactional(readOnly = true)
+    public StudyQuizListResponseDTO getStudyQuizList(Long studyId) {
+        List<StudyQuiz> quizzes = studyQuizRepository.findAllByStudy_StudyIdOrderByCreatedAtDesc(studyId);
+        return StudyQuizConverter.toStudyQuizListResponseDTO(quizzes);
+    }
+
+    @Transactional(readOnly = true)
+    public QuizHistoryListResponseDTO getQuizHistoryList(Long studyQuizId) {
+        List<QuizHistory> histories = quizHistoryRepository.findAllWithAnswersByStudyQuizId(studyQuizId);
+        return StudyQuizConverter.toQuizHistoryListResponseDTO(histories);
+    }
 
     @Transactional
     public Long saveStudyQuiz(Study study, List<QuizQuestionResponseDTO> questionDos) {

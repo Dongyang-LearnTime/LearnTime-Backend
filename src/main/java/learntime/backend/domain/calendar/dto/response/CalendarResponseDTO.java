@@ -11,8 +11,8 @@ public record CalendarResponseDTO (
     String content,
     LocalDateTime targetDate,
     Boolean isCompleted,
-    LocalDateTime createAt
-) {
+    LocalDateTime createdAt
+    ) {
     public static CalendarResponseDTO from(CalendarRecord record) {
         return CalendarResponseDTO.builder()
                 .calendarRecordId(record.getCalendarRecordId())
@@ -20,8 +20,7 @@ public record CalendarResponseDTO (
                 .content(record.getContent())
                 .targetDate(record.getTargetDate())
                 .isCompleted(record.getIsCompleted())
-                .createAt(record.getCreateAt())
+                .createdAt(record.getCreatedAt())
                 .build();
-
     }
-}
+    }

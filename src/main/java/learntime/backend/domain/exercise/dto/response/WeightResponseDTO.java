@@ -13,5 +13,5 @@ public class WeightResponseDTO {
     private Long id;
     private Double weight;
     private Double bodyFat;
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 }
