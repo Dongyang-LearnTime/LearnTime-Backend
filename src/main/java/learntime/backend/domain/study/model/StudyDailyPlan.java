@@ -43,6 +43,7 @@ public class StudyDailyPlan {
     @Column(name = "plan_content", nullable = false)
     private String planContent;
 
+    // 집중 시간
     @Column(name = "focus_time")
     private LocalTime focusTime;
 

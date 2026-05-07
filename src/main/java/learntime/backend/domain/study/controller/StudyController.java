@@ -31,6 +31,7 @@ public class StudyController {
     private final StudyFacade studyFacade;
     private final StudyCoreService studyCoreService;
 
+
     @PostMapping(
             value = "/extract",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE

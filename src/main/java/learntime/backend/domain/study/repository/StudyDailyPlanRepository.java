@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, Long> {
@@ -64,4 +65,7 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
            """)
     List<String> findRemainingContents(@Param("study") Study study,
                                        @Param("completedStatus") ProgressStatus completedStatus);
+
+    @Query("SELECT p FROM StudyDailyPlan p WHERE p.study.studyId = :studyId AND p.planDate = :planDate")
+    Optional<StudyDailyPlan> findByStudyIdAndPlanDate(@Param("studyId") Long studyId, @Param("planDate") LocalDate planDate);
 }

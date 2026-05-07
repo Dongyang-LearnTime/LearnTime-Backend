@@ -10,12 +10,16 @@ import learntime.backend.domain.quiz.model.QuizHistory;
 import learntime.backend.domain.quiz.model.QuizQuestion;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.quiz.model.StudyQuiz;
+import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.global.error.exception.BusinessException;
 
 import java.util.List;
 
 public class StudyQuizConverter {
 
-    private StudyQuizConverter() {}
+    private StudyQuizConverter() {
+        throw new BusinessException(ErrorCode.UTILITY_CLASS_INSTANTIATION);
+    }
 
     public static StudyQuizResponseDTO toResponseDTO(StudyQuiz studyQuiz, List<QuizQuestion> questions) {
         // JDK 16+ Stream.toList() 활용 (불변 리스트 반환)
