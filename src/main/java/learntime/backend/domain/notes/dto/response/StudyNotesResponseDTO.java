@@ -1,7 +1,7 @@
-package learntime.backend.domain.study.dto.response;
+package learntime.backend.domain.notes.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import learntime.backend.domain.study.model.StudyNotes;
+import learntime.backend.domain.notes.model.StudyNotes;
 import lombok.Builder;
 
 import java.time.LocalDateTime;

@@ -1,14 +1,14 @@
-package learntime.backend.domain.study.service.core;
+package learntime.backend.domain.notes.service;
 
-import learntime.backend.domain.study.dto.request.StudyNoteRequestDTO;
-import learntime.backend.domain.study.dto.request.StudyNotesUpdateRequestDTO;
-import learntime.backend.domain.study.dto.response.StudyNotesResponseDTO;
+import learntime.backend.domain.notes.dto.request.StudyNoteRequestDTO;
+import learntime.backend.domain.notes.dto.request.StudyNotesUpdateRequestDTO;
+import learntime.backend.domain.notes.dto.response.StudyNotesResponseDTO;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
-import learntime.backend.domain.study.model.StudyNotes;
-import learntime.backend.domain.study.converter.StudyNotesConverter;
-import learntime.backend.domain.study.repository.StudyNotesRepository;
+import learntime.backend.domain.notes.model.StudyNotes;
+import learntime.backend.domain.notes.converter.StudyNotesConverter;
+import learntime.backend.domain.notes.repository.StudyNotesRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,7 @@
-package learntime.backend.domain.study.model;
+package learntime.backend.domain.notes.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.study.model.Study;
 import learntime.backend.global.common.BaseTimeEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -49,4 +50,5 @@ public class StudyNotes extends BaseTimeEntity {
         this.noteTitle = noteTitle;
         this.noteContents = noteContents;
     }
+
 }

@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.dto.request;
+package learntime.backend.domain.notes.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

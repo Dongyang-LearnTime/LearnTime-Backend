@@ -1,12 +1,12 @@
-package learntime.backend.domain.study.controller;
+package learntime.backend.domain.notes.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import learntime.backend.domain.study.dto.request.StudyNoteRequestDTO;
-import learntime.backend.domain.study.dto.request.StudyNotesUpdateRequestDTO;
-import learntime.backend.domain.study.dto.response.StudyNotesResponseDTO;
-import learntime.backend.domain.study.service.core.StudyNotesService;
+import learntime.backend.domain.notes.dto.request.StudyNoteRequestDTO;
+import learntime.backend.domain.notes.dto.request.StudyNotesUpdateRequestDTO;
+import learntime.backend.domain.notes.dto.response.StudyNotesResponseDTO;
+import learntime.backend.domain.notes.service.StudyNotesService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

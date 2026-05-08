@@ -1,6 +1,6 @@
-package learntime.backend.domain.study.repository;
+package learntime.backend.domain.notes.repository;
 
-import learntime.backend.domain.study.model.StudyNotes;
+import learntime.backend.domain.notes.model.StudyNotes;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

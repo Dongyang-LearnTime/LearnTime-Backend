@@ -1,7 +1,7 @@
-package learntime.backend.domain.study.converter;
+package learntime.backend.domain.notes.converter;
 
 import learntime.backend.domain.study.model.Study;
-import learntime.backend.domain.study.model.StudyNotes;
+import learntime.backend.domain.notes.model.StudyNotes;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
 
