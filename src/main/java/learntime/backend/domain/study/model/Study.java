@@ -92,4 +92,9 @@ public class Study {
         this.startDate = startDate;
         this.endDate = endDate;
     }
+
+    public void updateStudyDates(LocalDate startDate, LocalDate endDate) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
 }

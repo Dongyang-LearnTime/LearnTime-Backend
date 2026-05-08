@@ -33,6 +33,9 @@ public class QuizHistory {
     @Column(nullable = false)
     private Integer correctCount; // 정답 개수
 
+    @Column(nullable = false)
+    private Integer earnedPoints = 0; // 획득한 포인트
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime submittedAt;
@@ -41,9 +44,10 @@ public class QuizHistory {
     private List<QuizAnswer> answers = new ArrayList<>();
 
     @Builder
-    public QuizHistory(StudyQuiz studyQuiz, Integer attemptNumber, Integer correctCount) {
+    public QuizHistory(StudyQuiz studyQuiz, Integer attemptNumber, Integer correctCount, Integer earnedPoints) {
         this.studyQuiz = studyQuiz;
         this.attemptNumber = attemptNumber;
         this.correctCount = correctCount;
+        this.earnedPoints = earnedPoints != null ? earnedPoints : 0;
     }
 }

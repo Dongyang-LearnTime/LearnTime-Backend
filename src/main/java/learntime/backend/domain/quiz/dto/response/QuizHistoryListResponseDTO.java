@@ -15,6 +15,7 @@ public record QuizHistoryListResponseDTO(
             Integer attemptNumber,
             Integer correctCount,
             Integer totalQuestionCount,
+            Integer earnedPoints,
             LocalDateTime submittedAt
     ) {}
 }

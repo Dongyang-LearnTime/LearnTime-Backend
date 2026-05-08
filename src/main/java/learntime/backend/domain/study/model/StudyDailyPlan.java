@@ -93,5 +93,14 @@ public class StudyDailyPlan {
         this.understandingScore = understandingScore;
     }
 
+    // 초기화 상태로 복구
+    public void resetPlan(LocalDate newPlanDate) {
+        this.planDate = newPlanDate;
+        this.progressStatus = ProgressStatus.NOT_STARTED;
+        this.focusTime = null;
+        this.completionStatus = null;
+        this.understandingScore = null;
+        this.completionDate = null;
+    }
 
 }

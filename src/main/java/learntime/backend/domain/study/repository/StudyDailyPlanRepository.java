@@ -68,4 +68,7 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
 
     @Query("SELECT p FROM StudyDailyPlan p WHERE p.study.studyId = :studyId AND p.planDate = :planDate")
     Optional<StudyDailyPlan> findByStudyIdAndPlanDate(@Param("studyId") Long studyId, @Param("planDate") LocalDate planDate);
+
+    // 스터디의 모든 일일 일정을 일차 순으로 오름차순 조회
+    List<StudyDailyPlan> findByStudyOrderByDayNumberAsc(Study study);
 }

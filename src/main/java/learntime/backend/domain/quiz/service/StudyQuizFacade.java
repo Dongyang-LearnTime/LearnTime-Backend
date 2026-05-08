@@ -82,28 +82,35 @@ public class StudyQuizFacade {
         Study study = studyRepository.findById(request.studyId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
-        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
+        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId()); // 본인 확인
 
+        // 노트 정보 가져옴
         StudyNotes studyNotes = studyNotesRepository.findById(request.studyNotesId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOTE_NOT_FOUND));
-
-        AuthorizationUtil.verifyOwnership(userId, studyNotes.getStudy().getUser().getUserId());
 
         promptQuotaUtil.decreasePromptQuota(userId); // 프롬프트 할당량 차감
 
         try {
             String cleanedText = preprocessNoteContent(studyNotes.getNoteContents());
-            int quizTotalCount = OX_COUNT + MULTIPLE_COUNT; // 총 문제 개수
+            int quizTotalCount = OX_COUNT + MULTIPLE_COUNT; // 총 문제 개수 (2+2)
 
             List<QuizQuestionResponseDTO> questionDos = geminiQuizService.generateQuizQuestions(
                     quizTotalCount, OX_COUNT, MULTIPLE_COUNT, cleanedText
             ); // DTO로 파싱된 AI 응답
 
-            return studyQuizService.saveStudyQuiz(study, questionDos);
+            return studyQuizService.saveStudyQuiz(study, questionDos); // DB에 퀴즈 저장 및 퀴즈 ID return
         } catch (Exception e) {
             promptQuotaUtil.restorePromptQuota(userId); // 예외 일어나면 할당 되돌려줌
             throw e;
         }
+    }
+
+    // 필기 내용에서 HTML 태그를 뺀 문장만 추출
+    private String preprocessNoteContent(String htmlContent) {
+        if (htmlContent == null || htmlContent.isBlank()) return "";
+        Document doc = Jsoup.parse(htmlContent);
+        doc.select("s, strike, del").remove(); // 취소줄 등은 제외
+        return doc.text();
     }
 
     public Long solveStudyQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
@@ -143,12 +150,4 @@ public class StudyQuizFacade {
         quizHistoryRepository.deleteById(quizHistoryId);
     }
 
-
-    // 필기 내용에서 HTML 태그를 뺀 문장만 추출
-    private String preprocessNoteContent(String htmlContent) {
-        if (htmlContent == null || htmlContent.isBlank()) return "";
-        Document doc = Jsoup.parse(htmlContent);
-        doc.select("s, strike, del").remove(); // 취소줄 등은 제외
-        return doc.text();
-    }
 }

@@ -28,7 +28,7 @@ public class UserConverter {
                 .name(signUpData.userName())
                 .email(signUpData.email())
                 .password(encodedPassword)
-                .role(Role.ROLE_USER)
+                .role(Role.ROLE_USER) // 관리자는 ROLE_ADMIN
                 .build();
     }
 }

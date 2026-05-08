@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study.dto.request.StudyResetRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.facade.StudyFacade;
@@ -65,11 +66,20 @@ public class StudyController {
         return ResponseEntity.ok(result);
     }
 
+    @PutMapping("/{studyId}/reset")
+    @Operation(summary = "공부 진도 초기화", description = "새로운 시작일과 휴일 정보를 바탕으로 공부 진도를 초기화합니다.")
+    public ResponseEntity<Void> resetStudy(@PathVariable Long studyId,
+                                           @Valid @RequestBody StudyResetRequestDTO request,
+                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyCoreService.resetStudy(studyId, request, userDetails.userId());
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{studyId}")
     @Operation(summary = "공부 진도 삭제", description = "특정 공부 진도 계획을 삭제합니다.")
     public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId,
                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        studyCoreService.deleteStudy(studyId, userDetails.userId());
+        studyFacade.deleteStudy(studyId, userDetails.userId());
         return ResponseEntity.noContent().build();
     }
 

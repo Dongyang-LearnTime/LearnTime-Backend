@@ -28,6 +28,7 @@ public record GeminiStudyRequestDTO(
         LocalDate startDate, // yyyy-MM-dd 형식
 
         @NotNull(message = "종료 날짜는 필수입니다.")
+        @FutureOrPresent(message = "종료 날짜는 오늘 이후여야 합니다.")
         LocalDate endDate,    // yyyy-MM-dd 형식
 
         @NotEmpty(message = "목차 정보는 최소 한 개 이상 포함되어야 합니다.")

@@ -50,19 +50,26 @@ public class StudyQuizConverter {
     }
 
     public static QuizQuestion toQuizQuestionEntity(StudyQuiz quiz, QuizQuestionResponseDTO dto) {
+        String sanitizedContent = dto.questionContent();
+        if (sanitizedContent != null) {
+            // 연속된 줄바꿈(\n\n+)을 단일 줄바꿈(\n)으로 변환
+            sanitizedContent = sanitizedContent.replaceAll("\\n+", "\n").trim();
+        }
+
         return QuizQuestion.builder()
                 .studyQuiz(quiz)
-                .questionContent(dto.questionContent())
+                .questionContent(sanitizedContent)
                 .correctAnswer(dto.correctAnswer())
                 .quizType(dto.quizType())
                 .build();
     }
 
-    public static QuizHistory toQuizHistoryEntity(StudyQuiz studyQuiz, int attemptNumber, int correctCount) {
+    public static QuizHistory toQuizHistoryEntity(StudyQuiz studyQuiz, int attemptNumber, int correctCount, Integer earnedPoints) {
         return QuizHistory.builder()
                 .studyQuiz(studyQuiz)
                 .attemptNumber(attemptNumber)
                 .correctCount(correctCount)
+                .earnedPoints(earnedPoints)
                 .build();
     }
 
@@ -94,7 +101,7 @@ public class StudyQuizConverter {
         return StudyQuizResultResponseDTO.builder()
                 .totalQuestionCount(quizHistory.getAnswers().size())
                 .correctQuestionCount(quizHistory.getCorrectCount())
-                .earnedPoints(earnedPoints)
+                .earnedPoints(earnedPoints != null ? earnedPoints : quizHistory.getEarnedPoints())
                 .quizResults(quizResults)
                 .build();
     }
@@ -122,6 +129,7 @@ public class StudyQuizConverter {
                         .attemptNumber(history.getAttemptNumber())
                         .correctCount(history.getCorrectCount())
                         .totalQuestionCount(history.getAnswers().size())
+                        .earnedPoints(history.getEarnedPoints())
                         .submittedAt(history.getSubmittedAt())
                         .build())
                 .toList();

@@ -4,12 +4,16 @@ import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
+import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.service.ai.GeminiStudyService;
 import learntime.backend.domain.study.service.ai.TocExtractionService;
 import learntime.backend.domain.study.service.core.StudyCoreService;
 import learntime.backend.domain.study.service.util.StudyFileValidator;
+import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -23,6 +27,7 @@ public class StudyFacade {
     private final TocExtractionService tocExtractionService;
     private final GeminiStudyService geminiStudyService;
     private final StudyCoreService studyCoreService;
+    private final StudyRepository studyRepository;
 
     /**
      * 사진 목차 추출
@@ -52,4 +57,15 @@ public class StudyFacade {
 
         return result;
     }
+
+    @Transactional
+    public void deleteStudy(Long studyId, Long userId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new IllegalArgumentException("공부 진도를 찾을 수 없습니다."));
+
+        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
+
+        studyRepository.deleteById(studyId);
+    }
+
 }

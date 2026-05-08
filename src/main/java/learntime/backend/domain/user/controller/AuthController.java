@@ -118,14 +118,16 @@ public class AuthController {
     @GetMapping("/name/{name}")
     @Operation(summary = "이름 중복 체크", description = "사용 가능한 이름인지 중복 체크합니다.")
     public ResponseEntity<Boolean> checkName(@PathVariable String name) {
-        return ResponseEntity.ok(userService.isNameDuplicated(name));
+        // true면 사용 가능, false면 이미 있음
+        return ResponseEntity.ok(!userService.isNameDuplicated(name));
     }
 
     // 이메일 중복 체크
     @GetMapping("/email/{email}")
     @Operation(summary = "이메일 중복 체크", description = "사용 가능한 이메일인지 중복 체크합니다.")
     public ResponseEntity<Boolean> checkEmail(@PathVariable String email) {
-        return ResponseEntity.ok(userService.isEmailDuplicated(email));
+        // true면 사용 가능, false면 이미 있음
+        return ResponseEntity.ok(!userService.isEmailDuplicated(email));
     }
 
 }

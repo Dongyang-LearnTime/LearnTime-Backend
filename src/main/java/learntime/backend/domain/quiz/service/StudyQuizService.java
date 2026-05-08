@@ -105,12 +105,18 @@ public class StudyQuizService {
             }
         }
 
+        int quizSolvePoint = 0;
+        // 푼 횟수가 1인(처음 푸는) 경우에만 포인트 지급 (completeQuiz() 호출 전이므로 0일때 처음 푼 것임)
+        if (isFirstTime) {
+            quizSolvePoint = PointPolicy.STUDY_QUIZ_COMPLETED.getAmount() + (CORRECT_ANSWER_BONUS * correctCount);
+        }
+
         // 퀴즈 상태 및 푼 횟수 증가
         studyQuiz.completeQuiz();
         int attemptNumber = studyQuiz.getCompletedCount();
 
         // 퀴즈 풀이 이력 생성 및 저장
-        QuizHistory quizHistory = StudyQuizConverter.toQuizHistoryEntity(studyQuiz, attemptNumber, correctCount);
+        QuizHistory quizHistory = StudyQuizConverter.toQuizHistoryEntity(studyQuiz, attemptNumber, correctCount, quizSolvePoint);
 
         List<QuizAnswer> quizAnswers = requests.stream().map(request -> {
             QuizQuestion question = questionMap.get(request.quizQuestionId());
@@ -121,23 +127,16 @@ public class StudyQuizService {
         quizHistory.getAnswers().addAll(quizAnswers);
         quizHistoryRepository.save(quizHistory);
 
-        // dto 변환
-        List<StudyQuizResultResponseDTO.QuizDetailResponseDTO> result = quizAnswers.stream()
-                .map(StudyQuizConverter::toQuizDetailResponseDTO)
-                .toList();
-
-        int quizSolvePoint = 0;
-        // 푼 횟수가 1인(처음 푸는) 경우에만 포인트 지급 (completeQuiz() 호출 후이므로 1일때 처음 푼 것임)
+        // 푼 횟수가 1인(처음 푸는) 경우에만 포인트 지급
         if (isFirstTime) {
-            quizSolvePoint = PointPolicy.STUDY_QUIZ_COMPLETED.getAmount() + (CORRECT_ANSWER_BONUS * correctCount);
             String eventDescription = PointPolicy.STUDY_QUIZ_COMPLETED.getDescription()
                     + " (문제 " + questions.size() + "개 중 정답: " + correctCount + "개)";
 
             eventPublisher.publishEvent(new PointEventDTO(
-                    userId,
-                    quizSolvePoint,
-                    PointType.EARN,
-                    eventDescription
+                    userId, // 사용자 ID
+                    quizSolvePoint, // 부여 할 포인트
+                    PointType.EARN, // 포인트 부여 유형 (증가, 감소, 취소)
+                    eventDescription // 포인트 이벤트 설명
             ));
         }
 

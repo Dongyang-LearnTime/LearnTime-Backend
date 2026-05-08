@@ -5,6 +5,7 @@ import learntime.backend.domain.point.enums.PointPolicy;
 import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study.dto.request.StudyResetRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.converter.StudyConverter;
@@ -184,14 +185,41 @@ public class StudyCoreService {
     }
 
     @Transactional
-    public void deleteStudy(Long studyId, Long userId) {
+    public void resetStudy(Long studyId, StudyResetRequestDTO request, Long userId) {
         Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new IllegalArgumentException("공부 진도를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
 
         AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
 
-        studyRepository.deleteById(studyId);
+        // 기존 쉬는 요일/날짜 삭제
+        study.getRestDates().clear();
+        study.getRestDays().clear();
+
+        // 새로운 쉬는 요일/날짜 저장
+        studyRestManager.saveRestDates(study, request.restDates());
+        studyRestManager.saveRestDays(study, request.restDays());
+
+        // 해당 스터디의 모든 일일 일정 조회 (dayNumber 오름차순 정렬)
+        List<StudyDailyPlan> dailyPlans = studyDailyPlanRepository.findByStudyOrderByDayNumberAsc(study);
+
+        // 새로운 일정 날짜들 계산
+        List<LocalDate> planDates = buildPlanDatesFromRequest(
+                request.startDate(),
+                dailyPlans.size(),
+                request.restDays(),
+                request.restDates()
+        );
+
+        // 스터디 종료일 업데이트
+        LocalDate newEndDate = planDates.isEmpty() ? request.startDate() : planDates.get(planDates.size() - 1);
+        study.updateStudyDates(request.startDate(), newEndDate);
+
+        // 각 일일 일정 초기화 및 새 날짜 할당
+        for (int i = 0; i < dailyPlans.size(); i++) {
+            dailyPlans.get(i).resetPlan(planDates.get(i));
+        }
     }
+
 
     private List<LocalDate> buildPlanDatesFromRequest(
             LocalDate startDate,

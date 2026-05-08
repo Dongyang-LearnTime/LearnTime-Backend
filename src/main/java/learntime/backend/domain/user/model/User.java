@@ -36,13 +36,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column
     private String password; // OAuth인 경우 null
 
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, length = 30, unique = true)
     private String name;
 
     @Column(nullable = false, columnDefinition = "INT DEFAULT 0 CHECK (point >= 0)")
