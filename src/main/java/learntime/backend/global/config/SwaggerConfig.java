@@ -25,13 +25,11 @@ public class SwaggerConfig {
         // 보안 스킴 식별자
         final String SECURITY_SCHEME_NAME = "bearerAuth";
 
-        // 서버 환경 설정
-        Server localServer = new Server().url("http://localhost:8080").description("Local Server");
-        Server devServer = new Server().url("https://api.dev.umc.com").description("Dev Server");
-
         return new OpenAPI()
                 .info(info)
-                .servers(List.of(localServer, devServer)) // 리스트 형태로 여러 서버 등록 가능
+                .servers(List.of(
+                        new Server().url("/") // 현재 서버
+                ))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components()
                         .addSecuritySchemes(SECURITY_SCHEME_NAME, new SecurityScheme()

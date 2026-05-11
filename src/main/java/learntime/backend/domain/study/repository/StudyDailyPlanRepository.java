@@ -3,6 +3,7 @@ package learntime.backend.domain.study.repository;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
+import learntime.backend.domain.study.dto.projection.StudyDailyPlanStatsDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, Long> {
@@ -64,4 +66,17 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
            """)
     List<String> findRemainingContents(@Param("study") Study study,
                                        @Param("completedStatus") ProgressStatus completedStatus);
+
+    @Query("SELECT p FROM StudyDailyPlan p WHERE p.study.studyId = :studyId AND p.planDate = :planDate")
+    Optional<StudyDailyPlan> findByStudyIdAndPlanDate(@Param("studyId") Long studyId, @Param("planDate") LocalDate planDate);
+
+    // 스터디의 모든 일일 일정을 일차 순으로 오름차순 조회
+    List<StudyDailyPlan> findByStudyOrderByDayNumberAsc(Study study);
+
+    @Query("SELECT p.progressStatus as progressStatus, p.completionStatus as completionStatus, p.focusTime as focusTime " +
+           "FROM StudyDailyPlan p WHERE p.study.studyId = :studyId")
+    List<StudyDailyPlanStatsDTO> findStatsByStudyId(@Param("studyId") Long studyId);
+
+    @Query("SELECT p FROM StudyDailyPlan p WHERE p.study.studyId = :studyId AND p.progressStatus = 'COMPLETED' ORDER BY p.dayNumber ASC")
+    List<StudyDailyPlan> findCompletedPlansByStudyId(@Param("studyId") Long studyId);
 }

@@ -20,6 +20,7 @@ public class StudyFileValidator {
     private static final List<String> ALLOWED_TYPES = Arrays.asList("image/jpeg", "image/png", "image/webp");
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+    // 업로드된 이미지 파일의 크기, 확장자, 그리고 실제 콘텐츠 타입을 검증합니다.
     public void validateImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new FileException(FileErrorCode.INVALID_INPUT_VALUE);

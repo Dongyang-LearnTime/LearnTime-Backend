@@ -13,6 +13,7 @@ import java.util.Set;
 @Component
 public class StudyDateCalculator {
 
+    // 휴일을 제외하고 학습이 가능한 다음 날짜를 계산하여 반환합니다.
     public LocalDate getNextValidPlanDate(LocalDate startDate,
                                           Set<DayOfWeek> restDays,
                                           Set<LocalDate> restDates) {
@@ -30,6 +31,7 @@ public class StudyDateCalculator {
         }
     }
 
+    // 주어진 학습 개수만큼 실제 학습이 진행될 날짜 목록을 생성합니다.
     public List<LocalDate> buildPlanDates(LocalDate startDate,
                                           int planCount,
                                           Set<DayOfWeek> restDays,
@@ -46,6 +48,7 @@ public class StudyDateCalculator {
         return planDates;
     }
 
+    // 특정 기간 내에서 휴일과 이미 완료된 학습을 제외한 남은 학습 가능 일수를 계산합니다.
     public int calculateRemainingDays(LocalDate startDate,
                                       LocalDate endDate,
                                       Set<DayOfWeek> restDays,

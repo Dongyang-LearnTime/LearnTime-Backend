@@ -9,6 +9,7 @@ import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
+import learntime.backend.global.utils.GeminiPromptParser;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,7 @@ public class GeminiStudyService {
     private String replanPromptTemplate;
 
 
+    /** 학습 계획 및 재계획을 위한 프롬프트 템플릿을 초기화한다. */
     @PostConstruct
     public void init() {
         try {
@@ -60,6 +62,7 @@ public class GeminiStudyService {
         }
     }
 
+    /** 제공된 도서 정보와 목차를 바탕으로 AI 학습 계획을 생성한다. */
     @Transactional
     public StudyPlanResponseDTO generateSmartStudyPlan(GeminiStudyRequestDTO request, Long userId) {
         int periodDays = request.getValidatedStudyDays();
@@ -82,9 +85,10 @@ public class GeminiStudyService {
                 bookToc
         );
 
-        return executeGeminiRequest(userPrompt, request, userId);
+        return executeGeminiRequest(userPrompt, userId);
     }
 
+    /** 남은 학습 내용과 기간을 바탕으로 AI 재계획을 생성한다. */
     @Transactional
     public StudyPlanResponseDTO generateReplan(GeminiReplanRequestDTO request, String remainingContent, int remainingDays, Long userId) {
         String userPrompt = replanPromptTemplate.formatted(
@@ -93,10 +97,11 @@ public class GeminiStudyService {
                 remainingContent
         );
 
-        return executeGeminiRequest(userPrompt, request, userId);
+        return executeGeminiRequest(userPrompt, userId);
     }
 
-    private StudyPlanResponseDTO executeGeminiRequest(String userPrompt, Object requestDto, Long userId) {
+    /** Gemini 모델에 요청을 보내고 응답을 파싱하여 반환한다. */
+    private StudyPlanResponseDTO executeGeminiRequest(String userPrompt, Long userId) {
         promptQuotaUtil.decreasePromptQuota(userId);
 
         Map<String, Object> requestBody = promptParser.createRequestBody(
@@ -116,6 +121,7 @@ public class GeminiStudyService {
         }
     }
 
+    /** 목차 항목 간의 페이지 차이를 계산하여 가중치 접미사를 생성한다. */
     private String buildWeightSuffix(GeminiStudyRequestDTO request, int index) {
         TocListResponseDTO current = request.tocList().get(index);
         Integer currentPage = current.page();

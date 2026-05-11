@@ -4,12 +4,17 @@ import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
+import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.service.ai.GeminiStudyService;
 import learntime.backend.domain.study.service.ai.TocExtractionService;
-import learntime.backend.domain.study.service.core.StudyCoreService;
+import learntime.backend.domain.study.service.core.StudyManagementService;
+import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.domain.study.service.util.StudyFileValidator;
+import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -22,34 +27,42 @@ public class StudyFacade {
     private final StudyFileValidator studyFileValidator;
     private final TocExtractionService tocExtractionService;
     private final GeminiStudyService geminiStudyService;
-    private final StudyCoreService studyCoreService;
+    private final StudyManagementService studyManagementService;
+    private final StudyQueryService studyQueryService;
+    private final StudyRepository studyRepository;
 
-    /**
-     * 사진 목차 추출
-     */
+    // 업로드된 이미지에서 AI를 활용하여 목차 정보를 추출합니다.
     public List<TocListResponseDTO> extractToc(MultipartFile imageFile) {
         studyFileValidator.validateImage(imageFile);
         return tocExtractionService.extractTocAsJson(imageFile);
     }
 
-    /**
-     * 신규 학습 계획 생성 및 저장
-     */
+    // AI를 활용해 새로운 스마트 학습 계획을 생성하고 저장합니다.
     public void generateAndSaveStudyPlan(GeminiStudyRequestDTO request, Long userId) {
         StudyPlanResponseDTO geminiResult = geminiStudyService.generateSmartStudyPlan(request, userId);
-        studyCoreService.saveStudyPlan(request, geminiResult, userId);
+        studyManagementService.saveStudyPlan(request, geminiResult, userId);
     }
 
-    /**
-     * 기존 학습 계획 재설계 및 업데이트
-     */
+    // 기존 학습 내용을 바탕으로 AI 재계획을 생성하고 시스템에 반영합니다.
     public StudyPlanResponseDTO replanAndSaveStudy(Long studyId, GeminiReplanRequestDTO request, Long userId) {
-        String remainingContent = studyCoreService.getRemainingStudyContent(studyId, userId);
-        int remainingDays = studyCoreService.calculateRemainingStudyDays(studyId, request, userId);
+        String remainingContent = studyQueryService.getRemainingStudyContent(studyId, userId);
+        int remainingDays = studyQueryService.calculateRemainingStudyDays(studyId, request, userId);
 
         StudyPlanResponseDTO result = geminiStudyService.generateReplan(request, remainingContent, remainingDays, userId);
-        studyCoreService.replanStudy(studyId, request, result, userId);
+        studyManagementService.replanStudy(studyId, request, result, userId);
 
         return result;
     }
+
+    // 특정 스터디와 관련된 모든 데이터를 삭제합니다.
+    @Transactional
+    public void deleteStudy(Long studyId, Long userId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new IllegalArgumentException("공부 진도를 찾을 수 없습니다."));
+
+        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
+
+        studyRepository.deleteById(studyId);
+    }
+
 }

@@ -8,6 +8,7 @@ import learntime.backend.domain.user.model.PromptQuotas;
 import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.model.UserTerms;
+import learntime.backend.domain.user.converter.UserConverter;
 import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserRepository;
@@ -118,12 +119,7 @@ public class AuthService {
         // 비밀번호 암호화
         String encodedPassword = customPasswordEncoder.encode(signUpData.password());
 
-        User user = User.builder()
-                .name(signUpData.userName())
-                .email(signUpData.email())
-                .password(encodedPassword)
-                .role(Role.ROLE_USER) // 관리자는 ROLE_ADMIN, 유저는 ROLE_USER
-                .build();
+        User user = UserConverter.toUserEntity(signUpData, encodedPassword);
         User savedUser = userRepository.save(user);
 
         // 클라이언트가 보낸 약관 Map을 순회하며 UserTerms 엔티티 리스트 생성 후 저장

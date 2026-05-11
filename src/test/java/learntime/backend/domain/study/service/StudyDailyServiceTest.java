@@ -40,6 +40,7 @@ class StudyDailyServiceTest {
 
     @Test
     @DisplayName("일일 진도 완료 시: 성공 상태이면 이해도 점수가 반영된 포인트 이벤트가 발행된다.")
+    // 일일 학습 성공 시 이해도 점수 반영된 보너스 포인트 이벤트 발행을 검증합니다.
     void completePlan_Success_WithBonusPoints() throws Exception {
         // given
         Long userId = 1L;
@@ -76,6 +77,7 @@ class StudyDailyServiceTest {
 
     @Test
     @DisplayName("일일 진도 완료 시: 실패 상태이면 최소 격려 포인트만 지급된다.")
+    // 학습 실패 시 최소 포인트만 지급되는지 여부를 검증합니다.
     void completePlan_Failure_MinimalPoints() throws Exception {
         // given
         Long userId = 1L;
@@ -100,9 +102,7 @@ class StudyDailyServiceTest {
         log.info("[테스트 결과] 실패 케이스 - 지급 포인트: {}p, 사유: {}", event.amount(), event.description());
     }
 
-    /**
-     * Reflection Helper: protected 기본 생성자를 가진 클래스의 인스턴스를 생성함
-     */
+    // Reflection을 사용하여 protected 기본 생성자를 가진 클래스의 인스턴스를 생성합니다.
     private <T> T createInstance(Class<T> clazz) throws Exception {
         Constructor<T> constructor = clazz.getDeclaredConstructor();
         constructor.setAccessible(true);

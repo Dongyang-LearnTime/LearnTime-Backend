@@ -24,6 +24,7 @@ public class StudyRestManager {
     private final StudyRestDateRepository studyRestDateRepository;
     private final StudyRestDayRepository studyRestDayRepository;
 
+    // 스터디의 휴무 날짜(특정 날짜) 정보를 저장합니다.
     @Transactional(propagation = Propagation.REQUIRED)
     public void saveRestDates(Study study, List<LocalDate> restDates) {
         if (CollectionUtils.isEmpty(restDates)) {
@@ -38,6 +39,7 @@ public class StudyRestManager {
     }
 
 
+    // 스터디의 정기 휴무 요일 정보를 저장합니다.
     @Transactional(propagation = Propagation.REQUIRED)
     public void saveRestDays(Study study, List<DayOfWeek> restDays) {
         if (CollectionUtils.isEmpty(restDays)) {

@@ -2,6 +2,8 @@ package learntime.backend.global.utils;
 
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.EncryptionException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -9,18 +11,25 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+@Component
 public class EncryptionUtil {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
-    // 프로젝트 설정 파일(yml)에서 관리하는 것을 권장하며, 현재는 테스트용 키(32자)를 사용합니다.
-    private static final String KEY = "12345678901234567890123456789012";
-    private static final String IV = KEY.substring(0, 16);
+
+    private static String KEY;
+    private static String IV;
+
+    @Value("${encryption.key}")
+    public void setKey(String key) {
+        EncryptionUtil.KEY = key;
+        EncryptionUtil.IV = key.substring(0, 16);
+    }
 
     public static String encrypt(String text) {
         try {
             if (text == null) return null;
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            SecretKeySpec keySpec = new SecretKeySpec(KEY.getBytes(), "AES");
-            IvParameterSpec ivParamSpec = new IvParameterSpec(IV.getBytes());
+            SecretKeySpec keySpec = new SecretKeySpec(KEY.getBytes(StandardCharsets.UTF_8), "AES");
+            IvParameterSpec ivParamSpec = new IvParameterSpec(IV.getBytes(StandardCharsets.UTF_8));
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParamSpec);
             byte[] encrypted = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(encrypted);
@@ -33,8 +42,8 @@ public class EncryptionUtil {
         try {
             if (cipherText == null) return null;
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            SecretKeySpec keySpec = new SecretKeySpec(KEY.getBytes(), "AES");
-            IvParameterSpec ivParamSpec = new IvParameterSpec(IV.getBytes());
+            SecretKeySpec keySpec = new SecretKeySpec(KEY.getBytes(StandardCharsets.UTF_8), "AES");
+            IvParameterSpec ivParamSpec = new IvParameterSpec(IV.getBytes(StandardCharsets.UTF_8));
             cipher.init(Cipher.DECRYPT_MODE, keySpec, ivParamSpec);
             byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
             byte[] decrypted = cipher.doFinal(decodedBytes);

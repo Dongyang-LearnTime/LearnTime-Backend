@@ -5,10 +5,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study.dto.request.StudyResetRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.facade.StudyFacade;
-import learntime.backend.domain.study.service.core.StudyCoreService;
+import learntime.backend.domain.study.service.core.StudyManagementService;
+import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,7 +32,18 @@ import java.util.List;
 public class StudyController {
 
     private final StudyFacade studyFacade;
-    private final StudyCoreService studyCoreService;
+    private final StudyQueryService studyQueryService;
+    private final StudyManagementService studyManagementService;
+
+    @GetMapping("/{studyId}/total")
+    @Operation(
+            summary = "공부 핵심 지표",
+            description = "진도 달성률, 퀴즈 정답률, 집중 시간 등 공부의 핵심 지표를 조회합니다. (캐싱함)")
+    public ResponseEntity<StudyTotalInfoResponseDTO> totalStudyIndicator(@PathVariable Long studyId) {
+        StudyTotalInfoResponseDTO result = studyQueryService.getStudyTotalIndicator(studyId);
+        return ResponseEntity.ok(result);
+    }
+
 
     @PostMapping(
             value = "/extract",
@@ -64,11 +78,20 @@ public class StudyController {
         return ResponseEntity.ok(result);
     }
 
+    @PutMapping("/{studyId}/reset")
+    @Operation(summary = "공부 진도 초기화", description = "새로운 시작일과 휴일 정보를 바탕으로 공부 진도를 초기화합니다.")
+    public ResponseEntity<Void> resetStudy(@PathVariable Long studyId,
+                                           @Valid @RequestBody StudyResetRequestDTO request,
+                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyManagementService.resetStudy(studyId, request, userDetails.userId());
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{studyId}")
     @Operation(summary = "공부 진도 삭제", description = "특정 공부 진도 계획을 삭제합니다.")
     public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId,
                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        studyCoreService.deleteStudy(studyId, userDetails.userId());
+        studyFacade.deleteStudy(studyId, userDetails.userId());
         return ResponseEntity.noContent().build();
     }
 

@@ -1,21 +1,18 @@
 package learntime.backend.domain.user.dto.response;
 
+import learntime.backend.domain.user.enums.Role;
 import lombok.Builder;
-import learntime.backend.domain.user.model.User;
+
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @Builder
 public record MyPageResponseDTO(
         String email,
         String userName,
         Integer point,
-        String socialProvider
-) {
-    public static MyPageResponseDTO from(User user) {
-        return MyPageResponseDTO.builder()
-                .email(user.getEmail())
-                .userName(user.getName()) // Entity의 name 필드
-                .point(user.getPoint())
-                .socialProvider(user.getSocialProvider().name())
-                .build();
-    }
-}
+        String socialProvider,
+        Map<String, Boolean> termsAgreements,
+        LocalDateTime createdAt,
+        Role role
+) {}

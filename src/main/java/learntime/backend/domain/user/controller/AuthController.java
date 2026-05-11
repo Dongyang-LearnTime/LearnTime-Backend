@@ -8,6 +8,7 @@ import learntime.backend.domain.user.dto.request.LoginRequestDTO;
 import learntime.backend.domain.user.dto.request.SignUpRequestDTO;
 import learntime.backend.domain.user.dto.response.TokenResponseDTO;
 import learntime.backend.domain.user.service.AuthService;
+import learntime.backend.domain.user.service.UserService;
 import learntime.backend.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
     private static final long REFRESH_TIME = 60 * 60 * 24 * 14; // 초 단위, 14일
 
@@ -110,6 +112,22 @@ public class AuthController {
         authService.createUser(request);
         log.info("{} 회원가입 성공!", request.userName());
         return ResponseEntity.ok().build();
+    }
+
+    // 이름 중복 체크
+    @GetMapping("/name/{name}")
+    @Operation(summary = "이름 중복 체크", description = "사용 가능한 이름인지 중복 체크합니다.")
+    public ResponseEntity<Boolean> checkName(@PathVariable String name) {
+        // true면 사용 가능, false면 이미 있음
+        return ResponseEntity.ok(!userService.isNameDuplicated(name));
+    }
+
+    // 이메일 중복 체크
+    @GetMapping("/email/{email}")
+    @Operation(summary = "이메일 중복 체크", description = "사용 가능한 이메일인지 중복 체크합니다.")
+    public ResponseEntity<Boolean> checkEmail(@PathVariable String email) {
+        // true면 사용 가능, false면 이미 있음
+        return ResponseEntity.ok(!userService.isEmailDuplicated(email));
     }
 
 }

@@ -1,10 +1,14 @@
 package learntime.backend.global.error.handler;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import learntime.backend.global.dto.ErrorResponseDTO;
 import learntime.backend.global.error.code.BaseErrorCode;
+import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BaseException;
 import learntime.backend.global.error.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -66,25 +70,45 @@ public class CustomExceptionHandler {
                 ));
     }
 
-    // @Valid 범위값 오류
+    // @Valid + @RequestBody 검증 실패
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponseDTO> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException e
+    ) {
 
-        // 첫 번째 에러 메시지를 추출
-        String errorMessage = ex.getBindingResult()
+        String errorMessage = e.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(FieldError::getDefaultMessage)
-                .filter(Objects::nonNull)
                 .findFirst()
-                .orElse("유효하지 않은 입력값입니다.");
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .orElse(ErrorCode.INVALID_REQUEST_BODY.getMessage());
 
-        // 2. HTTP 400에 맞는 규격화된 응답 반환
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(ErrorCode.INVALID_REQUEST_BODY.getStatus())
                 .body(new ErrorResponseDTO(
-                        "400",
-                        "잘못된 요청입니다. 입력값을 확인해주세요.",
+                        ErrorCode.INVALID_REQUEST_BODY.getCode(),
+                        ErrorCode.INVALID_REQUEST_BODY.getMessage(),
+                        errorMessage
+                ));
+    }
+
+    // RequestParam, PathVariable 검증 실패
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> handleConstraintViolationException(
+            ConstraintViolationException e
+    ) {
+
+        String errorMessage = e.getConstraintViolations()
+                .stream()
+                .findFirst()
+                .map(ConstraintViolation::getMessage)
+                .orElse(ErrorCode.INVALID_REQUEST_PARAMETER.getMessage());
+
+        return ResponseEntity
+                .status(ErrorCode.INVALID_REQUEST_PARAMETER.getStatus())
+                .body(new ErrorResponseDTO(
+                        ErrorCode.INVALID_REQUEST_PARAMETER.getCode(),
+                        ErrorCode.INVALID_REQUEST_PARAMETER.getMessage(),
                         errorMessage
                 ));
     }

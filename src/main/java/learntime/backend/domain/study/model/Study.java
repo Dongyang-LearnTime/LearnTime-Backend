@@ -1,15 +1,13 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.notes.model.StudyNotes;
+import learntime.backend.domain.quiz.model.StudyQuiz;
 import learntime.backend.domain.user.model.User;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -60,6 +58,10 @@ public class Study {
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyDailyPlan> studyDailyPlans = new ArrayList<>();
 
+    // 진도 AI 피드백
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudyFeedback> studyFeedbacks = new ArrayList<>();
+
     // 쉬는 요일
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyRestDay> restDays = new ArrayList<>();
@@ -88,6 +90,11 @@ public class Study {
     // --- 비즈니스 로직 --- //
     public void updateStudyInfo(String studyTitle, LocalDate startDate, LocalDate endDate) {
         this.studyTitle = studyTitle;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    public void updateStudyDates(LocalDate startDate, LocalDate endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
     }

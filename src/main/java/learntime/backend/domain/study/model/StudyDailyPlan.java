@@ -9,6 +9,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(
@@ -41,6 +42,10 @@ public class StudyDailyPlan {
 
     @Column(name = "plan_content", nullable = false)
     private String planContent;
+
+    // 집중 시간
+    @Column(name = "focus_time")
+    private LocalTime focusTime;
 
     // 진행 여부 (시작 전, 진행 중, 완료)
     @Enumerated(EnumType.STRING)
@@ -88,5 +93,14 @@ public class StudyDailyPlan {
         this.understandingScore = understandingScore;
     }
 
+    // 초기화 상태로 복구
+    public void resetPlan(LocalDate newPlanDate) {
+        this.planDate = newPlanDate;
+        this.progressStatus = ProgressStatus.NOT_STARTED;
+        this.focusTime = null;
+        this.completionStatus = null;
+        this.understandingScore = null;
+        this.completionDate = null;
+    }
 
 }
