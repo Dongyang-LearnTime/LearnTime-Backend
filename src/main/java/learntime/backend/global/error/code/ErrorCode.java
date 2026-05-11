@@ -41,7 +41,21 @@ public enum ErrorCode implements BaseErrorCode {
     UTILITY_CLASS_INSTANTIATION(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "COMMON500_2",
-            "유틸리티 클래스는 인스턴스화 하면 안됩니다.");
+            "유틸리티 클래스는 인스턴스화 하면 안됩니다."),
+
+    // RequestBody Validation
+    INVALID_REQUEST_BODY(
+            HttpStatus.BAD_REQUEST,
+            "VALIDATOR-001",
+            "요청 본문 값이 올바르지 않습니다."
+    ),
+
+    // Request Parameter Validation
+    INVALID_REQUEST_PARAMETER(
+            HttpStatus.BAD_REQUEST,
+            "VALIDATOR-002",
+            "요청 파라미터 값이 올바르지 않습니다."
+    );
 
     private final HttpStatus status;
     private final String code;
