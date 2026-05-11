@@ -17,4 +17,10 @@ public interface QuizHistoryRepository extends JpaRepository<QuizHistory, Long> 
             "WHERE qh.studyQuiz.studyQuizId = :studyQuizId " +
             "ORDER BY qh.attemptNumber DESC")
     List<QuizHistory> findAllWithAnswersByStudyQuizId(@Param("studyQuizId") Long studyQuizId);
+
+    @Query("SELECT COUNT(qa.quizAnswerId), SUM(CASE WHEN qa.isCorrect = true THEN 1 ELSE 0 END) " +
+            "FROM QuizHistory qh " +
+            "JOIN qh.answers qa " +
+            "WHERE qh.studyQuiz.study.studyId = :studyId")
+    List<Object[]> findQuizStatsByStudyId(@Param("studyId") Long studyId);
 }

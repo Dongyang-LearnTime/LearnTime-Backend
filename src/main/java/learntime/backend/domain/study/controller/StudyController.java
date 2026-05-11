@@ -7,9 +7,11 @@ import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyResetRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.facade.StudyFacade;
-import learntime.backend.domain.study.service.core.StudyCoreService;
+import learntime.backend.domain.study.service.core.StudyManagementService;
+import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,7 +32,17 @@ import java.util.List;
 public class StudyController {
 
     private final StudyFacade studyFacade;
-    private final StudyCoreService studyCoreService;
+    private final StudyQueryService studyQueryService;
+    private final StudyManagementService studyManagementService;
+
+    @GetMapping("/{studyId}/total")
+    @Operation(
+            summary = "공부 핵심 지표",
+            description = "진도 달성률, 퀴즈 정답률, 집중 시간 등 공부의 핵심 지표를 조회합니다. (캐싱함)")
+    public ResponseEntity<StudyTotalInfoResponseDTO> totalStudyIndicator(@PathVariable Long studyId) {
+        StudyTotalInfoResponseDTO result = studyQueryService.getStudyTotalIndicator(studyId);
+        return ResponseEntity.ok(result);
+    }
 
 
     @PostMapping(
@@ -71,7 +83,7 @@ public class StudyController {
     public ResponseEntity<Void> resetStudy(@PathVariable Long studyId,
                                            @Valid @RequestBody StudyResetRequestDTO request,
                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        studyCoreService.resetStudy(studyId, request, userDetails.userId());
+        studyManagementService.resetStudy(studyId, request, userDetails.userId());
         return ResponseEntity.ok().build();
     }
 

@@ -58,6 +58,10 @@ public class Study {
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyDailyPlan> studyDailyPlans = new ArrayList<>();
 
+    // 진도 AI 피드백
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudyFeedback> studyFeedbacks = new ArrayList<>();
+
     // 쉬는 요일
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyRestDay> restDays = new ArrayList<>();

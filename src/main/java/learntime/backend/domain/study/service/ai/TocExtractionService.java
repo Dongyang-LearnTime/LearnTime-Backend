@@ -38,6 +38,7 @@ public class TocExtractionService {
 
     private String promptTemplate;
 
+    // OCR 이미지 분석을 위한 프롬프트 템플릿을 초기화합니다.
     @PostConstruct
     public void init() {
         try {
@@ -47,6 +48,7 @@ public class TocExtractionService {
         }
     }
 
+    /** 이미지 파일에서 AI(OCR)를 이용해 목차 정보를 추출한다. */
     public List<TocListResponseDTO> extractTocAsJson(MultipartFile imageFile) {
         try {
             ByteArrayOutputStream os = new ByteArrayOutputStream();

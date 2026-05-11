@@ -20,6 +20,7 @@ public class StudyUserContentService {
     private final StudyUserContentRepository studyUserContentRepository;
     private final StudyDailyPlanRepository studyDailyPlanRepository;
 
+    // 일일 학습 계획에 사용자가 작성한 학습 내용을 추가합니다.
     @Transactional
     public Long createUserContent(StudyUserContentRequestDTO request, Long userId) {
         StudyDailyPlan dailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())

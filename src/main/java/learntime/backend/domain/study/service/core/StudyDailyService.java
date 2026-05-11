@@ -29,6 +29,8 @@ import java.util.List;
 import learntime.backend.domain.study.model.StudyRestDay;
 import learntime.backend.domain.study.model.StudyRestDate;
 import learntime.backend.domain.study.converter.StudyConverter;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 // 일일 진도 및 포인트 지급 관련 비즈니스 로직 담당 서비스
 @Service
@@ -40,9 +42,11 @@ public class StudyDailyService {
     private final StudyRestDayRepository studyRestDayRepository;
     private final StudyRepository studyRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final CacheManager cacheManager;
 
     private static final int UNDERSTANDING_SCORE_WEIGHT = 2; // 이해도에 따른 가중치 (이해도 2면 10*2)
 
+    // 특정 날짜의 학습 계획 정보를 조회합니다.
     @Transactional(readOnly = true)
     public StudyDailyPlanInfoResponseDTO getStudyPlanInfoByDate(Long studyId, LocalDate planDate, Long userId) {
         Study study = studyRepository.findById(studyId)
@@ -62,6 +66,7 @@ public class StudyDailyService {
         return StudyConverter.toStudyDailyPlanInfoResponseDTO(planDate, study, restDays, restDates, studyDailyPlan);
     }
 
+    // 일일 학습 계획을 완료 처리하고 포인트를 지급합니다.
     @Transactional
     public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
@@ -83,9 +88,16 @@ public class StudyDailyService {
                 description
         ));
 
+        // 통계 지표 캐시 무효화 (진도 상태가 변경되었으므로)
+        Cache cache = cacheManager.getCache("studyTotalIndicator");
+        if (cache != null) {
+            cache.evict(studyDailyPlan.getStudy().getStudyId());
+        }
+
         return calculatedPoint;
     }
 
+    // 학습 완료 상태와 이해도에 따라 지급할 포인트를 계산합니다.
     private int calculatePoint(CompletionStatus status, int understandingScore) {
         if (status == CompletionStatus.SUCCESS) {
             int bonus = understandingScore * UNDERSTANDING_SCORE_WEIGHT;
@@ -94,6 +106,7 @@ public class StudyDailyService {
         return PointPolicy.STUDY_COMPLETED_FAILURE.getAmount();
     }
 
+    // 포인트 지급 내역에 표시될 설명을 결정합니다.
     private String determineDescription(CompletionStatus status, int understandingScore) {
         if (status == CompletionStatus.SUCCESS) {
             return String.format("%s (이해도: %d점)",

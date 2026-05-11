@@ -2,6 +2,7 @@ package learntime.backend.domain.study.converter;
 
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyFeedbackResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.user.model.User;
@@ -35,6 +36,15 @@ public class StudyConverter {
                 plan.getCompletionStatus(),
                 plan.getUnderstandingScore()
         );
+    }
+
+    public static StudyFeedbackResponseDTO toStudyFeedbackResponseDTO(StudyFeedback feedback) {
+        return StudyFeedbackResponseDTO.builder()
+                .feedbackId(feedback.getStudyFeedbackId())
+                .feedbackTitle(feedback.getFeedbackTitle())
+                .feedbackContent(feedback.getFeedbackContent())
+                .createdAt(feedback.getCreatedAt())
+                .build();
     }
 
 

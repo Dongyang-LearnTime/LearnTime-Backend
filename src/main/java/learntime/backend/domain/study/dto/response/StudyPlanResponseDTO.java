@@ -23,7 +23,7 @@ public record StudyPlanResponseDTO(
 
     public static class TupleDeserializer extends JsonDeserializer<StudyPlanResponseDTO> {
         @Override
-        public StudyPlanResponseDTO deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+        public StudyPlanResponseDTO deserialize(JsonParser p, DeserializationContext text) throws IOException {
             JsonNode root = p.getCodec().readTree(p);
             List<DailyPlan> plans = new ArrayList<>();
 
