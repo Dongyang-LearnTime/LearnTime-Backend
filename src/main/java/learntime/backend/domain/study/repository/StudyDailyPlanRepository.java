@@ -3,7 +3,7 @@ package learntime.backend.domain.study.repository;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
-import learntime.backend.domain.study.dto.projection.StudyDailyPlanStatsDTO;
+import learntime.backend.domain.study.dto.StudyDailyPlanStatsDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

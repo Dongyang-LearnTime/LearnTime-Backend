@@ -1,7 +1,7 @@
 package learntime.backend.domain.study.service.core;
 
 import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
-import learntime.backend.domain.study.dto.projection.StudyDailyPlanStatsDTO;
+import learntime.backend.domain.study.dto.StudyDailyPlanStatsDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;

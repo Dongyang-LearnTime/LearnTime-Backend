@@ -6,6 +6,7 @@ import learntime.backend.domain.study.dto.response.*;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.study.model.StudyDailyPlan;
 import learntime.backend.domain.study.model.StudyFeedback;
 import learntime.backend.domain.study.repository.StudyFeedbackRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
@@ -27,7 +28,7 @@ public class StudyFeedbackService {
     private final StudyQueryService studyQueryService;
     private final GeminiFeedbackService geminiFeedbackService;
 
-    // 현재 학습 지표를 종합하여 AI 피드백을 생성하고 데이터베이스에 저장합니다.
+    /** 현재 학습 지표를 종합하여 AI 피드백을 생성하고 데이터베이스에 저장한다. */
     @Transactional
     public StudyFeedbackResponseDTO generateAndSaveFeedback(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
@@ -37,7 +38,7 @@ public class StudyFeedbackService {
 
         StudyTotalInfoResponseDTO indicator = studyQueryService.getStudyTotalIndicator(studyId);
         
-        List<learntime.backend.domain.study.model.StudyDailyPlan> completedPlans = 
+        List<StudyDailyPlan> completedPlans =
                 studyDailyPlanRepository.findCompletedPlansByStudyId(studyId);
                 
         List<StudyAnalysisDataDTO.DailyTopicStats> topicStats = completedPlans.stream()
