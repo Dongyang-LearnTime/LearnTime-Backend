@@ -10,6 +10,9 @@ import java.util.Collections;
 
 public record CustomUserDetails(Long userId, String email, String role, boolean isLocked) implements UserDetails {
 
+    // 유저의 리마인더를 빠르게 조회하기 위해 추가
+    public Long getUserId() { return userId; }
+
     @Override
     public @NonNull Collection<? extends GrantedAuthority> getAuthorities() {
         // role을 GrantedAuthority 형태로 변환하여 반환
