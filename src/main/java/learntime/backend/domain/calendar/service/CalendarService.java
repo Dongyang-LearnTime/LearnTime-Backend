@@ -6,12 +6,11 @@ import learntime.backend.domain.calendar.error.code.CalenderErrorCode;
 import learntime.backend.domain.calendar.error.exception.CalenderException;
 import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.calendar.repository.CalendarRecordRepository;
+import learntime.backend.domain.notification.service.ReminderService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
-import learntime.backend.global.error.exception.BusinessException;
-import learntime.backend.global.error.code.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +26,7 @@ import java.util.stream.Collectors;
 public class CalendarService {
     private final CalendarRecordRepository calendarRecordRepository;
     private final UserRepository userRepository;
+    private final ReminderService reminderService;
 
     // 일정 등록
     @Transactional
@@ -43,8 +43,9 @@ public class CalendarService {
                 .build();
 
         CalendarRecord saved = calendarRecordRepository.save(record);
-        log.info("새로운 일정이 등록되었습니다: ID={}, 제목={}", saved.getCalendarRecordId(), saved.getTitle());
 
+        // 리마인더(알림) 생성
+        reminderService.upsertReminder(saved, request.reminderOption());
         return CalendarResponseDTO.from(saved);
     }
 
@@ -72,12 +73,10 @@ public class CalendarService {
         CalendarRecord record = calendarRecordRepository.findById(calendarRecordId)
                 .orElseThrow(() -> new CalenderException(CalenderErrorCode.CALENDAR_NOT_FOUND));
 
-        record.update(
-                request.title(),
-                request.content(),
-                request.targetDate(),
-                request.isCompleted()
-        );
+        record.update(request.title(), request.content(), request.targetDate(), request.isCompleted());
+
+        // 💡 리마인더 업데이트 로직 연결 (시간이 바뀌면 알림 시간도 재계산됨)
+        reminderService.upsertReminder(record, request.reminderOption());
 
         return CalendarResponseDTO.from(record);
     }
@@ -85,11 +84,12 @@ public class CalendarService {
     // 일정 삭제
     @Transactional
     public void deleteSchedule(Long calendarRecordId) {
-        if (!calendarRecordRepository.existsById(calendarRecordId)) {
-            throw new CalenderException(CalenderErrorCode.CALENDAR_NOT_FOUND);
-        }
-        calendarRecordRepository.deleteById(calendarRecordId);
-        log.info("일정이 삭제되었습니다: ID={}", calendarRecordId);
-    }
+        CalendarRecord record = calendarRecordRepository.findById(calendarRecordId)
+                .orElseThrow(() -> new CalenderException(CalenderErrorCode.CALENDAR_NOT_FOUND));
 
+        // 💡 리마인더 먼저 삭제
+        reminderService.deleteReminder(record);
+
+        calendarRecordRepository.delete(record);
+    }
 }
