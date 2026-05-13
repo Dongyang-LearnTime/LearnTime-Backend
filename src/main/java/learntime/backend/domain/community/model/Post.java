@@ -53,8 +53,9 @@ public class Post extends CommunityBaseEntity {
     @Column(nullable = false)
     private Integer viewCount = 0; // 조회수
 
+    // 댓글
     @Builder.Default
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
     // 게시글 이미지
