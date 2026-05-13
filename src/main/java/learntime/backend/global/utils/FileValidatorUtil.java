@@ -1,7 +1,7 @@
-package learntime.backend.domain.study.service.util;
+package learntime.backend.global.utils;
 
-import learntime.backend.domain.study.error.code.FileErrorCode;
-import learntime.backend.domain.study.error.exception.FileException;
+import learntime.backend.global.error.code.FileErrorCode;
+import learntime.backend.global.error.exception.FileException;
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,7 +13,7 @@ import java.util.List;
 
 //학습 관련 파일 검증 유틸리티
 @Component
-public class StudyFileValidator {
+public class FileValidatorUtil {
 
     private final Tika tika = new Tika();
 
@@ -48,5 +48,16 @@ public class StudyFileValidator {
         } catch (IOException e) {
             throw new FileException(FileErrorCode.FILE_READ_ERROR);
         }
+    }
+
+    public static String getExtension(String contentType) {
+        if (contentType == null) return "";
+        return switch (contentType) {
+            case "image/jpeg" -> ".jpg";
+            case "image/png" -> ".png";
+            case "image/webp" -> ".webp";
+            case "image/gif" -> ".gif";
+            default -> "";
+        };
     }
 }

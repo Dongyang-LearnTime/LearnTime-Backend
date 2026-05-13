@@ -10,7 +10,7 @@ import learntime.backend.domain.study.service.ai.GeminiStudyService;
 import learntime.backend.domain.study.service.ai.TocExtractionService;
 import learntime.backend.domain.study.service.core.StudyManagementService;
 import learntime.backend.domain.study.service.core.StudyQueryService;
-import learntime.backend.domain.study.service.util.StudyFileValidator;
+import learntime.backend.global.utils.FileValidatorUtil;
 import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StudyFacade {
 
-    private final StudyFileValidator studyFileValidator;
+    private final FileValidatorUtil fileValidatorUtil;
     private final TocExtractionService tocExtractionService;
     private final GeminiStudyService geminiStudyService;
     private final StudyManagementService studyManagementService;
@@ -33,7 +33,7 @@ public class StudyFacade {
 
     // 업로드된 이미지에서 AI를 활용하여 목차 정보를 추출합니다.
     public List<TocListResponseDTO> extractToc(MultipartFile imageFile) {
-        studyFileValidator.validateImage(imageFile);
+        fileValidatorUtil.validateImage(imageFile);
         return tocExtractionService.extractTocAsJson(imageFile);
     }
 

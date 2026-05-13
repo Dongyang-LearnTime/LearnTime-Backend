@@ -1,6 +1,5 @@
-package learntime.backend.domain.study.error.code;
+package learntime.backend.global.error.code;
 
-import learntime.backend.global.error.code.BaseErrorCode;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
