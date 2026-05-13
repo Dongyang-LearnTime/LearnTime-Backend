@@ -75,7 +75,7 @@ public class CalendarService {
 
         record.update(request.title(), request.content(), request.targetDate(), request.isCompleted());
 
-        // 💡 리마인더 업데이트 로직 연결 (시간이 바뀌면 알림 시간도 재계산됨)
+        // 리마인더 업데이트 로직 연결 (시간이 바뀌면 알림 시간도 재계산됨)
         reminderService.upsertReminder(record, request.reminderOption());
 
         return CalendarResponseDTO.from(record);
@@ -87,7 +87,7 @@ public class CalendarService {
         CalendarRecord record = calendarRecordRepository.findById(calendarRecordId)
                 .orElseThrow(() -> new CalenderException(CalenderErrorCode.CALENDAR_NOT_FOUND));
 
-        // 💡 리마인더 먼저 삭제
+        // 리마인더 먼저 삭제
         reminderService.deleteReminder(record);
 
         calendarRecordRepository.delete(record);
