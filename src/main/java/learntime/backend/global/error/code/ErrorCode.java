@@ -27,6 +27,20 @@ public enum ErrorCode implements BaseErrorCode {
             "YOUTUBE-001",
             "YouTube 응답에 문제가 발생했습니다."),
 
+    // S3 관련 에러
+    S3_UPLOAD_FAILED(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "S3-001",
+            "S3 파일 업로드에 실패했습니다."),
+    S3_DELETE_FAILED(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "S3-002",
+            "S3 파일 삭제에 실패했습니다."),
+    S3_URL_INVALID(
+            HttpStatus.BAD_REQUEST,
+            "S3-003",
+            "유효하지 않은 S3 파일 URL입니다."),
+
     // 신체 데이터 암호화 관련 에러
     ENCRYPTION_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,

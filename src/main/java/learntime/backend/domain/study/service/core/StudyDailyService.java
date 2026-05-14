@@ -17,6 +17,7 @@ import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.domain.study.repository.StudyRestDayRepository;
 import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
 // 일일 진도 및 포인트 지급 관련 비즈니스 로직 담당 서비스
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StudyDailyService {
@@ -76,6 +78,7 @@ public class StudyDailyService {
 
         studyDailyPlan.setProgressStatus(ProgressStatus.COMPLETED);
         studyDailyPlan.setCompletionStatus(request.completionStatus());
+        studyDailyPlan.setUnderstandingScore(request.understandingScore());
         studyDailyPlan.setCompletionDate(LocalDateTime.now());
 
         int calculatedPoint = calculatePoint(request.completionStatus(), request.understandingScore());
@@ -92,6 +95,10 @@ public class StudyDailyService {
         Cache cache = cacheManager.getCache("studyTotalIndicator");
         if (cache != null) {
             cache.evict(studyDailyPlan.getStudy().getStudyId());
+        }
+        Cache recentWeekCache = cacheManager.getCache("studyRecentWeekInfo");
+        if (recentWeekCache != null) {
+            recentWeekCache.evict(studyDailyPlan.getStudy().getStudyId());
         }
 
         return calculatedPoint;
@@ -113,6 +120,44 @@ public class StudyDailyService {
                     PointPolicy.STUDY_COMPLETED_SUCCESS.getDescription(), understandingScore);
         }
         return PointPolicy.STUDY_COMPLETED_FAILURE.getDescription();
+    }
+
+    // 완료되지 않는 진도 실패 처리
+    @Transactional
+    public void markIncompletePlansAsFailure() {
+        LocalDate today = LocalDate.now();
+
+        log.info("[StudyDailyPlan] 미완료 계획 실패 처리 시작 - 기준일: {}", today);
+        long startTime = System.currentTimeMillis();
+
+        int updatedCount =
+                studyDailyPlanRepository.bulkFailIncompletePlans(today);
+
+        log.info("[StudyDailyPlan] 실패 처리 대상 건수: {}", updatedCount);
+
+        if (updatedCount > 0) {
+            Cache cache = cacheManager.getCache("studyTotalIndicator");
+            if (cache != null) {
+                cache.clear();
+                log.info("[StudyDailyPlan] studyTotalIndicator 캐시 초기화 완료");
+            } else {
+                log.warn("[StudyDailyPlan] studyTotalIndicator 캐시를 찾을 수 없음");
+            }
+            Cache recentWeekCache = cacheManager.getCache("studyRecentWeekInfo");
+            if (recentWeekCache != null) {
+                recentWeekCache.clear();
+                log.info("[StudyDailyPlan] studyRecentWeekInfo 캐시 초기화 완료");
+            } else {
+                log.warn("[StudyDailyPlan] studyRecentWeekInfo 캐시를 찾을 수 없음");
+            }
+        }
+        long endTime = System.currentTimeMillis();
+        log.info(
+                "[StudyDailyPlan] 실패 처리 완료 - 처리 건수: {}건, 소요 시간: {}ms",
+                updatedCount,
+                (endTime - startTime)
+        );
+
     }
 
 }

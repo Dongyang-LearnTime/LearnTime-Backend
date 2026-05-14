@@ -2,6 +2,9 @@ package learntime.backend.domain.user.model;
 
 import jakarta.persistence.*;
 import learntime.backend.domain.calendar.model.CalendarRecord;
+import learntime.backend.domain.community.model.Comment;
+import learntime.backend.domain.community.model.Post;
+import learntime.backend.domain.community.model.PostLike;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
@@ -104,6 +107,18 @@ public class User {
     // 포인트 내역
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<PointHistory> pointHistories = new ArrayList<>();
+
+    // 게시글 (SET NULL)
+    @OneToMany(mappedBy = "user")
+    private List<Post> posts = new ArrayList<>();
+
+    // 댓글 (SET NULL)
+    @OneToMany(mappedBy = "user")
+    private List<Comment> comments = new ArrayList<>();
+
+    // 게시글 좋아요 사용자 목록
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostLike> postLikes = new ArrayList<>();
 
     // 리프레쉬 토큰
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

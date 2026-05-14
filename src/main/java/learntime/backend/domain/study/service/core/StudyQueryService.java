@@ -1,13 +1,20 @@
 package learntime.backend.domain.study.service.core;
 
 import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
-import learntime.backend.domain.study.dto.projection.StudyDailyPlanStatsDTO;
+import learntime.backend.domain.study.converter.StudyConverter;
+import learntime.backend.domain.study.dto.StudyDailyPlanStatsDTO;
+import learntime.backend.domain.study.dto.response.StudyRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.study.model.StudyDailyPlan;
+import learntime.backend.domain.study.model.StudyRestDate;
+import learntime.backend.domain.study.model.StudyRestDay;
 import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
+import learntime.backend.domain.study.repository.StudyRestDateRepository;
+import learntime.backend.domain.study.repository.StudyRestDayRepository;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.utils.AuthorizationUtil;
@@ -30,6 +37,8 @@ public class StudyQueryService {
 
     private final StudyRepository studyRepository;
     private final StudyDailyPlanRepository studyDailyPlanRepository;
+    private final StudyRestDateRepository studyRestDateRepository;
+    private final StudyRestDayRepository studyRestDayRepository;
     private final QuizHistoryRepository quizHistoryRepository;
     private final StudyDateCalculator studyDateCalculator;
 
@@ -94,6 +103,30 @@ public class StudyQueryService {
                 .quizCorrectRate(quizCorrectRate)
                 .totalFocusedTime(totalFocusedTime)
                 .build();
+    }
+
+    // 오늘을 제외한 최근 7일의 날짜별 공부 상태를 조회합니다.
+    @Transactional(readOnly = true)
+    @Cacheable(value = "studyRecentWeekInfo", key = "#studyId")
+    public List<StudyRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId) {
+        LocalDate today = LocalDate.now();
+        List<StudyDailyPlan> recentPlans = studyDailyPlanRepository.findByStudyIdAndPlanDateBetweenOrderByPlanDateAsc(
+                studyId,
+                today.minusDays(7),
+                today.minusDays(1)
+        );
+
+        Set<DayOfWeek> restDays = studyRestDayRepository.findAllByStudy_StudyId(studyId)
+                .stream()
+                .map(StudyRestDay::getDayOfWeek)
+                .collect(java.util.stream.Collectors.toSet());
+
+        Set<LocalDate> restDates = studyRestDateRepository.findAllByStudy_StudyId(studyId)
+                .stream()
+                .map(StudyRestDate::getRestDate)
+                .collect(java.util.stream.Collectors.toSet());
+
+        return StudyConverter.toRecentWeekStudyInfoResponseDTOs(recentPlans, today, restDays, restDates);
     }
 
     // 아직 완료되지 않은 학습 계획의 내용을 통합하여 문자열로 반환합니다.

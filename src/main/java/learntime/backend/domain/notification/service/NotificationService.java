@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class NotificationService {
 
-    // 💡 모든 사용자의 연결을 관리 (Thread-safe한 Map 사용)
+    // 모든 사용자의 연결을 관리 (Thread-safe한 Map 사용)
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
     // SSE 연결 시간 (1시간)

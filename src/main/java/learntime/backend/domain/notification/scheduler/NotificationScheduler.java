@@ -1,8 +1,9 @@
-package learntime.backend.domain.notification.service;
+package learntime.backend.domain.notification.scheduler;
 
 import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.notification.model.Reminder;
 import learntime.backend.domain.notification.repository.ReminderRepository;
+import learntime.backend.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

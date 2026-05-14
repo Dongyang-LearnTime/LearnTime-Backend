@@ -3,7 +3,7 @@ package learntime.backend.domain.study.repository;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
-import learntime.backend.domain.study.dto.projection.StudyDailyPlanStatsDTO;
+import learntime.backend.domain.study.dto.StudyDailyPlanStatsDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -69,6 +69,17 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
 
     @Query("SELECT p FROM StudyDailyPlan p WHERE p.study.studyId = :studyId AND p.planDate = :planDate")
     Optional<StudyDailyPlan> findByStudyIdAndPlanDate(@Param("studyId") Long studyId, @Param("planDate") LocalDate planDate);
+
+    @Query("""
+           SELECT p
+           FROM StudyDailyPlan p
+           WHERE p.study.studyId = :studyId
+             AND p.planDate BETWEEN :startDate AND :endDate
+           ORDER BY p.planDate ASC
+           """)
+    List<StudyDailyPlan> findByStudyIdAndPlanDateBetweenOrderByPlanDateAsc(@Param("studyId") Long studyId,
+                                                                           @Param("startDate") LocalDate startDate,
+                                                                           @Param("endDate") LocalDate endDate);
 
     // 스터디의 모든 일일 일정을 일차 순으로 오름차순 조회
     List<StudyDailyPlan> findByStudyOrderByDayNumberAsc(Study study);

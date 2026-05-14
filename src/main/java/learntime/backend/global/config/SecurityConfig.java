@@ -6,6 +6,7 @@ import learntime.backend.global.error.security.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -72,6 +73,7 @@ public class SecurityConfig {
                             return new AuthorizationDecision(isLocal);
                         })
                         .requestMatchers("/api/auth/**").permitAll()       // 인증 예외 처리
+                        .requestMatchers(HttpMethod.GET, "/api/community/**").permitAll() // 커뮤니티 조회 제외
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한 검증
                         .anyRequest().authenticated()                      // 나머지 모든 요청은 인증(JWT) 필수
                 )

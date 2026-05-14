@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.dto.projection;
+package learntime.backend.domain.study.dto;
 
 import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;
