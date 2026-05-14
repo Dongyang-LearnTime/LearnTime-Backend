@@ -78,6 +78,7 @@ public class StudyDailyService {
 
         studyDailyPlan.setProgressStatus(ProgressStatus.COMPLETED);
         studyDailyPlan.setCompletionStatus(request.completionStatus());
+        studyDailyPlan.setUnderstandingScore(request.understandingScore());
         studyDailyPlan.setCompletionDate(LocalDateTime.now());
 
         int calculatedPoint = calculatePoint(request.completionStatus(), request.understandingScore());
@@ -94,6 +95,10 @@ public class StudyDailyService {
         Cache cache = cacheManager.getCache("studyTotalIndicator");
         if (cache != null) {
             cache.evict(studyDailyPlan.getStudy().getStudyId());
+        }
+        Cache recentWeekCache = cacheManager.getCache("studyRecentWeekInfo");
+        if (recentWeekCache != null) {
+            recentWeekCache.evict(studyDailyPlan.getStudy().getStudyId());
         }
 
         return calculatedPoint;
@@ -137,6 +142,13 @@ public class StudyDailyService {
                 log.info("[StudyDailyPlan] studyTotalIndicator 캐시 초기화 완료");
             } else {
                 log.warn("[StudyDailyPlan] studyTotalIndicator 캐시를 찾을 수 없음");
+            }
+            Cache recentWeekCache = cacheManager.getCache("studyRecentWeekInfo");
+            if (recentWeekCache != null) {
+                recentWeekCache.clear();
+                log.info("[StudyDailyPlan] studyRecentWeekInfo 캐시 초기화 완료");
+            } else {
+                log.warn("[StudyDailyPlan] studyRecentWeekInfo 캐시를 찾을 수 없음");
             }
         }
         long endTime = System.currentTimeMillis();

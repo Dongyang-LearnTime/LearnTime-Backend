@@ -98,7 +98,7 @@ public class StudyManagementService {
 
     // 기존 학습 계획을 바탕으로 AI가 생성한 재계획을 반영하여 저장합니다.
     @Transactional
-    @CacheEvict(value = "studyTotalIndicator", key = "#studyId")
+    @CacheEvict(value = {"studyTotalIndicator", "studyRecentWeekInfo"}, key = "#studyId")
     public void replanStudy(Long studyId,
                             GeminiReplanRequestDTO request,
                             StudyPlanResponseDTO geminiResult,
@@ -146,7 +146,7 @@ public class StudyManagementService {
 
     // 기존에 저장된 진도 계획 상태를 유지하며 휴일 및 시작일을 기준으로 전체 날짜를 재계산하여 초기화합니다.
     @Transactional
-    @CacheEvict(value = "studyTotalIndicator", key = "#studyId")
+    @CacheEvict(value = {"studyTotalIndicator", "studyRecentWeekInfo"}, key = "#studyId")
     public void resetStudy(Long studyId, StudyResetRequestDTO request, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));

@@ -4,6 +4,7 @@ import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyFeedbackResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
@@ -12,6 +13,9 @@ import learntime.backend.global.error.exception.BusinessException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class StudyConverter {
 
@@ -45,6 +49,44 @@ public class StudyConverter {
                 .feedbackContent(feedback.getFeedbackContent())
                 .createdAt(feedback.getCreatedAt())
                 .build();
+    }
+
+    public static List<StudyRecentWeekInfoResponseDTO> toRecentWeekStudyInfoResponseDTOs(
+            List<StudyDailyPlan> plans,
+            LocalDate today,
+            Set<DayOfWeek> restDays,
+            Set<LocalDate> restDates
+    ) {
+        LocalDate startDate = today.minusDays(7);
+
+        Map<LocalDate, StudyDailyPlan> planByDate = plans.stream()
+                .filter(plan -> plan.getPlanDate() != null)
+                .filter(plan -> !plan.getPlanDate().isBefore(startDate) && plan.getPlanDate().isBefore(today))
+                .collect(Collectors.toMap(
+                        StudyDailyPlan::getPlanDate,
+                        plan -> plan,
+                        (first, second) -> first
+                ));
+
+        return startDate.datesUntil(today)
+                .filter(date -> !restDays.contains(date.getDayOfWeek()))
+                .filter(date -> !restDates.contains(date))
+                .map(date -> toStudyRecentWeekInfoResponseDTO(date, planByDate.get(date)))
+                .toList();
+    }
+
+    private static StudyRecentWeekInfoResponseDTO toStudyRecentWeekInfoResponseDTO(LocalDate planDate, StudyDailyPlan plan) {
+        if (plan == null) {
+            return new StudyRecentWeekInfoResponseDTO(planDate, null, null, null, null);
+        }
+
+        return new StudyRecentWeekInfoResponseDTO(
+                planDate,
+                plan.getFocusTime(),
+                plan.getProgressStatus(),
+                plan.getCompletionStatus(),
+                plan.getUnderstandingScore()
+        );
     }
 
 
