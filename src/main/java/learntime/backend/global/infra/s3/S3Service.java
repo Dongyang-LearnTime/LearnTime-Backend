@@ -97,4 +97,5 @@ public class S3Service {
 
         return FileValidatorUtil.getExtension(file.getContentType());
     }
+
 }

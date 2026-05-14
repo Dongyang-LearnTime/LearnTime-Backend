@@ -1,0 +1,12 @@
+package learntime.backend.domain.community.repository;
+
+import learntime.backend.domain.community.model.PostLike;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
+    
+    /** 특정 사용자가 특정 게시글에 좋아요(추천)를 눌렀는지 여부를 확인함. */
+    boolean existsByPost_PostIdAndUser_UserId(Long postId, Long userId);
+}

@@ -1,6 +1,6 @@
 package learntime.backend.domain.community.scheduler;
 
-import learntime.backend.domain.community.service.CommunityCleanupService;
+import learntime.backend.domain.community.service.core.CommunityCleanupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;

@@ -1,0 +1,40 @@
+package learntime.backend.domain.community.dto.response;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
+
+import java.time.LocalDateTime;
+
+@Builder
+@Schema(description = "게시글 목록 조회 응답 DTO")
+public record PostListResponseDTO(
+        @Schema(description = "게시글 식별자(ID)", example = "1")
+        Long postId,
+        
+        @Schema(description = "작성자 식별자(ID). 탈퇴한 경우 null", example = "123")
+        Long userId,
+        
+        @Schema(description = "작성자 이름 또는 닉네임. 탈퇴한 경우 '탈퇴한 사용자'", example = "홍길동")
+        String userName,
+        
+        @Schema(description = "게시글 제목", example = "오늘 공부 인증합니다!")
+        String title,
+        
+        @Schema(description = "게시글 조회수", example = "150")
+        Integer viewCount,
+        
+        @Schema(description = "게시글 좋아요 수", example = "23")
+        Integer likeCount,
+        
+        @Schema(description = "게시글에 달린 댓글 수", example = "5")
+        Long commentCount,
+        
+        @Schema(description = "게시글 생성 일시")
+        LocalDateTime createdAt
+) {
+    public PostListResponseDTO {
+        if (userName == null) {
+            userName = "탈퇴한 사용자";
+        }
+    }
+}

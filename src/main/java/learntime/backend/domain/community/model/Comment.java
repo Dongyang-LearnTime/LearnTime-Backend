@@ -35,4 +35,7 @@ public class Comment extends CommunityBaseEntity {
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private User user;
 
+    public void updateContent(String content) {
+        this.content = content;
+    }
 }

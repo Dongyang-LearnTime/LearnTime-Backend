@@ -94,4 +94,9 @@ public class Post extends CommunityBaseEntity {
     // 조회수 증가
     public void incrementViewCount() { this.viewCount++; }
 
+    // 게시글 수정
+    public void updatePost(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
 }
