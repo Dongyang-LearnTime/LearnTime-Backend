@@ -73,10 +73,27 @@ public class Post extends CommunityBaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostViewHistory> postViewHistories = new ArrayList<>();
 
+    // --- 연관관계 편의 메서드 --- //
+
     // 이미지 추가
     public void addImage(PostImage image) {
         images.add(image);
         image.setPost(this);
+    }
+
+    // 댓글 추가
+    public void addComment(Comment comment) {
+        comments.add(comment);
+    }
+
+    // 좋아요 추가
+    public void addPostLike(PostLike postLike) {
+        postLikes.add(postLike);
+    }
+
+    // 조회 이력 추가
+    public void addPostViewHistory(PostViewHistory history) {
+        postViewHistories.add(history);
     }
 
     // 좋아요 증가

@@ -15,12 +15,7 @@ public enum StudyErrorCode implements BaseErrorCode {
     STUDY_UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "STUDY-007", "해당 공부 진도/필기에 대한 접근 권한이 없습니다."),
     QUIZ_QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-008", "퀴즈 문제를 찾을 수 없습니다."),
     QUIZ_HISTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-009", "퀴즈 풀이 이력을 찾을 수 없습니다."),
-    STUDY_DAILY_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "STUDY-010", "이미 완료된 공부 일일 일정에는 사용자 내용을 추가할 수 없습니다."),
-    STUDY_SHARE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "STUDY-011", "공유 친구는 최대 3명까지 가능합니다."),
-    STUDY_SHARE_ONLY_FRIEND(HttpStatus.BAD_REQUEST, "STUDY-012", "친구인 사용자에게만 공부 일정을 공유할 수 있습니다."),
-    STUDY_PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-013", "공부 일정 참가자를 찾을 수 없습니다."),
-    STUDY_OWNER_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "STUDY-014", "공부 일정 생성자는 나갈 수 없습니다."),
-    STUDY_SHARE_DUPLICATED_USER(HttpStatus.CONFLICT, "STUDY-015", "이미 공유된 사용자가 포함되어 있습니다.");
+    STUDY_DAILY_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "STUDY-010", "이미 완료된 공부 일일 일정에는 사용자 내용을 추가할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

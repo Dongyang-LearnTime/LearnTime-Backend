@@ -74,20 +74,6 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
            SELECT p
            FROM StudyDailyPlan p
            WHERE p.study.studyId = :studyId
-             AND p.planDate = :planDate
-             AND (
-                    p.studyParticipant.user.userId = :userId
-                 OR (p.studyParticipant IS NULL AND p.study.user.userId = :userId)
-             )
-           """)
-    Optional<StudyDailyPlan> findByStudyIdAndUserIdAndPlanDate(@Param("studyId") Long studyId,
-                                                               @Param("userId") Long userId,
-                                                               @Param("planDate") LocalDate planDate);
-
-    @Query("""
-           SELECT p
-           FROM StudyDailyPlan p
-           WHERE p.study.studyId = :studyId
              AND p.planDate BETWEEN :startDate AND :endDate
            ORDER BY p.planDate ASC
            """)
@@ -95,39 +81,12 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
                                                                            @Param("startDate") LocalDate startDate,
                                                                            @Param("endDate") LocalDate endDate);
 
-    @Query("""
-           SELECT p
-           FROM StudyDailyPlan p
-           WHERE p.study.studyId = :studyId
-             AND (
-                    p.studyParticipant.user.userId = :userId
-                 OR (p.studyParticipant IS NULL AND p.study.user.userId = :userId)
-             )
-             AND p.planDate BETWEEN :startDate AND :endDate
-           ORDER BY p.planDate ASC
-           """)
-    List<StudyDailyPlan> findByStudyIdAndUserIdAndPlanDateBetweenOrderByPlanDateAsc(@Param("studyId") Long studyId,
-                                                                                    @Param("userId") Long userId,
-                                                                                    @Param("startDate") LocalDate startDate,
-                                                                                    @Param("endDate") LocalDate endDate);
-
     // 스터디의 모든 일일 일정을 일차 순으로 오름차순 조회
     List<StudyDailyPlan> findByStudyOrderByDayNumberAsc(Study study);
 
     @Query("SELECT p.progressStatus as progressStatus, p.completionStatus as completionStatus, p.focusTime as focusTime " +
            "FROM StudyDailyPlan p WHERE p.study.studyId = :studyId")
     List<StudyDailyPlanStatsDTO> findStatsByStudyId(@Param("studyId") Long studyId);
-
-    @Query("""
-           SELECT p.progressStatus as progressStatus, p.completionStatus as completionStatus, p.focusTime as focusTime
-           FROM StudyDailyPlan p
-           WHERE p.study.studyId = :studyId
-             AND (
-                    p.studyParticipant.user.userId = :userId
-                 OR (p.studyParticipant IS NULL AND p.study.user.userId = :userId)
-             )
-           """)
-    List<StudyDailyPlanStatsDTO> findStatsByStudyIdAndUserId(@Param("studyId") Long studyId, @Param("userId") Long userId);
 
     @Query("SELECT p FROM StudyDailyPlan p WHERE p.study.studyId = :studyId AND p.progressStatus = 'COMPLETED' ORDER BY p.dayNumber ASC")
     List<StudyDailyPlan> findCompletedPlansByStudyId(@Param("studyId") Long studyId);

@@ -41,7 +41,7 @@ public class CommunityFacade {
 
         StudyTotalInfoResponseDTO studyIndicator = null;
         if (post.getStudy() != null) {
-            studyIndicator = studyQueryService.getStudyTotalIndicator(post.getStudy().getStudyId(), userId);
+            studyIndicator = studyQueryService.getStudyTotalIndicator(post.getStudy().getStudyId());
         }
 
         boolean isLiked = false;

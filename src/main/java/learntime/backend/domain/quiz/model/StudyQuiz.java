@@ -49,6 +49,16 @@ public class StudyQuiz extends BaseTimeEntity {
     @OneToMany(mappedBy = "studyQuiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuizHistory> quizHistories = new ArrayList<>();
 
+    // --- 연관관계 편의 메서드 --- //
+
+    public void addQuestion(QuizQuestion question) {
+        this.questions.add(question);
+    }
+
+    public void addQuizHistory(QuizHistory history) {
+        this.quizHistories.add(history);
+    }
+
     @Builder
     public StudyQuiz(Study study, String quizTitle) {
         this.study = study;

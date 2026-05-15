@@ -43,6 +43,12 @@ public class QuizHistory {
     @OneToMany(mappedBy = "quizHistory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuizAnswer> answers = new ArrayList<>();
 
+    // --- 연관관계 편의 메서드 --- //
+
+    public void addAnswer(QuizAnswer answer) {
+        this.answers.add(answer);
+    }
+
     @Builder
     public QuizHistory(StudyQuiz studyQuiz, Integer attemptNumber, Integer correctCount, Integer earnedPoints) {
         this.studyQuiz = studyQuiz;

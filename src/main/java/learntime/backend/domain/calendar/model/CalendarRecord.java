@@ -1,11 +1,14 @@
 package learntime.backend.domain.calendar.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.notification.model.Reminder;
 import learntime.backend.domain.user.model.User;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -46,11 +49,21 @@ public class CalendarRecord {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    // 리마인더 목록
+    @Builder.Default
+    @OneToMany(mappedBy = "calendarRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reminder> reminders = new ArrayList<>();
+
     // 일정 수정 기능을 위한 편의 메서드
     public void update(String title, String content, LocalDateTime targetDate, Boolean isCompleted) {
         this.title = title;
         this.content = content;
         this.targetDate = targetDate;
         this.isCompleted = isCompleted;
+    }
+
+    // 리마인더 추가 편의 메서드
+    public void addReminder(Reminder reminder) {
+        this.reminders.add(reminder);
     }
 }

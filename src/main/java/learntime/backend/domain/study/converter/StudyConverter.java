@@ -100,32 +100,22 @@ public class StudyConverter {
                 .build();
     }
 
-    public static StudyDailyPlan toStudyDailyPlanEntity(Study study, StudyParticipant participant, StudyPlanResponseDTO.DailyPlan planDto, LocalDate planDate) {
+    public static StudyDailyPlan toStudyDailyPlanEntity(Study study, StudyPlanResponseDTO.DailyPlan planDto, LocalDate planDate) {
         return StudyDailyPlan.builder()
                 .study(study)
-                .studyParticipant(participant)
                 .dayNumber(planDto.day())
                 .planDate(planDate)
                 .planContent(planDto.tasks())
                 .build();
     }
 
-    public static StudyDailyPlan toStudyDailyPlanEntity(Study study, StudyPlanResponseDTO.DailyPlan planDto, LocalDate planDate) {
-        return toStudyDailyPlanEntity(study, null, planDto, planDate);
-    }
-
-    public static StudyDailyPlan toStudyDailyPlanEntity(Study study, StudyParticipant participant, StudyPlanResponseDTO.DailyPlan planDto, LocalDate planDate, int lastDayNumber) {
+    public static StudyDailyPlan toStudyDailyPlanEntity(Study study, StudyPlanResponseDTO.DailyPlan planDto, LocalDate planDate, int lastDayNumber) {
         return StudyDailyPlan.builder()
                 .study(study)
-                .studyParticipant(participant)
                 .dayNumber(lastDayNumber + planDto.day())
                 .planDate(planDate)
                 .planContent(planDto.tasks())
                 .build();
-    }
-
-    public static StudyDailyPlan toStudyDailyPlanEntity(Study study, StudyPlanResponseDTO.DailyPlan planDto, LocalDate planDate, int lastDayNumber) {
-        return toStudyDailyPlanEntity(study, null, planDto, planDate, lastDayNumber);
     }
 
     public static StudyRestDate toStudyRestDateEntity(Study study, LocalDate date) {

@@ -83,9 +83,35 @@ public class Study {
     @OneToMany(mappedBy = "study")
     private List<Post> posts = new ArrayList<>();
 
-    // 공부 일정 참가자
-    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StudyParticipant> participants = new ArrayList<>();
+    // --- 연관관계 편의 메서드 --- //
+
+    public void addStudyDailyPlan(StudyDailyPlan plan) {
+        this.studyDailyPlans.add(plan);
+    }
+
+    public void addStudyFeedback(StudyFeedback feedback) {
+        this.studyFeedbacks.add(feedback);
+    }
+
+    public void addRestDay(StudyRestDay restDay) {
+        this.restDays.add(restDay);
+    }
+
+    public void addRestDate(StudyRestDate restDate) {
+        this.restDates.add(restDate);
+    }
+
+    public void addStudyQuiz(StudyQuiz quiz) {
+        this.studyQuizs.add(quiz);
+    }
+
+    public void addStudyNote(StudyNotes note) {
+        this.studyNotes.add(note);
+    }
+
+    public void addPost(Post post) {
+        this.posts.add(post);
+    }
 
     @Builder
     public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate, User user) {
