@@ -41,6 +41,7 @@ public class StudyQueryService {
     private final StudyRestDayRepository studyRestDayRepository;
     private final QuizHistoryRepository quizHistoryRepository;
     private final StudyDateCalculator studyDateCalculator;
+    private final StudyShareService studyShareService;
 
     // 남은 학습 기간 중 휴일을 제외한 실제 학습 가능 일수를 계산합니다.
     @Transactional(readOnly = true)
@@ -74,11 +75,13 @@ public class StudyQueryService {
         );
     }
 
-    // 스터디의 전체 통계 지표(달성률, 성공률, 퀴즈 정답률 등)를 조회합니다.
+    // 스터디의 사용자별 전체 통계 지표(달성률, 성공률, 퀴즈 정답률 등)를 조회합니다.
     @Transactional(readOnly = true)
-    @Cacheable(value = "studyTotalIndicator", key = "#studyId")
-    public StudyTotalInfoResponseDTO getStudyTotalIndicator(Long studyId) {
-        List<StudyDailyPlanStatsDTO> stats = studyDailyPlanRepository.findStatsByStudyId(studyId);
+    @Cacheable(value = "studyTotalIndicator", key = "#studyId + ':' + #userId")
+    public StudyTotalInfoResponseDTO getStudyTotalIndicator(Long studyId, Long userId) {
+        studyShareService.getActiveParticipant(studyId, userId);
+
+        List<StudyDailyPlanStatsDTO> stats = studyDailyPlanRepository.findStatsByStudyIdAndUserId(studyId, userId);
 
         if (stats.isEmpty()) {
             return buildEmptyIndicatorResponse();
@@ -107,11 +110,14 @@ public class StudyQueryService {
 
     // 오늘을 제외한 최근 7일의 날짜별 공부 상태를 조회합니다.
     @Transactional(readOnly = true)
-    @Cacheable(value = "studyRecentWeekInfo", key = "#studyId")
-    public List<StudyRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId) {
+    @Cacheable(value = "studyRecentWeekInfo", key = "#studyId + ':' + #userId")
+    public List<StudyRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId, Long userId) {
+        studyShareService.getActiveParticipant(studyId, userId);
+
         LocalDate today = LocalDate.now();
-        List<StudyDailyPlan> recentPlans = studyDailyPlanRepository.findByStudyIdAndPlanDateBetweenOrderByPlanDateAsc(
+        List<StudyDailyPlan> recentPlans = studyDailyPlanRepository.findByStudyIdAndUserIdAndPlanDateBetweenOrderByPlanDateAsc(
                 studyId,
+                userId,
                 today.minusDays(7),
                 today.minusDays(1)
         );

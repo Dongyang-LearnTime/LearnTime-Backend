@@ -1,6 +1,8 @@
 package learntime.backend.domain.notification.scheduler;
 
 import learntime.backend.domain.calendar.model.CalendarRecord;
+import learntime.backend.domain.notification.enums.NotificationType;
+import learntime.backend.domain.notification.enums.ReminderStatus;
 import learntime.backend.domain.notification.model.Reminder;
 import learntime.backend.domain.notification.repository.ReminderRepository;
 import learntime.backend.domain.notification.service.NotificationService;
@@ -12,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -26,11 +27,14 @@ public class NotificationScheduler {
     @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void sendReminderNotifications() {
-        // 1. 현재 시간 (초와 나노초는 무시하고 '분' 단위로 맞춤)
+        // 현재 시간 (초와 나노초는 무시하고 '분' 단위로 맞춤)
         LocalDateTime now = LocalDateTime.now().withSecond(0).withNano(0);
 
-        // 2. 해당 시간에 발송해야 할 대기 중인 리마인더 조회
-        List<Reminder> reminders = reminderRepository.findAllByRemindAtAndStatus(now, Reminder.ReminderStatus.WAITING);
+        // 발송 시각이 지났지만 아직 대기 중인 리마인더까지 함께 조회
+        List<Reminder> reminders = reminderRepository.findAllByRemindAtLessThanEqualAndStatus(
+                now,
+                ReminderStatus.WAITING
+        );
 
         if (reminders.isEmpty()) return;
 
@@ -38,17 +42,17 @@ public class NotificationScheduler {
             CalendarRecord record = reminder.getCalendarRecord();
             Long userId = record.getUser().getUserId();
 
-            // 3. 전송할 데이터 구성 (제목, 시간, 일정ID 포함)
-            Map<String, Object> payload = Map.of(
-                    "title", record.getTitle(),
-                    "targetDate", record.getTargetDate().toString(),
-                    "calendarRecordId", record.getCalendarRecordId()
+            // 알림을 저장하고, 접속 중인 사용자에게는 SSE로 즉시 전송
+            notificationService.notify(
+                    userId,
+                    NotificationType.CALENDAR_REMINDER,
+                    "일정 알림",
+                    record.getTitle() + " 일정 시간이 다가왔습니다.",
+                    record.getCalendarRecordId(),
+                    "CALENDAR_RECORD"
             );
 
-            // 4. SSE를 통해 알림 발송
-            notificationService.send(userId, payload, "calendar-reminder");
-
-            // 5. 발송 완료 상태로 변경
+            // 발송 완료 상태로 변경
             reminder.markAsSent();
         }
 

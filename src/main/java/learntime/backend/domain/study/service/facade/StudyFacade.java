@@ -10,6 +10,7 @@ import learntime.backend.domain.study.service.ai.GeminiStudyService;
 import learntime.backend.domain.study.service.ai.TocExtractionService;
 import learntime.backend.domain.study.service.core.StudyManagementService;
 import learntime.backend.domain.study.service.core.StudyQueryService;
+import learntime.backend.domain.study.service.core.StudyShareService;
 import learntime.backend.global.utils.FileValidatorUtil;
 import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class StudyFacade {
     private final StudyManagementService studyManagementService;
     private final StudyQueryService studyQueryService;
     private final StudyRepository studyRepository;
+    private final StudyShareService studyShareService;
 
     // 업로드된 이미지에서 AI를 활용하여 목차 정보를 추출합니다.
     public List<TocListResponseDTO> extractToc(MultipartFile imageFile) {
@@ -39,6 +41,7 @@ public class StudyFacade {
 
     // AI를 활용해 새로운 스마트 학습 계획을 생성하고 저장합니다.
     public void generateAndSaveStudyPlan(GeminiStudyRequestDTO request, Long userId) {
+        studyShareService.validateShareTargetsForCreate(userId, request.sharedFriendIds());
         StudyPlanResponseDTO geminiResult = geminiStudyService.generateSmartStudyPlan(request, userId);
         studyManagementService.saveStudyPlan(request, geminiResult, userId);
     }

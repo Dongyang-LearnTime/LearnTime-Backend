@@ -33,6 +33,11 @@ public class StudyDailyPlan {
     @JoinColumn(name = "study_id", nullable = false)
     private Study study;
 
+    /** 이 일일 계획을 수행하는 공부 참가자 */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "study_participant_id")
+    private StudyParticipant studyParticipant;
+
     @Column(name = "day_number", nullable = false)
     private Integer dayNumber; // DTO의 day
 
@@ -66,12 +71,17 @@ public class StudyDailyPlan {
     private LocalDateTime completionDate; // 완료 날짜
 
     @Builder
-    public StudyDailyPlan(Study study, Integer dayNumber, LocalDate planDate, String planContent) {
+    public StudyDailyPlan(Study study, StudyParticipant studyParticipant, Integer dayNumber, LocalDate planDate, String planContent) {
         this.study = study;
+        this.studyParticipant = studyParticipant;
         this.dayNumber = dayNumber;
         this.planDate = planDate;
         this.planContent = planContent;
         this.progressStatus = ProgressStatus.NOT_STARTED;
+    }
+
+    public void assignParticipant(StudyParticipant studyParticipant) {
+        this.studyParticipant = studyParticipant;
     }
 
     // --- 비즈니스 로직 --- //

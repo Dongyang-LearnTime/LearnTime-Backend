@@ -47,12 +47,13 @@ public class StudyManagementService {
     private final PromptQuotaUtil promptQuotaUtil;
     private final StudyDateCalculator studyDateCalculator;
     private final ApplicationEventPublisher eventPublisher;
+    private final StudyShareService studyShareService;
 
     // AI가 생성한 학습 계획을 검토 후 데이터베이스에 저장합니다.
     @Transactional
-    public void saveStudyPlan(GeminiStudyRequestDTO request,
-                              StudyPlanResponseDTO geminiResult,
-                              Long userId) {
+    public Study saveStudyPlan(GeminiStudyRequestDTO request,
+                               StudyPlanResponseDTO geminiResult,
+                               Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
@@ -60,6 +61,9 @@ public class StudyManagementService {
             Study study = StudyConverter.toStudyEntity(request, user);
 
             studyRepository.save(study);
+
+            // 생성자는 공유 공부 일정의 OWNER 참가자로 등록합니다.
+            var ownerParticipant = studyShareService.createOwnerParticipant(study, user);
 
             // 쉬는 날짜 정보 저장
             studyRestManager.saveRestDates(study, request.restDates());
@@ -77,10 +81,13 @@ public class StudyManagementService {
 
             for (int i = 0; i < geminiResult.dailyPlans().size(); i++) {
                 var planDto = geminiResult.dailyPlans().get(i);
-                dailyPlans.add(StudyConverter.toStudyDailyPlanEntity(study, planDto, planDates.get(i)));
+                dailyPlans.add(StudyConverter.toStudyDailyPlanEntity(study, ownerParticipant, planDto, planDates.get(i)));
             }
 
             studyDailyPlanRepository.saveAll(dailyPlans);
+
+            // 친구 공유 대상이 있으면 참가자와 친구별 독립 daily plan을 같은 트랜잭션에서 생성합니다.
+            studyShareService.shareStudyWithFriends(study, userId, request.sharedFriendIds());
 
             eventPublisher.publishEvent(
                     new PointEventDTO(userId,
@@ -89,6 +96,8 @@ public class StudyManagementService {
                             PointPolicy.STUDY_PLAN_CREATED.getDescription()
                     )
             );
+
+            return study;
 
         } catch (Exception e) {
             promptQuotaUtil.restorePromptQuota(userId);

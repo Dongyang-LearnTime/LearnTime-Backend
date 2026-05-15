@@ -35,7 +35,10 @@ public record GeminiStudyRequestDTO(
         List <TocListResponseDTO> tocList,
 
         List<DayOfWeek> restDays, // 쉬는 요일
-        List<LocalDate> restDates // 쉬는 날짜
+        List<LocalDate> restDates, // 쉬는 날짜
+
+        @Size(max = 3, message = "공유 친구는 최대 3명까지 가능합니다.")
+        List<Long> sharedFriendIds // 함께 공부할 친구 ID 목록
 ) {
     public Integer getValidatedStudyDays() {
         if (endDate.isBefore(startDate)) {

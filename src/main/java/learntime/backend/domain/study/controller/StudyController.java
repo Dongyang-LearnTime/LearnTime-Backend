@@ -40,8 +40,10 @@ public class StudyController {
     @Operation(
             summary = "공부 핵심 지표",
             description = "진도 달성률, 퀴즈 정답률, 집중 시간 등 공부의 핵심 지표를 조회합니다. (캐싱함)")
-    public ResponseEntity<StudyTotalInfoResponseDTO> totalStudyIndicator(@PathVariable Long studyId) {
-        StudyTotalInfoResponseDTO result = studyQueryService.getStudyTotalIndicator(studyId);
+    public ResponseEntity<StudyTotalInfoResponseDTO> totalStudyIndicator(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        StudyTotalInfoResponseDTO result = studyQueryService.getStudyTotalIndicator(studyId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
 
@@ -49,8 +51,10 @@ public class StudyController {
     @Operation(
             summary = "최근 일주일 공부 상태",
             description = "오늘을 제외한 최근 7일의 날짜별 집중 시간, 진행 상태, 완료 상태, 이해도 점수를 조회합니다.")
-    public ResponseEntity<List<StudyRecentWeekInfoResponseDTO>> recentWeekStudyIndicator(@PathVariable Long studyId) {
-        List<StudyRecentWeekInfoResponseDTO> result = studyQueryService.getRecentWeekStudyInfos(studyId);
+    public ResponseEntity<List<StudyRecentWeekInfoResponseDTO>> recentWeekStudyIndicator(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<StudyRecentWeekInfoResponseDTO> result = studyQueryService.getRecentWeekStudyInfos(studyId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
 

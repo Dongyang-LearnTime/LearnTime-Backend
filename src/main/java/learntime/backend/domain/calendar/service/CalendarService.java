@@ -4,15 +4,17 @@ import learntime.backend.domain.calendar.dto.request.CalendarRequestDTO;
 import learntime.backend.domain.calendar.dto.response.CalendarResponseDTO;
 import learntime.backend.domain.calendar.error.code.CalenderErrorCode;
 import learntime.backend.domain.calendar.error.exception.CalenderException;
+import learntime.backend.domain.calendar.dto.event.CalendarReminderDeleteEvent;
+import learntime.backend.domain.calendar.dto.event.CalendarReminderUpsertEvent;
 import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.calendar.repository.CalendarRecordRepository;
-import learntime.backend.domain.notification.service.ReminderService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +25,11 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+// 캘린더 일정 CRUD와 리마인더 예약 이벤트 발행을 담당하는 Service
 public class CalendarService {
     private final CalendarRecordRepository calendarRecordRepository;
     private final UserRepository userRepository;
-    private final ReminderService reminderService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 일정 등록
     @Transactional
@@ -44,8 +47,8 @@ public class CalendarService {
 
         CalendarRecord saved = calendarRecordRepository.save(record);
 
-        // 리마인더(알림) 생성
-        reminderService.upsertReminder(saved, request.reminderOption());
+        // 리마인더 예약은 이벤트 리스너가 같은 트랜잭션 커밋 직전에 처리
+        eventPublisher.publishEvent(new CalendarReminderUpsertEvent(saved));
         return CalendarResponseDTO.from(saved);
     }
 
@@ -75,8 +78,8 @@ public class CalendarService {
 
         record.update(request.title(), request.content(), request.targetDate(), request.isCompleted());
 
-        // 리마인더 업데이트 로직 연결 (시간이 바뀌면 알림 시간도 재계산됨)
-        reminderService.upsertReminder(record, request.reminderOption());
+        // 리마인더 재예약은 이벤트 리스너가 같은 트랜잭션 커밋 직전에 처리
+        eventPublisher.publishEvent(new CalendarReminderUpsertEvent(record));
 
         return CalendarResponseDTO.from(record);
     }
@@ -87,8 +90,8 @@ public class CalendarService {
         CalendarRecord record = calendarRecordRepository.findById(calendarRecordId)
                 .orElseThrow(() -> new CalenderException(CalenderErrorCode.CALENDAR_NOT_FOUND));
 
-        // 리마인더 먼저 삭제
-        reminderService.deleteReminder(record);
+        // 리마인더 삭제는 이벤트 리스너가 캘린더 삭제 커밋 직전에 처리
+        eventPublisher.publishEvent(new CalendarReminderDeleteEvent(record));
 
         calendarRecordRepository.delete(record);
     }

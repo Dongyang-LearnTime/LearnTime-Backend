@@ -83,6 +83,10 @@ public class Study {
     @OneToMany(mappedBy = "study")
     private List<Post> posts = new ArrayList<>();
 
+    // 공부 일정 참가자
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudyParticipant> participants = new ArrayList<>();
+
     @Builder
     public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate, User user) {
         this.studyTitle = studyTitle;

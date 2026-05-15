@@ -15,7 +15,7 @@ import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.domain.study.repository.StudyRestDayRepository;
-import learntime.backend.global.utils.AuthorizationUtil;
+import learntime.backend.domain.study.service.util.StudyParticipantAccessVerifier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -45,6 +45,7 @@ public class StudyDailyService {
     private final StudyRepository studyRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final CacheManager cacheManager;
+    private final StudyShareService studyShareService;
 
     private static final int UNDERSTANDING_SCORE_WEIGHT = 2; // 이해도에 따른 가중치 (이해도 2면 10*2)
 
@@ -54,7 +55,7 @@ public class StudyDailyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
 
-        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
+        studyShareService.getActiveParticipant(studyId, userId);
 
         List<DayOfWeek> restDays = studyRestDayRepository.findAllByStudy_StudyId(studyId)
                 .stream().map(StudyRestDay::getDayOfWeek).toList();
@@ -62,7 +63,7 @@ public class StudyDailyService {
         List<LocalDate> restDates = studyRestDateRepository.findAllByStudy_StudyId(studyId)
                 .stream().map(StudyRestDate::getRestDate).toList();
 
-        StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findByStudyIdAndPlanDate(studyId, planDate)
+        StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findByStudyIdAndUserIdAndPlanDate(studyId, userId, planDate)
                 .orElse(null);
 
         return StudyConverter.toStudyDailyPlanInfoResponseDTO(planDate, study, restDays, restDates, studyDailyPlan);
@@ -74,7 +75,7 @@ public class StudyDailyService {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
                 .orElseThrow(() -> new IllegalArgumentException("공부 일일 진도를 찾을 수 없습니다."));
 
-        AuthorizationUtil.verifyOwnership(userId, studyDailyPlan.getStudy().getUser().getUserId());
+        StudyParticipantAccessVerifier.verifyDailyPlanParticipant(studyDailyPlan, userId);
 
         studyDailyPlan.setProgressStatus(ProgressStatus.COMPLETED);
         studyDailyPlan.setCompletionStatus(request.completionStatus());
@@ -94,11 +95,11 @@ public class StudyDailyService {
         // 통계 지표 캐시 무효화 (진도 상태가 변경되었으므로)
         Cache cache = cacheManager.getCache("studyTotalIndicator");
         if (cache != null) {
-            cache.evict(studyDailyPlan.getStudy().getStudyId());
+            cache.evict(studyDailyPlan.getStudy().getStudyId() + ":" + userId);
         }
         Cache recentWeekCache = cacheManager.getCache("studyRecentWeekInfo");
         if (recentWeekCache != null) {
-            recentWeekCache.evict(studyDailyPlan.getStudy().getStudyId());
+            recentWeekCache.evict(studyDailyPlan.getStudy().getStudyId() + ":" + userId);
         }
 
         return calculatedPoint;

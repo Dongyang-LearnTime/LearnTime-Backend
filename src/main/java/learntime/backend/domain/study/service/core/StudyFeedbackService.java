@@ -36,7 +36,7 @@ public class StudyFeedbackService {
 
         AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
 
-        StudyTotalInfoResponseDTO indicator = studyQueryService.getStudyTotalIndicator(studyId);
+        StudyTotalInfoResponseDTO indicator = studyQueryService.getStudyTotalIndicator(studyId, userId);
         
         List<StudyDailyPlan> completedPlans =
                 studyDailyPlanRepository.findCompletedPlansByStudyId(studyId);
