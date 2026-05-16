@@ -1,15 +1,19 @@
 package learntime.backend.domain.community.service.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
+import learntime.backend.domain.community.dto.request.PostUpdateRequestDTO;
+import learntime.backend.domain.community.dto.response.PostListResponseDTO;
+import learntime.backend.domain.community.dto.response.PostUpdateDetailDTO;
 import learntime.backend.domain.community.error.code.CommunityErrorCode;
 import learntime.backend.domain.community.error.exception.CommunityException;
 import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.model.PostImage;
+import learntime.backend.domain.community.repository.PostImageRepository;
+import learntime.backend.domain.community.repository.PostLikeRepository;
 import learntime.backend.domain.community.repository.PostRepository;
-import learntime.backend.domain.study.error.code.StudyErrorCode;
-import learntime.backend.domain.study.error.exception.StudyException;
-import learntime.backend.domain.study.model.Study;
-import learntime.backend.domain.study.repository.StudyRepository;
+import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
+import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
@@ -18,21 +22,14 @@ import learntime.backend.global.infra.s3.S3Service;
 import learntime.backend.global.utils.AuthorizationUtil;
 import learntime.backend.global.utils.FileValidatorUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-
-import learntime.backend.domain.community.repository.PostImageRepository;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import learntime.backend.domain.community.dto.response.PostListResponseDTO;
-
-import learntime.backend.domain.community.dto.request.PostUpdateRequestDTO;
-import learntime.backend.domain.community.dto.response.PostUpdateDetailDTO;
 
 @Slf4j
 @Service
@@ -41,11 +38,12 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final StudyRepository studyRepository;
+    private final StudyQueryService studyQueryService;
     private final S3Service s3Service;
     private final FileValidatorUtil fileValidatorUtil;
-    private final learntime.backend.domain.community.repository.PostLikeRepository postLikeRepository;
+    private final PostLikeRepository postLikeRepository;
     private final PostImageRepository postImageRepository;
+    private final ObjectMapper objectMapper;
 
     private static final int IMAGE_LIMIT_COUNT = 3;
 
@@ -67,12 +65,9 @@ public class PostService {
         if (imageUrls == null) {
             imageUrls = List.of();
         }
-        
-        Long studyId = post.getStudy() != null ? post.getStudy().getStudyId() : null;
 
         return PostUpdateDetailDTO.builder()
                 .postId(post.getPostId())
-                .studyId(studyId)
                 .title(post.getTitle())
                 .content(post.getContent())
                 .images(imageUrls)
@@ -98,7 +93,6 @@ public class PostService {
             
             for (PostImage imageToRemove : imagesToRemove) {
                 post.getImages().remove(imageToRemove);
-                // s3Service.deleteFile(imageToRemove.getFileUrl()); // S3 실제 삭제는 필요에 따라 추가 또는 배치로 처리
             }
         }
 
@@ -112,17 +106,22 @@ public class PostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        Study study = null;
+        // 공부 정보 스냅샷 생성
+        String studySnapshot = null;
         if (request.studyId() != null) {
-            study = studyRepository.findById(request.studyId())
-                    .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+            try {
+                StudyTotalInfoResponseDTO studyIndicator = studyQueryService.getStudyTotalIndicator(request.studyId());
+                studySnapshot = objectMapper.writeValueAsString(studyIndicator);
+            } catch (Exception e) {
+                log.warn("공부 정보 스냅샷 생성 중 오류가 발생했습니다. studyId: {}", request.studyId(), e);
+            }
         }
 
         Post post = Post.builder()
                 .title(request.title())
                 .content(request.content())
                 .user(user)
-                .study(study)
+                .studySnapshot(studySnapshot)
                 .build();
 
         handleImageUploads(images, post);
@@ -159,28 +158,27 @@ public class PostService {
         }
     }
 
-    /**  게시글과 연관된 세부 정보(User, Study를 한 번에 조회함. */
+    /** 게시글과 연관된 세부 정보를 한 번에 조회함 */
     @Transactional(readOnly = true)
     public Post getPostWithDetails(Long postId) {
         return postRepository.findByIdWithDetails(postId)
                 .orElseThrow(() -> new CommunityException(CommunityErrorCode.POST_NOT_FOUND));
     }
 
-    /** 특정 사용자가 해당 게시글을 좋아요 했는지 확인함. (true시 했음, false시 안함) */
+    /** 특정 사용자가 해당 게시글을 좋아요 했는지 확인함 */
     @Transactional(readOnly = true)
     public boolean isPostLikedByUser(Long postId, Long userId) {
         return postLikeRepository.existsByPost_PostIdAndUser_UserId(postId, userId);
     }
 
-    /** 이미지 조회 실패가 게시글 조회 전체에 영향을 주지 않도록 조회합니다. */
+    /** 이미지 URL 목록 조회 */
     @Transactional(readOnly = true)
     public List<String> getPostImageUrls(Long postId) {
         try {
-            // 엔티티 전체 대신 String(URL)만 조회하여 메모리 및 성능 최적화
             return postImageRepository.findFileUrlsByPostId(postId);
         } catch (Exception e) {
             log.warn("게시글 이미지 조회 중 오류가 발생했습니다. postId: {}", postId, e);
-            return null; // 실패 시 null 반환하여 상위에서 인지할 수 있도록 함
+            return null;
         }
     }
 

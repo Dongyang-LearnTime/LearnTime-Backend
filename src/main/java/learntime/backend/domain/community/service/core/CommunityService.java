@@ -1,6 +1,7 @@
-package learntime.backend.domain.point.service;
+package learntime.backend.domain.community.service.core;
 
-import learntime.backend.domain.point.dto.PointRankingResponseDTO;
+import learntime.backend.domain.community.converter.CommunityConverter;
+import learntime.backend.domain.community.dto.response.PointRankingResponseDTO;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PointService {
+public class CommunityService {
     private final UserRepository userRepository;
 
     public Page<PointRankingResponseDTO> getPointRanking(Pageable pageable) {
@@ -21,8 +22,9 @@ public class PointService {
         int startRank = (int) pageable.getOffset() + 1;
 
         return userPage.map(user -> {
-            int currentRank = startRank + (userPage.getContent().indexOf(user));
-            return PointRankingResponseDTO.from(user, currentRank);
+            int currentRank = startRank + userPage.getContent().indexOf(user);
+            return CommunityConverter.toPointRankingResponseDTO(user, currentRank);
         });
+
     }
 }

@@ -19,9 +19,6 @@ public record PostResponseDTO(
         @Schema(description = "작성자 이름 또는 닉네임. 탈퇴한 경우 '탈퇴한 사용자'", example = "홍길동")
         String userName,
         
-        @Schema(description = "연관된 공부 식별자(ID). 없을 경우 null", example = "456")
-        Long studyId,
-        
         @Schema(description = "게시글 제목", example = "오늘 공부 인증합니다!")
         String title,
         
@@ -52,7 +49,7 @@ public record PostResponseDTO(
         @Schema(description = "게시글에 달린 댓글 목록")
         List<CommentResponseDTO> comments,
         
-        @Schema(description = "연관된 스터디의 핵심 지표(달성률, 정답률 등). 연결된 스터디가 없으면 null")
+        @Schema(description = "연관된 스터디의 핵심 지표(달성률, 정답률 등). 스냅샷 정보가 없으면 null")
         StudyTotalInfoResponseDTO studyTotalIndicator
 ) {
 }

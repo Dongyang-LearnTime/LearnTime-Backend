@@ -1,7 +1,6 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
-import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.notes.model.StudyNotes;
 import learntime.backend.domain.quiz.model.StudyQuiz;
 import learntime.backend.domain.user.model.User;
@@ -79,10 +78,6 @@ public class Study {
     @OneToMany(mappedBy = "study")
     private List<StudyNotes> studyNotes = new ArrayList<>();
 
-    // 게시글 (SET NULL)
-    @OneToMany(mappedBy = "study")
-    private List<Post> posts = new ArrayList<>();
-
     // --- 연관관계 편의 메서드 --- //
 
     public void addStudyDailyPlan(StudyDailyPlan plan) {
@@ -107,10 +102,6 @@ public class Study {
 
     public void addStudyNote(StudyNotes note) {
         this.studyNotes.add(note);
-    }
-
-    public void addPost(Post post) {
-        this.posts.add(post);
     }
 
     @Builder
