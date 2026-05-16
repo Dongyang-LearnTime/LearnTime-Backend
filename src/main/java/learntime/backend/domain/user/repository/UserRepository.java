@@ -1,6 +1,8 @@
 package learntime.backend.domain.user.repository;
 
 import learntime.backend.domain.user.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +17,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByName(String name);
     boolean existsByEmail(String email);
+
+    Page<User> findAllByOrderByPointDesc(Pageable pageable);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE User u SET u.point = u.point + :amount WHERE u.userId = :userId")
