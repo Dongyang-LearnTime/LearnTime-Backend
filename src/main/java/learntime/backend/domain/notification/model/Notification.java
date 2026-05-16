@@ -41,11 +41,11 @@ public class Notification extends BaseTimeEntity {
     private String message;
 
     /** 알림과 연결된 대상 ID */
-    @Column(name = "reference_id")
+    @Column(nullable = false, name = "reference_id")
     private Long referenceId;
 
     /** 알림과 연결된 대상 종류 */
-    @Column(name = "reference_type", length = 50)
+    @Column(nullable = false, name = "reference_type", length = 50)
     private String referenceType;
 
     /** 사용자가 알림을 읽었는지 여부 */
