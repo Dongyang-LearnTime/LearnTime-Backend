@@ -11,6 +11,7 @@ import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.notification.model.Notification;
 import learntime.backend.domain.point.model.PointHistory;
 import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.study.model.StudyMember;
 import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.domain.user.enums.Role;
 import lombok.*;
@@ -85,9 +86,9 @@ public class User {
 
     // ==================== 연관관계 매핑 ====================
 
-    // 진도
+    // 진도 맴버
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<Study> study = new ArrayList<>();
+    private List<StudyMember> studyMembers = new ArrayList<>();
 
     // 운동 기록
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})

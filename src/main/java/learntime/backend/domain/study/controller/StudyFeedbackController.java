@@ -23,19 +23,19 @@ public class StudyFeedbackController {
 
     private final StudyFeedbackService studyFeedbackService;
 
-    @PostMapping("/{studyId}/generate")
+    @PostMapping("/{studyMemberId}/generate")
     @Operation(summary = "AI 피드백 생성", description = "현재 학습 상태를 분석하여 AI 피드백을 생성하고 DB에 저장합니다.")
-    public ResponseEntity<StudyFeedbackResponseDTO> generateFeedback(@PathVariable Long studyId,
+    public ResponseEntity<StudyFeedbackResponseDTO> generateFeedback(@PathVariable Long studyMemberId,
                                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
-        StudyFeedbackResponseDTO response = studyFeedbackService.generateAndSaveFeedback(studyId, userDetails.userId());
+        StudyFeedbackResponseDTO response = studyFeedbackService.generateAndSaveFeedback(studyMemberId, userDetails.userId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/{studyId}/list")
+    @GetMapping("/{studyMemberId}/list")
     @Operation(summary = "AI 피드백 목록 조회", description = "특정 스터디에 대해 생성된 모든 AI 피드백 목록을 조회합니다.")
-    public ResponseEntity<List<StudyFeedbackResponseDTO>> getFeedbackList(@PathVariable Long studyId,
+    public ResponseEntity<List<StudyFeedbackResponseDTO>> getFeedbackList(@PathVariable Long studyMemberId,
                                                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<StudyFeedbackResponseDTO> response = studyFeedbackService.getFeedbackList(studyId, userDetails.userId());
+        List<StudyFeedbackResponseDTO> response = studyFeedbackService.getFeedbackList(studyMemberId, userDetails.userId());
         return ResponseEntity.ok(response);
     }
 

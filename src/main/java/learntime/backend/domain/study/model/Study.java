@@ -1,9 +1,6 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
-import learntime.backend.domain.notes.model.StudyNotes;
-import learntime.backend.domain.quiz.model.StudyQuiz;
-import learntime.backend.domain.user.model.User;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-// 향후 프런트에서 로그인, 회원가입 기능 구현 후, user 테이블과 1대N 연결
 @Entity
 @Table(name = "study")
 @Getter
@@ -27,7 +23,7 @@ import java.util.List;
 public class Study {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // MySQL Auto Increment
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long studyId;
 
     @Column(nullable = false, length = 100)
@@ -50,17 +46,13 @@ public class Study {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    // 진도 맴버
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudyMember> studyMembers = new ArrayList<>();
 
     // 일차별 진도 내용
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyDailyPlan> studyDailyPlans = new ArrayList<>();
-
-    // 진도 AI 피드백
-    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StudyFeedback> studyFeedbacks = new ArrayList<>();
 
     // 쉬는 요일
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -70,47 +62,12 @@ public class Study {
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyRestDate> restDates = new ArrayList<>();
 
-    // 퀴즈
-    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StudyQuiz> studyQuizs = new ArrayList<>();
-
-    // 필기 (SET NULL)
-    @OneToMany(mappedBy = "study")
-    private List<StudyNotes> studyNotes = new ArrayList<>();
-
-    // --- 연관관계 편의 메서드 --- //
-
-    public void addStudyDailyPlan(StudyDailyPlan plan) {
-        this.studyDailyPlans.add(plan);
-    }
-
-    public void addStudyFeedback(StudyFeedback feedback) {
-        this.studyFeedbacks.add(feedback);
-    }
-
-    public void addRestDay(StudyRestDay restDay) {
-        this.restDays.add(restDay);
-    }
-
-    public void addRestDate(StudyRestDate restDate) {
-        this.restDates.add(restDate);
-    }
-
-    public void addStudyQuiz(StudyQuiz quiz) {
-        this.studyQuizs.add(quiz);
-    }
-
-    public void addStudyNote(StudyNotes note) {
-        this.studyNotes.add(note);
-    }
-
     @Builder
-    public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate, User user) {
+    public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate) {
         this.studyTitle = studyTitle;
         this.bookTitle = bookTitle;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.user = user;
     }
 
     // --- 비즈니스 로직 --- //
@@ -124,4 +81,5 @@ public class Study {
         this.startDate = startDate;
         this.endDate = endDate;
     }
+
 }

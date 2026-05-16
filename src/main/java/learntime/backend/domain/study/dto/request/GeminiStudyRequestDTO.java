@@ -34,6 +34,8 @@ public record GeminiStudyRequestDTO(
         @NotEmpty(message = "목차 정보는 최소 한 개 이상 포함되어야 합니다.")
         List <TocListResponseDTO> tocList,
 
+        List <Long> studyMemberList, // 스터디 맴버 리스트
+
         List<DayOfWeek> restDays, // 쉬는 요일
         List<LocalDate> restDates // 쉬는 날짜
 ) {

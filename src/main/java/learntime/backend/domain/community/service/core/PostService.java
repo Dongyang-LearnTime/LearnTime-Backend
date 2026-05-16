@@ -110,7 +110,7 @@ public class PostService {
         String studySnapshot = null;
         if (request.studyId() != null) {
             try {
-                StudyTotalInfoResponseDTO studyIndicator = studyQueryService.getStudyTotalIndicator(request.studyId());
+                StudyTotalInfoResponseDTO studyIndicator = studyQueryService.getStudyMemberTotalIndicatorByUserId(request.studyId(), userId);
                 studySnapshot = objectMapper.writeValueAsString(studyIndicator);
             } catch (Exception e) {
                 log.warn("공부 정보 스냅샷 생성 중 오류가 발생했습니다. studyId: {}", request.studyId(), e);

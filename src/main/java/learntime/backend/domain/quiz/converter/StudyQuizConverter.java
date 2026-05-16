@@ -10,6 +10,7 @@ import learntime.backend.domain.quiz.model.QuizHistory;
 import learntime.backend.domain.quiz.model.QuizQuestion;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.quiz.model.StudyQuiz;
+import learntime.backend.domain.study.model.StudyMember;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
 
@@ -22,7 +23,6 @@ public class StudyQuizConverter {
     }
 
     public static StudyQuizResponseDTO toResponseDTO(StudyQuiz studyQuiz, List<QuizQuestion> questions) {
-        // JDK 16+ Stream.toList() 활용 (불변 리스트 반환)
         List<StudyQuizResponseDTO.QuizQuestionInfoDTO> questionDTOs = questions.stream()
                 .map(StudyQuizConverter::toQuestionInfoDTO)
                 .toList();
@@ -42,9 +42,9 @@ public class StudyQuizConverter {
                 .build();
     }
 
-    public static StudyQuiz toStudyQuizEntity(Study study, String quizTitle) {
+    public static StudyQuiz toStudyQuizEntity(StudyMember studyMember, String quizTitle) {
         return StudyQuiz.builder()
-                .study(study)
+                .studyMember(studyMember)
                 .quizTitle(quizTitle)
                 .build();
     }

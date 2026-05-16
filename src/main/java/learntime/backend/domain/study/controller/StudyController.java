@@ -3,10 +3,8 @@ package learntime.backend.domain.study.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
-import learntime.backend.domain.study.dto.request.StudyResetRequestDTO;
-import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyMemberRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
@@ -39,9 +37,10 @@ public class StudyController {
     @GetMapping("/{studyId}/total")
     @Operation(
             summary = "공부 핵심 지표",
-            description = "진도 달성률, 퀴즈 정답률, 집중 시간 등 공부의 핵심 지표를 조회합니다. (캐싱함)")
-    public ResponseEntity<StudyTotalInfoResponseDTO> totalStudyIndicator(@PathVariable Long studyId) {
-        StudyTotalInfoResponseDTO result = studyQueryService.getStudyTotalIndicator(studyId);
+            description = "진도 달성률, 퀴즈 정답률, 집중 시간 등 공부의 핵심 지표를 조회합니다.")
+    public ResponseEntity<StudyTotalInfoResponseDTO> totalStudyIndicator(@PathVariable Long studyId,
+                                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
+        StudyTotalInfoResponseDTO result = studyQueryService.getStudyMemberTotalIndicatorByUserId(studyId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
 
@@ -49,8 +48,9 @@ public class StudyController {
     @Operation(
             summary = "최근 일주일 공부 상태",
             description = "오늘을 제외한 최근 7일의 날짜별 집중 시간, 진행 상태, 완료 상태, 이해도 점수를 조회합니다.")
-    public ResponseEntity<List<StudyRecentWeekInfoResponseDTO>> recentWeekStudyIndicator(@PathVariable Long studyId) {
-        List<StudyRecentWeekInfoResponseDTO> result = studyQueryService.getRecentWeekStudyInfos(studyId);
+    public ResponseEntity<List<StudyMemberRecentWeekInfoResponseDTO>> recentWeekStudyIndicator(@PathVariable Long studyId,
+                                                                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<StudyMemberRecentWeekInfoResponseDTO> result = studyQueryService.getRecentWeekStudyInfos(studyId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
 
@@ -72,37 +72,28 @@ public class StudyController {
 
     @PostMapping("/generate")
     @Operation(summary = "공부 진도 생성", description = "목차 정보를 기반으로 공부 진도를 생성 후 DB에 저장합니다.")
-    public ResponseEntity<Void> createStudyPlan(@Valid @RequestBody GeminiStudyRequestDTO request,
+    public ResponseEntity<Long> createStudyPlan(@Valid @RequestBody GeminiStudyRequestDTO request,
                                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
-        studyFacade.generateAndSaveStudyPlan(request, userDetails.userId());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        Long studyMemberId = studyFacade.generateAndSaveStudyPlan(request, userDetails.userId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(studyMemberId);
     }
 
 
-    @PutMapping("/{studyId}/replan")
-    @Operation(summary = "공부 진도 재생성", description = "AI를 사용하여 기존 진도를 재조정합니다.")
-    public ResponseEntity<StudyPlanResponseDTO> replanStudyPlan(@PathVariable Long studyId,
-                                                                @Valid @RequestBody GeminiReplanRequestDTO request,
-                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
-        StudyPlanResponseDTO result = studyFacade.replanAndSaveStudy(studyId, request, userDetails.userId());
-        return ResponseEntity.ok(result);
-    }
+//    @PutMapping("/{studyId}/replan")
+//    @Operation(summary = "공부 진도 재생성", description = "AI를 사용하여 기존 진도를 재조정합니다.")
+//    public ResponseEntity<StudyPlanResponseDTO> replanStudyPlan(@PathVariable Long studyId,
+//                                                                @Valid @RequestBody GeminiReplanRequestDTO request,
+//                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
+//        StudyPlanResponseDTO result = studyFacade.replanAndSaveStudy(studyId, request, userDetails.userId());
+//        return ResponseEntity.ok(result);
+//    }
 
-    @PutMapping("/{studyId}/reset")
-    @Operation(summary = "공부 진도 초기화", description = "새로운 시작일과 휴일 정보를 바탕으로 공부 진도를 초기화합니다.")
-    public ResponseEntity<Void> resetStudy(@PathVariable Long studyId,
-                                           @Valid @RequestBody StudyResetRequestDTO request,
-                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
-        studyManagementService.resetStudy(studyId, request, userDetails.userId());
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/{studyId}")
-    @Operation(summary = "공부 진도 삭제", description = "특정 공부 진도 계획을 삭제합니다.")
-    public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId,
-                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        studyFacade.deleteStudy(studyId, userDetails.userId());
-        return ResponseEntity.noContent().build();
-    }
+//    @DeleteMapping("/{studyId}")
+//    @Operation(summary = "공부 진도 삭제", description = "특정 공부 진도 계획을 삭제합니다.")
+//    public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId,
+//                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+//        studyFacade.deleteStudy(studyId, userDetails.userId());
+//        return ResponseEntity.noContent().build();
+//    }
 
 }

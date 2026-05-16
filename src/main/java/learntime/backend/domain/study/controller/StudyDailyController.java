@@ -6,7 +6,6 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyUserContentRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
-import learntime.backend.domain.study.model.StudyUserContent;
 import learntime.backend.domain.study.service.core.StudyDailyService;
 import learntime.backend.domain.study.service.core.StudyUserContentService;
 import learntime.backend.global.dto.CustomUserDetails;
@@ -49,8 +48,7 @@ public class StudyDailyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(studyUserContentId);
     }
 
-
-    @PatchMapping("/completion")
+    @PostMapping("/completion")
     @Operation(summary = "일일 진도 완료", description = "공부 일일진도를 완료로 변경하고 포인트를 지급합니다.")
     public ResponseEntity<String> completePlan(@Valid @RequestBody PlanCompleteRequestDTO request,
                                                @AuthenticationPrincipal CustomUserDetails userDetails) {

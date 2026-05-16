@@ -17,10 +17,8 @@ import java.util.List;
 @Table(
         name = "study_daily_plan",
         indexes = {
-                // 스터디의 전체 일정을 일차별로 조회 및 정렬 O(log N) 탐색 커버
-                @Index(name = "idx_study_daily_plan_on_study_and_date", columnList = "study_id, plan_date"),
-                // 스터디 대시보드 등에서 '특정 상태(예: 진행 중)'의 계획만 필터링 조회할 때 풀 테이블 스캔 방지
-                @Index(name = "idx_study_daily_plan_on_study_and_status", columnList = "study_id, progress_status")
+                // 스터디의 전체 일정을 일차별로 조회 및 정렬
+                @Index(name = "idx_study_daily_plan_study_date", columnList = "study_id, plan_date")
         }
 )
 @Getter
@@ -30,10 +28,6 @@ public class StudyDailyPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long studyDailyPlanId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_id", nullable = false)
-    private Study study;
 
     @Column(name = "day_number", nullable = false)
     private Integer dayNumber; // DTO의 day
@@ -45,31 +39,17 @@ public class StudyDailyPlan {
     @Column(name = "plan_content", nullable = false)
     private String planContent;
 
-    // 집중 시간
-    @Column(name = "focus_time")
-    private LocalTime focusTime;
-
-    // 진행 여부 (시작 전, 진행 중, 완료)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "progress_status", nullable = false, length = 20)
-    private ProgressStatus progressStatus;
-
-    // 완료 여부 결과 (성공, 실패)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "completion_status", length = 20)
-    private CompletionStatus completionStatus;
-
-    // 이해도 점수 (1~5점)
-    @Column(name = "understanding_score", columnDefinition = "TINYINT")
-    @Min(value = 1, message = "점수는 1점 이상이어야 합니다.")
-    @Max(value = 5, message = "점수는 최대 5점까지 가능합니다.")
-    private Integer understandingScore;
-
-    private LocalDateTime completionDate; // 완료 날짜
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "study_id", nullable = false)
+    private Study study;
 
     // 사용자 작성 내용
     @OneToMany(mappedBy = "studyDailyPlan", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StudyUserContent> userContents = new ArrayList<>();
+    private List<StudyMemberContent> studyMemberContents = new ArrayList<>();
+
+    // 공부 일일 진도 상태
+    @OneToMany(mappedBy = "studyDailyPlan", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudyStatus> studyStatuses = new ArrayList<>();
 
     @Builder
     public StudyDailyPlan(Study study, Integer dayNumber, LocalDate planDate, String planContent) {
@@ -77,36 +57,6 @@ public class StudyDailyPlan {
         this.dayNumber = dayNumber;
         this.planDate = planDate;
         this.planContent = planContent;
-        this.progressStatus = ProgressStatus.NOT_STARTED;
-    }
-
-    // --- 비즈니스 로직 --- //
-    public void startPlan() {
-        if (this.progressStatus != ProgressStatus.NOT_STARTED) {
-            throw new IllegalStateException("이미 시작되었거나 종료된 계획입니다.");
-        }
-        this.progressStatus = ProgressStatus.IN_PROGRESS;
-    }
-
-    // 완료 상태에서의 최종 결과 (성공 or 실패)
-    public void completePlan(CompletionStatus result, Integer understandingScore) {
-        if (understandingScore != null && (understandingScore < 1 || understandingScore > 5)) {
-            throw new IllegalArgumentException("이해도는 1점에서 5점 사이의 정수여야 합니다.");
-        }
-
-        this.progressStatus = ProgressStatus.COMPLETED;
-        this.completionStatus = result;
-        this.understandingScore = understandingScore;
-    }
-
-    // 초기화 상태로 복구
-    public void resetPlan(LocalDate newPlanDate) {
-        this.planDate = newPlanDate;
-        this.progressStatus = ProgressStatus.NOT_STARTED;
-        this.focusTime = null;
-        this.completionStatus = null;
-        this.understandingScore = null;
-        this.completionDate = null;
     }
 
 }

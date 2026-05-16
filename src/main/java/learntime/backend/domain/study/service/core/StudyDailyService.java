@@ -30,8 +30,10 @@ import java.util.List;
 import learntime.backend.domain.study.model.StudyRestDay;
 import learntime.backend.domain.study.model.StudyRestDate;
 import learntime.backend.domain.study.converter.StudyConverter;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
+
+import learntime.backend.domain.study.model.StudyStatus;
+import learntime.backend.domain.study.model.StudyMember;
+import learntime.backend.domain.study.repository.StudyStatusRepository;
 
 // 일일 진도 및 포인트 지급 관련 비즈니스 로직 담당 서비스
 @Slf4j
@@ -42,9 +44,9 @@ public class StudyDailyService {
     private final StudyDailyPlanRepository studyDailyPlanRepository;
     private final StudyRestDateRepository studyRestDateRepository;
     private final StudyRestDayRepository studyRestDayRepository;
+    private final StudyStatusRepository studyStatusRepository;
     private final StudyRepository studyRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final CacheManager cacheManager;
 
     private static final int UNDERSTANDING_SCORE_WEIGHT = 2; // 이해도에 따른 가중치 (이해도 2면 10*2)
 
@@ -53,8 +55,6 @@ public class StudyDailyService {
     public StudyDailyPlanInfoResponseDTO getStudyPlanInfoByDate(Long studyId, LocalDate planDate, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
-
-        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
 
         List<DayOfWeek> restDays = studyRestDayRepository.findAllByStudy_StudyId(studyId)
                 .stream().map(StudyRestDay::getDayOfWeek).toList();
@@ -65,7 +65,23 @@ public class StudyDailyService {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findByStudyIdAndPlanDate(studyId, planDate)
                 .orElse(null);
 
-        return StudyConverter.toStudyDailyPlanInfoResponseDTO(planDate, study, restDays, restDates, studyDailyPlan);
+        Long studyMemberId = study.getStudyMembers().stream()
+                .filter(m -> m.getUser().getUserId().equals(userId))
+                .map(StudyMember::getStudyMemberId)
+                .findFirst()
+                .orElse(null);
+
+        List<Long> allStudyMemberIds = study.getStudyMembers().stream()
+                .map(StudyMember::getStudyMemberId)
+                .toList();
+
+        StudyStatus studyStatus = null;
+        if (studyDailyPlan != null && studyMemberId != null) {
+            studyStatus = studyStatusRepository.findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMemberId, studyDailyPlan.getStudyDailyPlanId())
+                    .orElse(null);
+        }
+
+        return StudyConverter.toStudyDailyPlanInfoResponseDTO(planDate, study, restDays, restDates, studyDailyPlan, studyStatus, studyMemberId, allStudyMemberIds);
     }
 
     // 일일 학습 계획을 완료 처리하고 포인트를 지급합니다.
@@ -74,12 +90,23 @@ public class StudyDailyService {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
                 .orElseThrow(() -> new IllegalArgumentException("공부 일일 진도를 찾을 수 없습니다."));
 
-        AuthorizationUtil.verifyOwnership(userId, studyDailyPlan.getStudy().getUser().getUserId());
+        Study study = studyDailyPlan.getStudy();
+        
+        StudyMember studyMember = study.getStudyMembers().stream()
+                .filter(m -> m.getUser().getUserId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("해당 스터디의 멤버가 아닙니다."));
 
-        studyDailyPlan.setProgressStatus(ProgressStatus.COMPLETED);
-        studyDailyPlan.setCompletionStatus(request.completionStatus());
-        studyDailyPlan.setUnderstandingScore(request.understandingScore());
-        studyDailyPlan.setCompletionDate(LocalDateTime.now());
+        StudyStatus studyStatus = studyStatusRepository.findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMember.getStudyMemberId(), studyDailyPlan.getStudyDailyPlanId())
+                .orElseGet(() -> StudyStatus.builder()
+                        .studyMember(studyMember)
+                        .studyDailyPlan(studyDailyPlan)
+                        .build());
+
+        studyStatus.completePlan(request.completionStatus(), request.understandingScore());
+        studyStatus.setCompletionDate(LocalDateTime.now());
+        
+        studyStatusRepository.save(studyStatus);
 
         int calculatedPoint = calculatePoint(request.completionStatus(), request.understandingScore());
         String description = determineDescription(request.completionStatus(), request.understandingScore());
@@ -90,16 +117,6 @@ public class StudyDailyService {
                 PointType.EARN,
                 description
         ));
-
-        // 통계 지표 캐시 무효화 (진도 상태가 변경되었으므로)
-        Cache cache = cacheManager.getCache("studyTotalIndicator");
-        if (cache != null) {
-            cache.evict(studyDailyPlan.getStudy().getStudyId());
-        }
-        Cache recentWeekCache = cacheManager.getCache("studyRecentWeekInfo");
-        if (recentWeekCache != null) {
-            recentWeekCache.evict(studyDailyPlan.getStudy().getStudyId());
-        }
 
         return calculatedPoint;
     }
@@ -122,7 +139,7 @@ public class StudyDailyService {
         return PointPolicy.STUDY_COMPLETED_FAILURE.getDescription();
     }
 
-    // 완료되지 않는 진도 실패 처리
+    // 완료되지 않은 진도를 실패 처리함
     @Transactional
     public void markIncompletePlansAsFailure() {
         LocalDate today = LocalDate.now();
@@ -130,34 +147,19 @@ public class StudyDailyService {
         log.info("[StudyDailyPlan] 미완료 계획 실패 처리 시작 - 기준일: {}", today);
         long startTime = System.currentTimeMillis();
 
-        int updatedCount =
-                studyDailyPlanRepository.bulkFailIncompletePlans(today);
+        // 미생성된 상태를 FAILURE로 일괄 생성함
+        int insertedCount = studyStatusRepository.insertMissingStatusesAsFailure(today);
+        
+        // 미완료된 상태를 FAILURE로 업데이트함
+        int updatedCount = studyStatusRepository.bulkFailIncompleteStatuses(today);
 
-        log.info("[StudyDailyPlan] 실패 처리 대상 건수: {}", updatedCount);
-
-        if (updatedCount > 0) {
-            Cache cache = cacheManager.getCache("studyTotalIndicator");
-            if (cache != null) {
-                cache.clear();
-                log.info("[StudyDailyPlan] studyTotalIndicator 캐시 초기화 완료");
-            } else {
-                log.warn("[StudyDailyPlan] studyTotalIndicator 캐시를 찾을 수 없음");
-            }
-            Cache recentWeekCache = cacheManager.getCache("studyRecentWeekInfo");
-            if (recentWeekCache != null) {
-                recentWeekCache.clear();
-                log.info("[StudyDailyPlan] studyRecentWeekInfo 캐시 초기화 완료");
-            } else {
-                log.warn("[StudyDailyPlan] studyRecentWeekInfo 캐시를 찾을 수 없음");
-            }
-        }
         long endTime = System.currentTimeMillis();
         log.info(
-                "[StudyDailyPlan] 실패 처리 완료 - 처리 건수: {}건, 소요 시간: {}ms",
+                "[StudyDailyPlan] 실패 처리 완료 - 신규 생성: {}건, 상태 업데이트: {}건, 소요 시간: {}ms",
+                insertedCount,
                 updatedCount,
                 (endTime - startTime)
         );
-
     }
 
 }

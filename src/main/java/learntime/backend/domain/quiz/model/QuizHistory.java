@@ -13,7 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "quiz_history")
+@Table(
+        name = "quiz_history",
+        indexes = {
+                @Index(name = "idx_quiz_history_study_quiz", columnList = "study_quiz_id, attempt_number DESC")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)

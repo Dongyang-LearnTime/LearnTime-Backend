@@ -3,30 +3,28 @@ package learntime.backend.domain.study.service.core;
 import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
 import learntime.backend.domain.study.converter.StudyConverter;
 import learntime.backend.domain.study.dto.StudyDailyPlanStatsDTO;
+import learntime.backend.domain.study.dto.response.StudyMemberRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;
-import learntime.backend.domain.study.model.Study;
-import learntime.backend.domain.study.model.StudyDailyPlan;
-import learntime.backend.domain.study.model.StudyRestDate;
-import learntime.backend.domain.study.model.StudyRestDay;
+import learntime.backend.domain.study.error.code.StudyErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
+import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.domain.study.repository.StudyRestDayRepository;
+import learntime.backend.domain.study.repository.StudyStatusRepository;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
-import learntime.backend.domain.study.service.util.StudyDateCalculator;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Set;
@@ -40,51 +38,32 @@ public class StudyQueryService {
     private final StudyDailyPlanRepository studyDailyPlanRepository;
     private final StudyRestDateRepository studyRestDateRepository;
     private final StudyRestDayRepository studyRestDayRepository;
+    private final StudyStatusRepository studyStatusRepository;
     private final QuizHistoryRepository quizHistoryRepository;
-    private final StudyDateCalculator studyDateCalculator;
 
-    // 남은 학습 기간 중 휴일을 제외한 실제 학습 가능 일수를 계산합니다.
+
+    // 특정 유저의 전체 통계 지표를 조회합니다.
     @Transactional(readOnly = true)
-    public int calculateRemainingStudyDays(Long studyId, GeminiReplanRequestDTO request, Long userId) {
+    public StudyTotalInfoResponseDTO getStudyMemberTotalIndicatorByUserId(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
 
-        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
+        Long studyMemberId = study.getStudyMembers().stream()
+                .filter(m -> m.getUser().getUserId().equals(userId))
+                .map(StudyMember::getStudyMemberId)
+                .findFirst()
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
-        Set<DayOfWeek> restDays = request.restDays() == null
-                ? Set.of()
-                : Set.copyOf(request.restDays());
-
-        Set<LocalDate> restDates = request.restDates() == null
-                ? Set.of()
-                : Set.copyOf(request.restDates());
-
-        long completedCount = studyDailyPlanRepository.countCompletedPlansByStudyAndDateRange(
-                study,
-                ProgressStatus.COMPLETED,
-                request.startDate(),
-                request.endDate()
-        );
-
-        return studyDateCalculator.calculateRemainingDays(
-                request.startDate(),
-                request.endDate(),
-                restDays,
-                restDates,
-                completedCount
-        );
-    }
-
-    // 스터디의 전체 통계 지표(달성률, 성공률, 퀴즈 정답률 등)를 조회합니다.
-    @Transactional(readOnly = true)
-    @Cacheable(value = "studyTotalIndicator", key = "#studyId")
-    public StudyTotalInfoResponseDTO getStudyTotalIndicator(Long studyId) {
-        List<StudyDailyPlanStatsDTO> stats = studyDailyPlanRepository.findStatsByStudyId(studyId);
+        List<StudyDailyPlanStatsDTO> stats = studyStatusRepository.findStatsByStudyMemberId(studyMemberId);
 
         if (stats.isEmpty()) {
             return buildEmptyIndicatorResponse();
         }
 
+        return buildIndicatorResponse(studyMemberId, stats);
+    }
+
+    private StudyTotalInfoResponseDTO buildIndicatorResponse(Long targetId, List<StudyDailyPlanStatsDTO> stats) {
         long totalPlans = stats.size();
         Double completionRate = calculateRate(
                 stats.stream().filter(s -> s.progressStatus() == ProgressStatus.COMPLETED).count(),
@@ -96,7 +75,9 @@ public class StudyQueryService {
         );
 
         Long totalFocusedTime = calculateTotalFocusedTime(stats);
-        Double quizCorrectRate = calculateQuizCorrectRate(studyId);
+        
+        // 퀴즈 통계를 멤버 기반 또는 스터디 전체 기반으로 조회
+        Double quizCorrectRate = calculateQuizCorrectRate(targetId);
 
         return StudyTotalInfoResponseDTO.builder()
                 .studyCompletionRate(completionRate)
@@ -106,10 +87,12 @@ public class StudyQueryService {
                 .build();
     }
 
-    // 오늘을 제외한 최근 7일의 날짜별 공부 상태를 조회합니다.
+    // 오늘을 제외한 최근 7일의 날짜별 공부 상태를 모든 스터디 멤버에 대해 조회합니다.
     @Transactional(readOnly = true)
-    @Cacheable(value = "studyRecentWeekInfo", key = "#studyId")
-    public List<StudyRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId) {
+    public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId, Long userId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+
         LocalDate today = LocalDate.now();
         List<StudyDailyPlan> recentPlans = studyDailyPlanRepository.findByStudyIdAndPlanDateBetweenOrderByPlanDateAsc(
                 studyId,
@@ -127,21 +110,17 @@ public class StudyQueryService {
                 .map(StudyRestDate::getRestDate)
                 .collect(Collectors.toSet());
 
-        return StudyConverter.toRecentWeekStudyInfoResponseDTOs(recentPlans, today, restDays, restDates);
-    }
-
-    // 아직 완료되지 않은 학습 계획의 내용을 통합하여 문자열로 반환합니다.
-    @Transactional(readOnly = true)
-    public String getRemainingStudyContent(Long studyId, Long userId) {
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
-
-        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
-
-        return String.join("\n", studyDailyPlanRepository.findRemainingContents(
-                study,
-                ProgressStatus.COMPLETED
-        ));
+        return study.getStudyMembers().stream()
+                .map(member -> {
+                    List<StudyStatus> statuses = studyStatusRepository.findByMemberIdAndPlanDateBetween(
+                            member.getStudyMemberId(),
+                            today.minusDays(7),
+                            today.minusDays(1)
+                    );
+                    List<StudyRecentWeekInfoResponseDTO> memberRecentWeekInfos = StudyConverter.toRecentWeekStudyInfoResponseDTOs(recentPlans, statuses, today, restDays, restDates);
+                    return new StudyMemberRecentWeekInfoResponseDTO(member.getStudyMemberId(), memberRecentWeekInfos);
+                })
+                .collect(Collectors.toList());
     }
 
     // 데이터가 없는 경우를 위한 빈 통계 지표 응답 객체를 생성합니다.
@@ -175,9 +154,9 @@ public class StudyQueryService {
         return hasFocusTime ? totalFocusSeconds : null;
     }
 
-    // 스터디와 관련된 퀴즈의 전체 정답률을 계산합니다.
-    private Double calculateQuizCorrectRate(Long studyId) {
-        List<Object[]> quizStats = quizHistoryRepository.findQuizStatsByStudyId(studyId);
+    // 스터디와 관련된 퀴즈의 전체 정답률을 계산함
+    private Double calculateQuizCorrectRate(Long studyMemberId) {
+        List<Object[]> quizStats = quizHistoryRepository.findQuizStatsByStudyMemberId(studyMemberId);
 
         if (quizStats.isEmpty() || quizStats.getFirst()[0] == null) {
             return null;
@@ -191,3 +170,4 @@ public class StudyQueryService {
                 : null;
     }
 }
+

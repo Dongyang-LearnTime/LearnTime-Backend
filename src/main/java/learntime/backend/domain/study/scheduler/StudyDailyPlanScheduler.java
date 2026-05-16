@@ -23,4 +23,5 @@ public class StudyDailyPlanScheduler {
     public void scheduledTask() {
         studyDailyPlanService.markIncompletePlansAsFailure();
     }
+
 }
