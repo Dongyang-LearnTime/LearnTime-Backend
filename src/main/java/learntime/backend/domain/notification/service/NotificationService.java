@@ -62,12 +62,12 @@ public class NotificationService {
 
     @Transactional
     public NotificationResponseDTO notify(
-            Long receiverId,
-            NotificationType type,
-            String title,
-            String message,
-            Long referenceId,
-            String referenceType
+            Long receiverId, // 알림을 받을 사용자 ID
+            NotificationType type, // 알림 종류 (친구 요청, 스터디 초대 등)
+            String title, // 알림 제목
+            String message, // 사용자에게 보여줄 알림 내용
+            Long referenceId, // 관련 리소스 PK (친구 요청 ID, 스터디 초대 ID 등)
+            String referenceType // 관련 리소스 타입명
     ) {
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));

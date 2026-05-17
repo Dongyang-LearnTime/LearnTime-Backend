@@ -11,6 +11,12 @@ import org.hibernate.annotations.OnDeleteAction;
         name = "friend",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"user_id", "friend_user_id"})
+        },
+        indexes = {
+                @Index(
+                        name = "idx_friend_friend_user",
+                        columnList = "friend_user_id, user_id"
+                )
         }
 )
 @Getter

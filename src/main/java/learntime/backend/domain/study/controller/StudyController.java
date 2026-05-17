@@ -5,8 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyMemberRecentWeekInfoResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyRecentWeekInfoResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyStatusResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;

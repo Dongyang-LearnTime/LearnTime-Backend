@@ -2,9 +2,9 @@ package learntime.backend.domain.notification.event;
 
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.notification.service.NotificationService;
-import learntime.backend.domain.user.dto.event.FriendRequestAcceptedEvent;
-import learntime.backend.domain.user.dto.event.FriendRequestRejectedEvent;
-import learntime.backend.domain.user.dto.event.FriendRequestSentEvent;
+import learntime.backend.domain.user.event.FriendRequestAcceptedEvent;
+import learntime.backend.domain.user.event.FriendRequestRejectedEvent;
+import learntime.backend.domain.user.event.FriendRequestSentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

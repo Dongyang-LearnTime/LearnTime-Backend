@@ -38,4 +38,20 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
                OR (f.user.userId = :friendUserId AND f.friendUser.userId = :userId)
             """)
     Optional<Friend> findFriendship(@Param("userId") Long userId, @Param("friendUserId") Long friendUserId);
+
+
+    /** 양방향 친구 여부 확인 */
+    @Query("""
+    SELECT COUNT(f) > 0
+    FROM Friend f
+    WHERE
+        (f.user.userId = :userId1 AND f.friendUser.userId = :userId2)
+        OR
+        (f.user.userId = :userId2 AND f.friendUser.userId = :userId1)
+    """)
+    boolean existsFriendRelation(
+            Long userId1,
+            Long userId2
+    );
+
 }

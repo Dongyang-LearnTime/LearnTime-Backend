@@ -6,7 +6,6 @@ import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
 import learntime.backend.domain.study.enums.CompletionStatus;
-import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
@@ -31,7 +30,7 @@ import learntime.backend.domain.study.model.StudyRestDate;
 import learntime.backend.domain.study.converter.StudyConverter;
 
 import learntime.backend.domain.study.model.StudyStatus;
-import learntime.backend.domain.study.model.StudyMember;
+import learntime.backend.domain.studymember.model.StudyMember;
 import learntime.backend.domain.study.repository.StudyStatusRepository;
 
 // 일일 진도 및 포인트 지급 관련 비즈니스 로직 담당 서비스

@@ -8,9 +8,8 @@ import learntime.backend.domain.quiz.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.quiz.model.QuizAnswer;
 import learntime.backend.domain.quiz.model.QuizHistory;
 import learntime.backend.domain.quiz.model.QuizQuestion;
-import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.quiz.model.StudyQuiz;
-import learntime.backend.domain.study.model.StudyMember;
+import learntime.backend.domain.studymember.model.StudyMember;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
 

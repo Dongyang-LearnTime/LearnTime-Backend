@@ -21,7 +21,12 @@ public enum StudyErrorCode implements BaseErrorCode {
     STUDY_DAILY_NOT_YET_STARTED(HttpStatus.BAD_REQUEST, "STUDY-012", "아직 시작되지 않은 공부 계획은 완료 처리할 수 없습니다."),
     
     FEEDBACK_NOT_ENOUGH_DATA(HttpStatus.BAD_REQUEST, "STUDY-013", "피드백을 생성하기 위한 학습 데이터가 부족합니다. (최소 1건 필요)"),
-    FEEDBACK_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-014", "피드백 정보를 찾을 수 없습니다.");
+    FEEDBACK_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-014", "피드백 정보를 찾을 수 없습니다."),
+    SELF_INVITATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-015", "자기 자신은 스터디에 초대할 수 없습니다."),
+    STUDY_MEMBER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "STUDY-016", "스터디 최대 인원은 4명입니다."),
+    ALREADY_STUDY_MEMBER(HttpStatus.BAD_REQUEST, "STUDY-017", "이미 해당 스터디의 멤버입니다."),
+    STUDY_INVITATION_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "STUDY-018", "이미 대기 중인 초대가 존재합니다."),
+    NOT_FRIEND_RELATION(HttpStatus.BAD_REQUEST, "STUDY-019", "친구인 사용자만 스터디에 초대할 수 있습니다.");
 
     private final HttpStatus status;
     private final String code;

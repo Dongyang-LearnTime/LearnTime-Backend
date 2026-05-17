@@ -1,8 +1,7 @@
 package learntime.backend.domain.notes.model;
 
 import jakarta.persistence.*;
-import learntime.backend.domain.study.model.Study;
-import learntime.backend.domain.study.model.StudyMember;
+import learntime.backend.domain.studymember.model.StudyMember;
 import learntime.backend.global.common.BaseTimeEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
