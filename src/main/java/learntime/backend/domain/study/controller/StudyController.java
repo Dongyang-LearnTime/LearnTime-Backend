@@ -6,6 +6,8 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyMemberRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyRecentWeekInfoResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyStatusResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.facade.StudyFacade;
@@ -55,6 +57,12 @@ public class StudyController {
     }
 
 
+    @GetMapping("/{studyId}/status")
+    @Operation(summary = "공부 진도 생성 상태 확인", description = "스터디의 현재 생성 상태(PLANNING/READY/FAILED)를 확인합니다.")
+    public ResponseEntity<StudyStatusResponseDTO> getStudyStatus(@PathVariable Long studyId) {
+        return ResponseEntity.ok(studyQueryService.getStudyStatus(studyId));
+    }
+
     @PostMapping(
             value = "/extract",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -74,8 +82,8 @@ public class StudyController {
     @Operation(summary = "공부 진도 생성", description = "목차 정보를 기반으로 공부 진도를 생성 후 DB에 저장합니다.")
     public ResponseEntity<Long> createStudyPlan(@Valid @RequestBody GeminiStudyRequestDTO request,
                                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long studyMemberId = studyFacade.generateAndSaveStudyPlan(request, userDetails.userId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(studyMemberId);
+        Long studyId = studyFacade.generateAndSaveStudyPlan(request, userDetails.userId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(studyId);
     }
 
 

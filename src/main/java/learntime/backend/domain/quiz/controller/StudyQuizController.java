@@ -41,11 +41,11 @@ public class StudyQuizController {
     }
 
 
-    @GetMapping("/list/{studyMemberId}")
+    @GetMapping("/list/{studyId}")
     @Operation(summary = "퀴즈 목록 조회", description = "특정 스터디의 퀴즈 목록을 조회함.")
-    public ResponseEntity<StudyQuizListResponseDTO> getStudyQuizList(@PathVariable Long studyMemberId,
+    public ResponseEntity<StudyQuizListResponseDTO> getStudyQuizList(@PathVariable Long studyId,
                                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
-        StudyQuizListResponseDTO result = studyQuizFacade.getStudyQuizList(studyMemberId, userDetails.userId());
+        StudyQuizListResponseDTO result = studyQuizFacade.getStudyQuizList(studyId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
 

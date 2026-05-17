@@ -17,7 +17,11 @@ public enum StudyErrorCode implements BaseErrorCode {
     STUDY_UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "STUDY-008", "해당 공부 진도/필기에 대한 접근 권한이 없습니다."),
     QUIZ_QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-009", "퀴즈 문제를 찾을 수 없습니다."),
     QUIZ_HISTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-010", "퀴즈 풀이 이력을 찾을 수 없습니다."),
-    STUDY_DAILY_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "STUDY-011", "이미 완료된 공부 일일 일정에는 사용자 내용을 추가할 수 없습니다.");
+    STUDY_DAILY_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "STUDY-011", "이미 완료된 공부 일일 일정에는 사용자 내용을 추가할 수 없습니다."),
+    STUDY_DAILY_NOT_YET_STARTED(HttpStatus.BAD_REQUEST, "STUDY-012", "아직 시작되지 않은 공부 계획은 완료 처리할 수 없습니다."),
+    
+    FEEDBACK_NOT_ENOUGH_DATA(HttpStatus.BAD_REQUEST, "STUDY-013", "피드백을 생성하기 위한 학습 데이터가 부족합니다. (최소 1건 필요)"),
+    FEEDBACK_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-014", "피드백 정보를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

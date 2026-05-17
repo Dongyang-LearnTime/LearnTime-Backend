@@ -28,15 +28,15 @@ public class StudyNotesService {
     @Transactional(readOnly = true)
     public StudyNotesResponseDTO getNote(Long studyNotesId, Long userId) {
         StudyNotes studyNotes = findByNotesId(studyNotesId);
-        // 스터디 멤버이면 해당 스터디의 필기를 조회할 수 있음
-        StudyAuthUtil.verifyStudyMember(studyNotes.getStudyMember().getStudy(), userId);
+        // 본인만 본인의 필기를 조회할 수 있음
+        StudyAuthUtil.verifyOwnership(studyNotes.getStudyMember(), userId);
 
         return StudyNotesConverter.toStudyNotesResponseDTO(studyNotes);
     }
 
     @Transactional(readOnly = true)
-    public List<StudyNotesResponseDTO> getNotesList(Long studyMemberId, Long userId) {
-        StudyMember studyMember = findByStudyMemberId(studyMemberId);
+    public List<StudyNotesResponseDTO> getNotesList(Long studyId, Long userId) {
+        StudyMember studyMember = findByStudyIdAndUserId(studyId, userId);
         // 스터디 멤버이면 해당 스터디의 필기 목록을 조회할 수 있음
         StudyAuthUtil.verifyStudyMember(studyMember.getStudy(), userId);
 
@@ -50,7 +50,7 @@ public class StudyNotesService {
 
     @Transactional
     public Long create(StudyNoteRequestDTO request, Long userId) {
-        StudyMember studyMember = findByStudyMemberId(request.studyMemberId());
+        StudyMember studyMember = findByStudyIdAndUserId(request.studyId(), userId);
         // 본인의 필기만 생성할 수 있음
         StudyAuthUtil.verifyOwnership(studyMember, userId);
 
@@ -83,8 +83,8 @@ public class StudyNotesService {
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOTE_NOT_FOUND));
     }
 
-    private StudyMember findByStudyMemberId(Long studyMemberId) {
-        return studyMemberRepository.findById(studyMemberId)
+    private StudyMember findByStudyIdAndUserId(Long studyId, Long userId) {
+        return studyMemberRepository.findByStudy_StudyIdAndUser_UserId(studyId, userId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
     }
 

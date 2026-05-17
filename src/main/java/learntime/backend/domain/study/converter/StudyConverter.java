@@ -1,11 +1,9 @@
 package learntime.backend.domain.study.converter;
 
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
-import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyFeedbackResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyRecentWeekInfoResponseDTO;
+import learntime.backend.domain.study.dto.response.*;
 import learntime.backend.domain.study.enums.ProgressStatus;
+import learntime.backend.domain.study.enums.StudyPlanStatus;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
@@ -37,7 +35,7 @@ public class StudyConverter {
                 plan.getDayNumber(),
                 plan.getPlanContent(),
                 status != null ? status.getFocusTime() : null,
-                status != null && status.getProgressStatus() != null ? status.getProgressStatus() : learntime.backend.domain.study.enums.ProgressStatus.NOT_STARTED,
+                status != null && status.getProgressStatus() != null ? status.getProgressStatus() : ProgressStatus.NOT_STARTED,
                 status != null ? status.getCompletionStatus() : null,
                 status != null ? status.getUnderstandingScore() : null,
                 studyMemberId,
@@ -81,15 +79,16 @@ public class StudyConverter {
                 ));
 
         return startDate.datesUntil(today)
-                .filter(date -> !restDays.contains(date.getDayOfWeek()))
-                .filter(date -> !restDates.contains(date))
-                .map(date -> toStudyRecentWeekInfoResponseDTO(date, planByDate.get(date), statusByDate.get(date)))
+                .map(date -> {
+                    boolean isRestDay = restDays.contains(date.getDayOfWeek()) || restDates.contains(date);
+                    return toStudyRecentWeekInfoResponseDTO(date, planByDate.get(date), statusByDate.get(date), isRestDay);
+                })
                 .toList();
     }
 
-    private static StudyRecentWeekInfoResponseDTO toStudyRecentWeekInfoResponseDTO(LocalDate planDate, StudyDailyPlan plan, StudyStatus status) {
+    private static StudyRecentWeekInfoResponseDTO toStudyRecentWeekInfoResponseDTO(LocalDate planDate, StudyDailyPlan plan, StudyStatus status, boolean isRestDay) {
         if (plan == null) {
-            return new StudyRecentWeekInfoResponseDTO(planDate, null, null, null, null);
+            return new StudyRecentWeekInfoResponseDTO(planDate, null, null, null, null, isRestDay);
         }
 
         return new StudyRecentWeekInfoResponseDTO(
@@ -97,7 +96,8 @@ public class StudyConverter {
                 status != null ? status.getFocusTime() : null,
                 status != null && status.getProgressStatus() != null ? status.getProgressStatus() : ProgressStatus.NOT_STARTED,
                 status != null ? status.getCompletionStatus() : null,
-                status != null ? status.getUnderstandingScore() : null
+                status != null ? status.getUnderstandingScore() : null,
+                isRestDay
         );
     }
 
@@ -108,6 +108,7 @@ public class StudyConverter {
                 .bookTitle(request.bookTitle())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
+                .status(StudyPlanStatus.PLANNING)
                 .build();
     }
 

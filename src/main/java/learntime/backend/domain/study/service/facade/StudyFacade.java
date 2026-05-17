@@ -35,10 +35,15 @@ public class StudyFacade {
         return tocExtractionService.extractTocAsJson(imageFile);
     }
 
-    // AI를 활용해 새로운 스마트 학습 계획을 생성하고 저장합니다.
+    // AI를 활용해 새로운 스마트 학습 계획을 생성하고 저장합니다. (비동기 처리)
     public Long generateAndSaveStudyPlan(GeminiStudyRequestDTO request, Long userId) {
-        StudyPlanResponseDTO geminiResult = geminiStudyService.generateSmartStudyPlan(request, userId);
-        return studyManagementService.saveStudyPlan(request, geminiResult, userId);
+        // 1. 초기 정보 저장 (PLANNING 상태)
+        Long studyId = studyManagementService.initializeStudy(request, userId);
+
+        // 2. 비동기로 AI 계획 생성 및 상세 일정 조립 (백그라운드 처리)
+        studyManagementService.generateAndSavePlanAsync(studyId, request, userId);
+
+        return studyId;
     }
 
 //    // 특정 스터디와 관련된 모든 데이터를 삭제합니다.

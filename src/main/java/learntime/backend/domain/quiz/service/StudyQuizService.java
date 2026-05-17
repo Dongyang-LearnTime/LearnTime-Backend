@@ -92,6 +92,12 @@ public class StudyQuizService {
         }
 
         StudyQuiz studyQuiz = questions.getFirst().getStudyQuiz(); // 공부 퀴즈 정보 가져옴
+        
+        // 본인만 본인의 퀴즈를 풀 수 있음
+        if (!studyQuiz.getStudyMember().getUser().getUserId().equals(userId)) {
+            throw new StudyException(StudyErrorCode.STUDY_UNAUTHORIZED_ACCESS);
+        }
+
         boolean isFirstTime = studyQuiz.getCompletedCount() == 0; // 처음 푸는지 여부 확인
 
         Map<Long, QuizQuestion> questionMap = questions.stream()

@@ -1,6 +1,7 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.study.enums.StudyPlanStatus;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,6 +39,10 @@ public class Study {
     @Column(nullable = false)
     private LocalDate endDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StudyPlanStatus status = StudyPlanStatus.PLANNING;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -63,14 +68,19 @@ public class Study {
     private List<StudyRestDate> restDates = new ArrayList<>();
 
     @Builder
-    public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate) {
+    public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate, StudyPlanStatus status) {
         this.studyTitle = studyTitle;
         this.bookTitle = bookTitle;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.status = (status == null) ? StudyPlanStatus.PLANNING : status;
     }
 
     // --- 비즈니스 로직 --- //
+    public void updateStatus(StudyPlanStatus status) {
+        this.status = status;
+    }
+
     public void updateStudyInfo(String studyTitle, LocalDate startDate, LocalDate endDate) {
         this.studyTitle = studyTitle;
         this.startDate = startDate;

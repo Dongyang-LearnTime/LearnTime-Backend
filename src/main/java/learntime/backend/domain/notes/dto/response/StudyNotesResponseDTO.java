@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
 public record StudyNotesResponseDTO (
         @Schema(description = "공부 필기 ID")
         Long studyNotesId,
+
+        @Schema(description = "공부 ID")
+        Long studyId,
         
         @Schema(description = "공부 맴버 ID (없을 경우 null)")
         Long studyMemberId,

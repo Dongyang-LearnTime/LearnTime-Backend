@@ -18,8 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByName(String name);
     boolean existsByEmail(String email);
 
-    Page<User> findAllByOrderByPointDesc(Pageable pageable);
-
     @Modifying(clearAutomatically = true)
     @Query("UPDATE User u SET u.point = u.point + :amount WHERE u.userId = :userId")
     void updatePoint(@Param("userId") Long userId, @Param("amount") int amount);

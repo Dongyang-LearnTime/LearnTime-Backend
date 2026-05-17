@@ -43,20 +43,20 @@ public class StudyQuizFacade {
     private static final int MULTIPLE_COUNT = 2; // 4지선다 문제 개수
 
     @Transactional(readOnly = true)
-    public StudyQuizListResponseDTO getStudyQuizList(Long studyMemberId, Long userId) {
-        StudyMember studyMember = findByStudyMemberId(studyMemberId);
+    public StudyQuizListResponseDTO getStudyQuizList(Long studyId, Long userId) {
+        StudyMember studyMember = findByStudyIdAndUserId(studyId, userId);
         // 스터디 멤버이면 조회 가능
         StudyAuthUtil.verifyStudyMember(studyMember.getStudy(), userId);
 
-        return studyQuizService.getStudyQuizList(studyMemberId);
+        return studyQuizService.getStudyQuizList(studyMember.getStudyMemberId());
     }
 
     @Transactional(readOnly = true)
     public QuizHistoryListResponseDTO getQuizHistoryList(Long studyQuizId, Long userId) {
         StudyQuiz studyQuiz = studyQuizRepository.findById(studyQuizId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
-        // 스터디 멤버이면 조회 가능
-        StudyAuthUtil.verifyStudyMember(studyQuiz.getStudyMember().getStudy(), userId);
+        // 본인만 조회 가능
+        StudyAuthUtil.verifyOwnership(studyQuiz.getStudyMember(), userId);
 
         return studyQuizService.getQuizHistoryList(studyQuizId);
     }
@@ -67,8 +67,8 @@ public class StudyQuizFacade {
         StudyQuiz studyQuiz = studyQuizRepository.findByIdWithQuestions(studyQuizId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
 
-        // 스터디 멤버이면 퀴즈 문항 열람 가능
-        StudyAuthUtil.verifyStudyMember(studyQuiz.getStudyMember().getStudy(), userId);
+        // 본인만 퀴즈 문항 열람 가능
+        StudyAuthUtil.verifyOwnership(studyQuiz.getStudyMember(), userId);
 
         return StudyQuizConverter.toResponseDTO(studyQuiz, studyQuiz.getQuestions());
     }
@@ -78,15 +78,15 @@ public class StudyQuizFacade {
         QuizHistory quizHistory = quizHistoryRepository.findById(quizHistoryId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_HISTORY_NOT_FOUND));
                 
-        // 스터디 멤버이면 조회 가능
-        StudyAuthUtil.verifyStudyMember(quizHistory.getStudyQuiz().getStudyMember().getStudy(), userId);
+        // 본인만 조회 가능
+        StudyAuthUtil.verifyOwnership(quizHistory.getStudyQuiz().getStudyMember(), userId);
 
         return studyQuizService.getQuizResult(quizHistoryId);
     }
 
     // 필기를 기반으로 퀴즈 추출
     public Long generateAndSaveStudyQuiz(QuizCreateRequestDTO request, Long userId) {
-        StudyMember studyMember = findByStudyMemberId(request.studyMemberId());
+        StudyMember studyMember = findByStudyIdAndUserId(request.studyId(), userId);
 
         // 본인만 생성 가능
         StudyAuthUtil.verifyOwnership(studyMember, userId);
@@ -147,14 +147,14 @@ public class StudyQuizFacade {
         quizHistoryRepository.deleteById(quizHistoryId);
     }
 
+    private StudyMember findByStudyIdAndUserId(Long studyId, Long userId) {
+        return studyMemberRepository.findByStudy_StudyIdAndUser_UserId(studyId, userId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+    }
+
     private StudyQuiz findByStudyQuizId(Long studyQuizId){
         return studyQuizRepository.findById(studyQuizId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
-    }
-
-    private StudyMember findByStudyMemberId(Long studyMemberId) {
-        return studyMemberRepository.findById(studyMemberId)
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
     }
 
 

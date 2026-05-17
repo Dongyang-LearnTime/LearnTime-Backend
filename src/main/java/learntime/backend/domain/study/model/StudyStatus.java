@@ -5,11 +5,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import learntime.backend.global.common.BaseTimeEntity;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,7 +22,7 @@ import java.time.LocalTime;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class StudyStatus {
+public class StudyStatus extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,8 +60,11 @@ public class StudyStatus {
     private StudyDailyPlan studyDailyPlan;
 
     @Builder
-    public StudyStatus(ProgressStatus progressStatus, StudyMember studyMember, StudyDailyPlan studyDailyPlan) {
+    public StudyStatus(ProgressStatus progressStatus, CompletionStatus completionStatus, Integer understandingScore, LocalTime focusTime, StudyMember studyMember, StudyDailyPlan studyDailyPlan) {
         this.progressStatus = progressStatus != null ? progressStatus : ProgressStatus.NOT_STARTED;
+        this.completionStatus = completionStatus;
+        this.understandingScore = understandingScore;
+        this.focusTime = focusTime;
         this.studyMember = studyMember;
         this.studyDailyPlan = studyDailyPlan;
     }

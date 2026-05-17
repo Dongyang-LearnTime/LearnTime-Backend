@@ -6,7 +6,9 @@ import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,14 +19,21 @@ public class CommunityService {
     private final UserRepository userRepository;
 
     public Page<PointRankingResponseDTO> getPointRanking(Pageable pageable) {
-        Page<User> userPage = userRepository.findAllByOrderByPointDesc(pageable);
-
-        int startRank = (int) pageable.getOffset() + 1;
+        Pageable rankingPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(
+                        Sort.Order.desc("point"),
+                        Sort.Order.asc("userId")
+                )
+        );
+        Page<User> userPage = userRepository.findAll(rankingPageable);
+        int startRank = (int) rankingPageable.getOffset() + 1;
 
         return userPage.map(user -> {
             int currentRank = startRank + userPage.getContent().indexOf(user);
+
             return CommunityConverter.toPointRankingResponseDTO(user, currentRank);
         });
-
     }
 }

@@ -28,7 +28,7 @@ public interface StudyStatusRepository extends JpaRepository<StudyStatus, Long> 
     // 스터디 전체의 통계 지표를 위한 상태를 조회함
     @Query("SELECT new learntime.backend.domain.study.dto.StudyDailyPlanStatsDTO(s.progressStatus, s.completionStatus, s.focusTime) " +
            "FROM StudyStatus s WHERE s.studyMember.study.studyId = :studyId")
-    List<StudyDailyPlanStatsDTO> findStatsByStudyId(@Param("studyId") Long studyId);
+    List<StudyDailyPlanStatsDTO> findStatsById(@Param("studyId") Long studyId);
 
     // 기간 내 완료된 계획 개수를 계산함
     @Query("SELECT COUNT(s) FROM StudyStatus s " +

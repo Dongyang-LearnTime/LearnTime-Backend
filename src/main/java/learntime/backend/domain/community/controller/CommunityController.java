@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/points")
+@RequestMapping("/api/community")
 @RequiredArgsConstructor
 @Tag(name = "커뮤니티 API", description = "커뮤니티의 랭킹 순위 등을 관리합니다.")
 public class CommunityController {
@@ -25,8 +25,9 @@ public class CommunityController {
     @Operation(summary = "랭킹", description = "포인트 수가 많은 내림차순으로 순위 정렬")
     @GetMapping("/ranking")
     public ResponseEntity<Page<PointRankingResponseDTO>> getRanking(
-            // 동일 포인트일 경우, 유저 ID로 순서정렬
-            @PageableDefault(sort = {"point", "userId"}, direction = Sort.Direction.DESC)Pageable pageable) {
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
         return ResponseEntity.ok(communityService.getPointRanking(pageable));
     }
+
 }

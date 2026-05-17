@@ -15,7 +15,6 @@ import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.domain.study.repository.StudyRestDayRepository;
-import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -89,6 +88,12 @@ public class StudyDailyService {
     public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
                 .orElseThrow(() -> new IllegalArgumentException("공부 일일 진도를 찾을 수 없습니다."));
+
+        // 계획 날짜가 오늘 이후라면 완료 처리 불가
+        LocalDate today = LocalDate.now(java.util.TimeZone.getTimeZone("Asia/Seoul").toZoneId());
+        if (studyDailyPlan.getPlanDate().isAfter(today)) {
+            throw new StudyException(StudyErrorCode.STUDY_DAILY_NOT_YET_STARTED);
+        }
 
         Study study = studyDailyPlan.getStudy();
         

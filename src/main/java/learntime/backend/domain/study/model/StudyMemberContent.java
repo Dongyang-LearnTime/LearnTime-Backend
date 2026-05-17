@@ -32,4 +32,9 @@ public class StudyMemberContent {
         this.memberContent = memberContent;
     }
 
+    // --- 비즈니스 로직 --- //
+    public void updateContent(String userContent) {
+        this.memberContent = userContent;
+    }
+
 }

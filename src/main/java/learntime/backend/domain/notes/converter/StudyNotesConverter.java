@@ -23,6 +23,7 @@ public class StudyNotesConverter {
     public static StudyNotesResponseDTO toStudyNotesResponseDTO(StudyNotes studyNotes) {
         return StudyNotesResponseDTO.builder()
                 .studyNotesId(studyNotes.getStudyNotesId())
+                .studyId(studyNotes.getStudyMember() != null ? studyNotes.getStudyMember().getStudy().getStudyId() : null)
                 .studyMemberId(studyNotes.getStudyMember() != null ? studyNotes.getStudyMember().getStudyMemberId() : null)
                 .title(studyNotes.getNoteTitle())
                 .content(studyNotes.getNoteContents())

@@ -22,6 +22,9 @@ public record StudyRecentWeekInfoResponseDTO(
         CompletionStatus completionStatus,
 
         @Schema(description = "이해도 점수 (계획이 없으면 null)")
-        Integer understandingScore
+        Integer understandingScore,
+
+        @Schema(description = "휴식일 여부")
+        Boolean isRestDay
 ) {
 }
