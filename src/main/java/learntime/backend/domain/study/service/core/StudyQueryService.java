@@ -36,7 +36,7 @@ public class StudyQueryService {
 
     public StudyStatusResponseDTO getStudyStatus(Long studyId) {
         Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
         return StudyStatusResponseDTO.builder()
                 .studyId(study.getStudyId())
                 .status(study.getStatus())
@@ -47,7 +47,7 @@ public class StudyQueryService {
     @Transactional(readOnly = true)
     public StudyAnalysisDataDTO getStudyAnalysisData(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
         StudyMember member = study.getStudyMembers().stream()
                 .filter(m -> m.getUser().getUserId().equals(userId))
@@ -78,7 +78,7 @@ public class StudyQueryService {
     @Transactional(readOnly = true)
     public StudyTotalInfoResponseDTO getStudyMemberTotalIndicatorByUserId(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
         Long studyMemberId = study.getStudyMembers().stream()
                 .filter(m -> m.getUser().getUserId().equals(userId))
@@ -122,7 +122,7 @@ public class StudyQueryService {
     @Transactional(readOnly = true)
     public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
         LocalDate today = LocalDate.now(java.util.TimeZone.getTimeZone("Asia/Seoul").toZoneId());
         List<StudyDailyPlan> recentPlans = studyDailyPlanRepository.findByStudyIdAndPlanDateBetweenOrderByPlanDateAsc(

@@ -111,7 +111,7 @@ public class StudyManagementService {
         Study study = null;
         try {
             study = studyRepository.findById(studyId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+                    .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
             // 1. AI 호출 (단순 목차 분배)
             StudyPlanResponseDTO geminiResult = geminiStudyService.generateSmartStudyPlan(request, userId);

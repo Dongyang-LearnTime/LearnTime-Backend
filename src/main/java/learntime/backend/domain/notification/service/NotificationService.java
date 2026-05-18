@@ -88,8 +88,21 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
-    public List<NotificationResponseDTO> getNotifications(Long userId) {
-        return notificationRepository.findAllByReceiver_UserIdOrderByCreatedAtDesc(userId).stream()
+    public List<NotificationResponseDTO> getNotifications(Long userId, Long cursorId) {
+        List<Notification> notifications;
+
+        if (cursorId == null) { // 첫 페이지 조회
+            notifications = notificationRepository
+                    .findTop20ByReceiver_UserIdOrderByNotificationIdDesc(userId);
+        } else { // 커서 기반 다음 페이지 조회
+            notifications = notificationRepository
+                    .findTop20ByReceiver_UserIdAndNotificationIdLessThanOrderByNotificationIdDesc(
+                            userId,
+                            cursorId
+                    );
+        }
+
+        return notifications.stream()
                 .map(NotificationConverter::toNotificationResponseDTO)
                 .toList();
     }
@@ -143,5 +156,19 @@ public class NotificationService {
             emitters.remove(userId);
         }
     }
+
+    @Transactional
+    public void deleteNotification(Long notificationId, Long userId) {
+        Notification notification = notificationRepository.findByNotificationIdAndReceiver_UserId(notificationId, userId)
+                .orElseThrow(() -> new NotificationException(NotificationErrorCode.NOTIFICATION_NOT_FOUND));
+
+        notificationRepository.delete(notification);
+    }
+
+    @Transactional
+    public void deleteNotifications(Long userId, List<Long> notificationIds) {
+        notificationRepository.deleteByNotificationIdInAndReceiver_UserId(notificationIds, userId);
+    }
+
 
 }

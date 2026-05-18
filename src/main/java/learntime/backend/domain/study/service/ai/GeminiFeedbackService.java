@@ -3,6 +3,8 @@ package learntime.backend.domain.study.service.ai;
 import jakarta.annotation.PostConstruct;
 import learntime.backend.domain.study.dto.response.AiFeedbackResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyAnalysisDataDTO;
+import learntime.backend.domain.study.error.code.StudyErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
@@ -46,7 +48,8 @@ public class GeminiFeedbackService {
         try {
             this.feedbackPromptTemplate = feedbackPromptTemplateResource.getContentAsString(StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new RuntimeException("피드백 프롬프트 초기화 실패", e);
+            log.error("피드백 프롬프트 초기화 실패", e);
+            throw new StudyException(StudyErrorCode.PROMPT_INIT_FAILED);
         }
     }
 

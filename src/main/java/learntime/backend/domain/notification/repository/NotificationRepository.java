@@ -12,11 +12,17 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-// 사용자 알림의 조회와 읽음 대상 식별을 담당하는 Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    // 내 알림 목록을 최신순으로 조회
-    List<Notification> findAllByReceiver_UserIdOrderByCreatedAtDesc(Long receiverId);
+    // 알림 목록 첫 조회
+    List<Notification> findTop20ByReceiver_UserIdOrderByNotificationIdDesc(Long userId);
+
+    // 알림 목록 다음 페이지 조회 (커서 기반)
+    List<Notification> findTop20ByReceiver_UserIdAndNotificationIdLessThanOrderByNotificationIdDesc(
+            Long userId,
+            Long cursorId
+    );
+
 
     // 읽지 않은 내 알림 개수 조회
     long countByReceiver_UserIdAndIsReadFalse(Long receiverId);
@@ -31,6 +37,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     // 읽음 처리된 지 특정 시점이 지난 오래된 알림 삭제
     @Modifying
-    @Query("DELETE FROM Notification n WHERE n.isRead = true AND n.updatedAt <= :targetDate")
+    @Query("DELETE FROM Notification n WHERE n.isRead = true AND n.createdAt <= :targetDate")
     int deleteOldReadNotifications(@Param("targetDate") LocalDateTime targetDate);
+
+    // 여러 알림을 한 번에 삭제 (벌크 연산으로 N+1 방지)
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Notification n WHERE n.notificationId IN :notificationIds AND n.receiver.userId = :userId")
+    void deleteByNotificationIdInAndReceiver_UserId(@Param("notificationIds") List<Long> notificationIds, @Param("userId") Long userId);
 }

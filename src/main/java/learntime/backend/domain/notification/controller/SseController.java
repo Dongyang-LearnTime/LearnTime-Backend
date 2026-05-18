@@ -30,20 +30,26 @@ public class SseController {
     }
 
     @GetMapping
-    @Operation(summary = "알림 목록 조회", description = "현재 로그인한 사용자의 알림 목록을 최신순으로 조회합니다.")
+    @Operation(summary = "알림 목록 조회", description = "사용자의 알림 목록을 커서 기반으로 조회합니다.")
     public ResponseEntity<List<NotificationResponseDTO>> getNotifications(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(notificationService.getNotifications(userDetails.getUserId()));
+            @RequestParam(required = false) Long cursorId, // 마지막 notificationId
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        List<NotificationResponseDTO> result = notificationService
+                .getNotifications(userDetails.getUserId(), cursorId);
+
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/unread-count")
-    @Operation(summary = "읽지 않은 알림 수 조회", description = "현재 로그인한 사용자의 읽지 않은 알림 개수를 조회합니다.")
+    @Operation(summary = "읽지 않은 알림 수 조회", description = "사용자의 읽지 않은 알림 개수를 조회합니다.")
     public ResponseEntity<Long> getUnreadCount(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(notificationService.getUnreadCount(userDetails.getUserId()));
+        Long alarmCount = notificationService.getUnreadCount(userDetails.getUserId());
+        return ResponseEntity.ok(alarmCount);
     }
 
     @PatchMapping("/{notificationId}/read")
-    @Operation(summary = "알림 읽음 처리", description = "현재 로그인한 사용자의 알림 하나를 읽음 처리합니다.")
+    @Operation(summary = "알림 읽음 처리", description = "사용자의 알림 하나를 읽음 처리합니다.")
     public ResponseEntity<Void> readNotification(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long notificationId) {
@@ -52,9 +58,26 @@ public class SseController {
     }
 
     @PatchMapping("/read-all")
-    @Operation(summary = "전체 알림 읽음 처리", description = "현재 로그인한 사용자의 모든 알림을 읽음 처리합니다.")
+    @Operation(summary = "전체 알림 읽음 처리", description = "사용자의 모든 알림을 읽음 처리합니다.")
     public ResponseEntity<Void> readAllNotifications(@AuthenticationPrincipal CustomUserDetails userDetails) {
         notificationService.readAllNotifications(userDetails.getUserId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{notificationId}")
+    @Operation(summary = "단일 알림 삭제 처리", description = "사용자의 알림을 삭제 처리합니다.")
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long notificationId,
+                                                   @AuthenticationPrincipal CustomUserDetails userDetails) {
+        notificationService.deleteNotification(notificationId, userDetails.getUserId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/bulk")
+    @Operation(summary = "여러 알림 삭제 처리", description = "사용자의 여러 알림을 한 번에 삭제 처리합니다. (벌크 연산으로 N+1 방지)")
+    public ResponseEntity<Void> deleteNotifications(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam List<Long> notificationIds) {
+        notificationService.deleteNotifications(userDetails.getUserId(), notificationIds);
         return ResponseEntity.noContent().build();
     }
 

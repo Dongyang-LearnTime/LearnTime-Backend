@@ -31,7 +31,8 @@ public enum StudyErrorCode implements BaseErrorCode {
     NOT_INVITED_USER(HttpStatus.FORBIDDEN, "STUDY-021", "초대받은 사용자만 처리할 수 있습니다."),
     STUDY_INVITATION_NOT_PENDING(HttpStatus.BAD_REQUEST, "STUDY-022", "대기 중인 초대가 아닙니다."),
     NOT_INVITER_USER(HttpStatus.FORBIDDEN, "STUDY-023", "초대한 사용자만 처리할 수 있습니다."),
-    INVALID_OWNER_TRANSFER(HttpStatus.BAD_REQUEST, "STUDY-024", "자기 자신에게 방장 권한을 위임할 수 없습니다.");
+    INVALID_OWNER_TRANSFER(HttpStatus.BAD_REQUEST, "STUDY-024", "자기 자신에게 방장 권한을 위임할 수 없습니다."),
+    PROMPT_INIT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-025", "AI 프롬프트 템플릿 초기화에 실패했습니다.");
 
     private final HttpStatus status;
     private final String code;

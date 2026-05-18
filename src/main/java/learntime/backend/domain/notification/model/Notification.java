@@ -9,8 +9,15 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Table(name = "notification")
-@Getter
+@Table(
+        name = "notification",
+        indexes = {
+                @Index(
+                        name = "idx_notification_receiver_id_notification_id",
+                        columnList = "receiver_id, notification_id"
+                )
+        }
+)@Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

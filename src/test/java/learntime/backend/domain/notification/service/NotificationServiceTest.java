@@ -75,4 +75,18 @@ class NotificationServiceTest {
                 notification.getReferenceType().equals("FRIEND_REQUEST")
         ));
     }
+
+    @Test
+    @DisplayName("벌크 삭제 로직이 repository.deleteByNotificationIdInAndReceiver_UserId()를 호출한다")
+    void deleteNotifications_CallsRepository() {
+        // given
+        Long userId = 1L;
+        java.util.List<Long> ids = java.util.List.of(100L, 101L, 102L);
+
+        // when
+        notificationService.deleteNotifications(userId, ids);
+
+        // then
+        verify(notificationRepository, times(1)).deleteByNotificationIdInAndReceiver_UserId(ids, userId);
+    }
 }

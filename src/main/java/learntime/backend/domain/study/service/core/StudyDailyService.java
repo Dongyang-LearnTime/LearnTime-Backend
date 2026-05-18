@@ -86,7 +86,7 @@ public class StudyDailyService {
     @Transactional
     public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
-                .orElseThrow(() -> new IllegalArgumentException("공부 일일 진도를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
 
         // 계획 날짜가 오늘 이후라면 완료 처리 불가
         LocalDate today = LocalDate.now(java.util.TimeZone.getTimeZone("Asia/Seoul").toZoneId());
@@ -99,7 +99,7 @@ public class StudyDailyService {
         StudyMember studyMember = study.getStudyMembers().stream()
                 .filter(m -> m.getUser().getUserId().equals(userId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 스터디의 멤버가 아닙니다."));
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         StudyStatus studyStatus = studyStatusRepository.findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMember.getStudyMemberId(), studyDailyPlan.getStudyDailyPlanId())
                 .orElseGet(() -> StudyStatus.builder()

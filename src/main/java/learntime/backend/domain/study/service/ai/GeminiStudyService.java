@@ -6,6 +6,8 @@ import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.global.common.GeminiModel;
+import learntime.backend.domain.study.error.code.StudyErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
@@ -65,7 +67,8 @@ public class GeminiStudyService {
             this.promptTemplate = promptResource.getContentAsString(StandardCharsets.UTF_8);
             this.replanPromptTemplate = replanPromptResource.getContentAsString(StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new RuntimeException("프롬프트 초기화 실패", e);
+            log.error("프롬프트 초기화 실패", e);
+            throw new StudyException(StudyErrorCode.PROMPT_INIT_FAILED);
         }
     }
 
