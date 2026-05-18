@@ -1,4 +1,4 @@
-package learntime.backend.domain.study.enums;
+package learntime.backend.domain.studymember.enums;
 
 public enum StudyPlanStatus {
     PLANNING, // 생성 중

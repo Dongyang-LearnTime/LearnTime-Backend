@@ -6,8 +6,8 @@ import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.converter.StudyConverter;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
-import learntime.backend.domain.study.enums.StudyPlanStatus;
-import learntime.backend.domain.study.enums.StudyRole;
+import learntime.backend.domain.studymember.enums.StudyPlanStatus;
+import learntime.backend.domain.studymember.enums.StudyMemberRole;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
@@ -25,6 +25,7 @@ import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.utils.PromptQuotaUtil;
+import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -70,7 +71,7 @@ public class StudyManagementService {
             StudyMember owner = StudyMember.builder()
                     .user(user)
                     .study(study)
-                    .studyRole(StudyRole.Owner)
+                    .studyMemberRole(StudyMemberRole.OWNER)
                     .build();
 
             studyMemberRepository.save(owner);
@@ -83,7 +84,7 @@ public class StudyManagementService {
                         .map(m -> StudyMember.builder()
                                 .user(m)
                                 .study(study)
-                                .studyRole(StudyRole.Member)
+                                .studyMemberRole(StudyMemberRole.MEMBER)
                                 .build())
                         .toList();
                 studyMemberRepository.saveAll(studyMembers);
@@ -144,7 +145,7 @@ public class StudyManagementService {
             // 6. 모든 멤버에게 포인트 지급
             List<StudyMember> members = studyMemberRepository.findAllByStudy_StudyId(study.getStudyId());
             for (StudyMember member : members) {
-                PointPolicy policy = (member.getStudyRole() == StudyRole.Owner) 
+                PointPolicy policy = (member.getStudyMemberRole() == StudyMemberRole.OWNER)
                         ? PointPolicy.STUDY_PLAN_CREATED 
                         : PointPolicy.STUDY_PLAN_JOINED;
                 
@@ -185,5 +186,45 @@ public class StudyManagementService {
                 restDaysSet,
                 restDatesSet
         );
+    }
+
+    /**
+     * 스터디와 관련된 모든 데이터를 벌크 삭제함.
+     * (단, StudyNotes는 SET NULL 제약에 의해 데이터가 유지됨.)
+     */
+    @Transactional
+    public void deleteStudyBulk(Long studyId, Long userId) {
+        boolean existsStudy = studyRepository.existsById(studyId);
+        if (!existsStudy) {
+            throw new StudyException(StudyErrorCode.STUDY_NOT_FOUND);
+        }
+
+        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserId(studyId, userId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        // 방장 권한 검증
+        StudyAuthUtil.checkOwnerRole(studyMember);
+
+        // 1. 가장 하위 계층(1계층) 벌크 삭제
+        studyRepository.deleteStudyMemberContentsByStudyId(studyId);
+        studyRepository.deleteStudyStatusesByStudyId(studyId);
+        studyRepository.deleteStudyFeedbacksByStudyId(studyId);
+        studyRepository.deleteQuizHistoriesByStudyId(studyId);
+        studyRepository.deleteQuizQuestionsByStudyId(studyId);
+
+        // 2. 2계층 벌크 삭제 (StudyQuiz) - StudyNotes는 보존(Set Null)
+        studyRepository.deleteStudyQuizzesByStudyId(studyId);
+
+        // 3. 3계층(Study와 직접 연관된 하위) 벌크 삭제
+        studyRepository.deleteStudyDailyPlansByStudyId(studyId);
+        studyRepository.deleteStudyRestDatesByStudyId(studyId);
+        studyRepository.deleteStudyRestDaysByStudyId(studyId);
+        studyRepository.deleteStudyInvitationsByStudyId(studyId);
+
+        // 4. StudyMember 및 Study 본체 삭제
+        studyRepository.deleteStudyMembersByStudyId(studyId);
+        studyRepository.deleteStudyById(studyId);
+
+        log.info("[Study Delete] 스터디 벌크 삭제 완료 - 스터디 ID: {}, 요청자 ID: {}", studyId, userId);
     }
 }

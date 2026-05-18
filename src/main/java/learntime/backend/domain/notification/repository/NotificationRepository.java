@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,4 +28,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.receiver.userId = :receiverId AND n.isRead = false")
     void markAllAsReadByReceiverId(@Param("receiverId") Long receiverId);
+
+    // 읽음 처리된 지 특정 시점이 지난 오래된 알림 삭제
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.isRead = true AND n.updatedAt <= :targetDate")
+    int deleteOldReadNotifications(@Param("targetDate") LocalDateTime targetDate);
 }

@@ -14,6 +14,7 @@ import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -60,8 +61,8 @@ public class NotificationService {
         return emitter;
     }
 
-    @Transactional
-    public NotificationResponseDTO notify(
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notify(
             Long receiverId, // 알림을 받을 사용자 ID
             NotificationType type, // 알림 종류 (친구 요청, 스터디 초대 등)
             String title, // 알림 제목
@@ -84,7 +85,6 @@ public class NotificationService {
 
         NotificationResponseDTO response = NotificationConverter.toNotificationResponseDTO(notification);
         send(receiverId, response, type.getEventName());
-        return response;
     }
 
     @Transactional(readOnly = true)

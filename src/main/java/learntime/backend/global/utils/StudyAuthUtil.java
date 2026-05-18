@@ -1,6 +1,6 @@
 package learntime.backend.global.utils;
 
-import learntime.backend.domain.study.enums.StudyRole;
+import learntime.backend.domain.studymember.enums.StudyMemberRole;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
@@ -32,7 +32,7 @@ public class StudyAuthUtil {
 
     // 현재 사용자가 스터디 맴버이고, 오너인지 확인
     public static void checkOwnerRole(StudyMember studyMember) {
-        if (studyMember.getStudyRole() != StudyRole.Owner) {
+        if (studyMember.getStudyMemberRole() != StudyMemberRole.OWNER) {
             throw new StudyException(StudyErrorCode.STUDY_UNAUTHORIZED_ACCESS);
         }
     }

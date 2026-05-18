@@ -1,6 +1,6 @@
 package learntime.backend.domain.study.dto.response;
 
-import learntime.backend.domain.study.enums.StudyPlanStatus;
+import learntime.backend.domain.studymember.enums.StudyPlanStatus;
 import lombok.Builder;
 
 @Builder

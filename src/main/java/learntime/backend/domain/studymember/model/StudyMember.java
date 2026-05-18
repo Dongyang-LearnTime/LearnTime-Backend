@@ -1,16 +1,13 @@
 package learntime.backend.domain.studymember.model;
 
 import jakarta.persistence.*;
-import learntime.backend.domain.study.enums.StudyRole;
+import learntime.backend.domain.studymember.enums.StudyMemberRole;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyFeedback;
 import learntime.backend.domain.study.model.StudyMemberContent;
 import learntime.backend.domain.study.model.StudyStatus;
 import learntime.backend.domain.user.model.User;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -26,6 +23,8 @@ import java.util.List;
         }
 )
 @Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 public class StudyMember {
@@ -48,24 +47,23 @@ public class StudyMember {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StudyRole studyRole;
+    private StudyMemberRole studyMemberRole;
 
+    @Builder.Default
     @OneToMany(mappedBy = "studyMember", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyMemberContent> studyMemberContents = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "studyMember", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyFeedback> studyFeedbacks = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "studyMember", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyStatus> studyStatuses = new ArrayList<>();
 
-    @Builder
-    public StudyMember(learntime.backend.domain.user.model.User user, Study study, learntime.backend.domain.study.enums.StudyRole studyRole) {
-        this.user = user;
-        this.study = study;
-        this.studyRole = studyRole;
-    }
-
     // --- 비즈니스 로직 --- //
+    public void changeRole(StudyMemberRole studyMemberRole) {
+        this.studyMemberRole = studyMemberRole;
+    }
 
 }

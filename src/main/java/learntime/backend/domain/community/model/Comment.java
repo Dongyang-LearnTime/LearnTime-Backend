@@ -9,7 +9,14 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
-@Table
+@Table(
+        indexes = {
+                @Index(
+                        name = "idx_comment_post_deleted_comment",
+                        columnList = "post_id, deleted_at, comment_id"
+                )
+        }
+)
 // soft delete
 @SQLDelete(sql = "UPDATE comment SET deleted_at = CURRENT_TIMESTAMP WHERE comment_id = ?")
 @SQLRestriction("deleted_at IS NULL")

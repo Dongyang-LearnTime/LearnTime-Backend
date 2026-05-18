@@ -26,7 +26,12 @@ public enum StudyErrorCode implements BaseErrorCode {
     STUDY_MEMBER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "STUDY-016", "스터디 최대 인원은 4명입니다."),
     ALREADY_STUDY_MEMBER(HttpStatus.BAD_REQUEST, "STUDY-017", "이미 해당 스터디의 멤버입니다."),
     STUDY_INVITATION_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "STUDY-018", "이미 대기 중인 초대가 존재합니다."),
-    NOT_FRIEND_RELATION(HttpStatus.BAD_REQUEST, "STUDY-019", "친구인 사용자만 스터디에 초대할 수 있습니다.");
+    NOT_FRIEND_RELATION(HttpStatus.BAD_REQUEST, "STUDY-019", "친구인 사용자만 스터디에 초대할 수 있습니다."),
+    STUDY_INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-020", "스터디 초대를 찾을 수 없습니다."),
+    NOT_INVITED_USER(HttpStatus.FORBIDDEN, "STUDY-021", "초대받은 사용자만 처리할 수 있습니다."),
+    STUDY_INVITATION_NOT_PENDING(HttpStatus.BAD_REQUEST, "STUDY-022", "대기 중인 초대가 아닙니다."),
+    NOT_INVITER_USER(HttpStatus.FORBIDDEN, "STUDY-023", "초대한 사용자만 처리할 수 있습니다."),
+    INVALID_OWNER_TRANSFER(HttpStatus.BAD_REQUEST, "STUDY-024", "자기 자신에게 방장 권한을 위임할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

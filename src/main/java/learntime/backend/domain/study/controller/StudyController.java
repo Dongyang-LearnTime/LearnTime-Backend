@@ -84,6 +84,15 @@ public class StudyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(studyId);
     }
 
+    @DeleteMapping("/{studyId}")
+    @Operation(summary = "공부 진도 삭제", description = "특정 공부 진도 계획을 삭제합니다.")
+    public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId,
+                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyFacade.deleteStudy(studyId, userDetails.userId());
+        return ResponseEntity.noContent().build();
+    }
+
+
 
 //    @PutMapping("/{studyId}/replan")
 //    @Operation(summary = "공부 진도 재생성", description = "AI를 사용하여 기존 진도를 재조정합니다.")
@@ -92,14 +101,6 @@ public class StudyController {
 //                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
 //        StudyPlanResponseDTO result = studyFacade.replanAndSaveStudy(studyId, request, userDetails.userId());
 //        return ResponseEntity.ok(result);
-//    }
-
-//    @DeleteMapping("/{studyId}")
-//    @Operation(summary = "공부 진도 삭제", description = "특정 공부 진도 계획을 삭제합니다.")
-//    public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId,
-//                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
-//        studyFacade.deleteStudy(studyId, userDetails.userId());
-//        return ResponseEntity.noContent().build();
 //    }
 
 }

@@ -1,7 +1,7 @@
 package learntime.backend.domain.community.service.facade;
 
 import learntime.backend.domain.community.converter.PostConverter;
-import learntime.backend.domain.community.dto.PostViewEventDTO;
+import learntime.backend.domain.community.event.PostViewEventDTO;
 import learntime.backend.domain.community.dto.response.CommentResponseDTO;
 import learntime.backend.domain.community.dto.response.PostResponseDTO;
 import learntime.backend.domain.community.model.Post;

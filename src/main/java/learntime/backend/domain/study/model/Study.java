@@ -1,7 +1,7 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
-import learntime.backend.domain.study.enums.StudyPlanStatus;
+import learntime.backend.domain.studymember.enums.StudyPlanStatus;
 import learntime.backend.domain.studymember.model.StudyMember;
 import lombok.AccessLevel;
 import lombok.Builder;

@@ -3,7 +3,7 @@ package learntime.backend.domain.study.converter;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.*;
 import learntime.backend.domain.study.enums.ProgressStatus;
-import learntime.backend.domain.study.enums.StudyPlanStatus;
+import learntime.backend.domain.studymember.enums.StudyPlanStatus;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;

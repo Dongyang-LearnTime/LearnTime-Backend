@@ -46,13 +46,10 @@ public class StudyFacade {
         return studyId;
     }
 
-//    // 특정 스터디와 관련된 모든 데이터를 삭제합니다.
-//    @Transactional
-//    public void deleteStudy(Long userId) {
-//        Study study = studyRepository.findById(studyId)
-//                .orElseThrow(() -> new IllegalArgumentException("공부 진도를 찾을 수 없습니다."));
-//
-//        studyRepository.deleteById(studyId);
-//    }
+    // 특정 스터디와 관련된 모든 데이터를 삭제합니다.
+    @Transactional
+    public void deleteStudy(Long studyId, Long userId) {
+        studyManagementService.deleteStudyBulk(studyId, userId);
+    }
 
 }

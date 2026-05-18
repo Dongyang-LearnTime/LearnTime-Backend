@@ -1,6 +1,6 @@
 package learntime.backend.domain.studymember.service;
 
-import learntime.backend.domain.study.enums.StudyRole;
+import learntime.backend.domain.studymember.enums.StudyMemberRole;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
@@ -120,7 +120,7 @@ class StudyMemberServiceTest {
                 StudyMember.builder()
                         .study(study)
                         .user(inviter)
-                        .studyRole(StudyRole.Owner)
+                        .studyMemberRole(StudyMemberRole.OWNER)
                         .build()
         );
 
@@ -176,7 +176,7 @@ class StudyMemberServiceTest {
                 StudyMember.builder()
                         .study(study)
                         .user(inviter)
-                        .studyRole(StudyRole.Owner)
+                        .studyMemberRole(StudyMemberRole.OWNER)
                         .build()
         );
 
@@ -226,7 +226,7 @@ class StudyMemberServiceTest {
                 StudyMember.builder()
                         .study(study)
                         .user(inviter)
-                        .studyRole(StudyRole.Owner)
+                        .studyMemberRole(StudyMemberRole.OWNER)
                         .build()
         );
 
@@ -234,7 +234,7 @@ class StudyMemberServiceTest {
                 StudyMember.builder()
                         .study(study)
                         .user(invitedUser)
-                        .studyRole(StudyRole.Member)
+                        .studyMemberRole(StudyMemberRole.OWNER)
                         .build()
         );
 
@@ -284,7 +284,7 @@ class StudyMemberServiceTest {
                 StudyMember.builder()
                         .study(study)
                         .user(inviter)
-                        .studyRole(StudyRole.Owner)
+                        .studyMemberRole(StudyMemberRole.OWNER)
                         .build()
         );
 
@@ -343,7 +343,7 @@ class StudyMemberServiceTest {
                 StudyMember.builder()
                         .study(study)
                         .user(inviter)
-                        .studyRole(StudyRole.Owner)
+                        .studyMemberRole(StudyMemberRole.OWNER)
                         .build()
         );
 
@@ -365,7 +365,7 @@ class StudyMemberServiceTest {
                     StudyMember.builder()
                             .study(study)
                             .user(member)
-                            .studyRole(StudyRole.Member)
+                            .studyMemberRole(StudyMemberRole.MEMBER)
                             .build()
             );
         }
@@ -386,5 +386,110 @@ class StudyMemberServiceTest {
                 .hasMessage(
                         StudyErrorCode.STUDY_MEMBER_LIMIT_EXCEEDED.getMessage()
                 );
+    }
+
+    @Test
+    @DisplayName("스터디 초대 승인 성공")
+    void approveRequest_success() {
+        // given
+        User inviter = createUser("초대자", "inviter_approve@test.com");
+        User invitedUser = createUser("초대대상", "invited_approve@test.com");
+
+        Study study = createStudy("승인 테스트 스터디");
+
+        studyMemberRepository.save(
+                StudyMember.builder()
+                        .study(study)
+                        .user(inviter)
+                        .studyMemberRole(StudyMemberRole.OWNER)
+                        .build()
+        );
+
+        StudyInvitation invitation = studyInvitationRepository.save(
+                StudyInvitation.builder()
+                        .study(study)
+                        .invitedUser(invitedUser)
+                        .inviterUser(inviter)
+                        .build()
+        );
+
+        // when
+        studyInvitationService.approveRequest(invitation.getStudyInvitationId(), invitedUser.getUserId());
+
+        // then
+        StudyInvitation updatedInvitation = studyInvitationRepository.findById(invitation.getStudyInvitationId()).orElseThrow();
+        assertThat(updatedInvitation.getStatus()).isEqualTo(StudyInvitationStatus.ACCEPTED);
+
+        boolean isMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserId(study.getStudyId(), invitedUser.getUserId());
+        assertThat(isMember).isTrue();
+    }
+
+    @Test
+    @DisplayName("스터디 초대 거절 성공")
+    void rejectRequest_success() {
+        // given
+        User inviter = createUser("초대자", "inviter_reject@test.com");
+        User invitedUser = createUser("초대대상", "invited_reject@test.com");
+
+        Study study = createStudy("거절 테스트 스터디");
+
+        studyMemberRepository.save(
+                StudyMember.builder()
+                        .study(study)
+                        .user(inviter)
+                        .studyMemberRole(StudyMemberRole.OWNER)
+                        .build()
+        );
+
+        StudyInvitation invitation = studyInvitationRepository.save(
+                StudyInvitation.builder()
+                        .study(study)
+                        .invitedUser(invitedUser)
+                        .inviterUser(inviter)
+                        .build()
+        );
+
+        // when
+        studyInvitationService.rejectRequest(invitation.getStudyInvitationId(), invitedUser.getUserId());
+
+        // then
+        StudyInvitation updatedInvitation = studyInvitationRepository.findById(invitation.getStudyInvitationId()).orElseThrow();
+        assertThat(updatedInvitation.getStatus()).isEqualTo(StudyInvitationStatus.REJECTED);
+
+        boolean isMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserId(study.getStudyId(), invitedUser.getUserId());
+        assertThat(isMember).isFalse();
+    }
+
+    @Test
+    @DisplayName("스터디 초대 취소 성공")
+    void cancelRequest_success() {
+        // given
+        User inviter = createUser("초대자", "inviter_cancel@test.com");
+        User invitedUser = createUser("초대대상", "invited_cancel@test.com");
+
+        Study study = createStudy("취소 테스트 스터디");
+
+        studyMemberRepository.save(
+                StudyMember.builder()
+                        .study(study)
+                        .user(inviter)
+                        .studyMemberRole(StudyMemberRole.OWNER)
+                        .build()
+        );
+
+        StudyInvitation invitation = studyInvitationRepository.save(
+                StudyInvitation.builder()
+                        .study(study)
+                        .invitedUser(invitedUser)
+                        .inviterUser(inviter)
+                        .build()
+        );
+
+        // when
+        studyInvitationService.cancelRequest(invitation.getStudyInvitationId(), inviter.getUserId());
+
+        // then
+        StudyInvitation updatedInvitation = studyInvitationRepository.findById(invitation.getStudyInvitationId()).orElseThrow();
+        assertThat(updatedInvitation.getStatus()).isEqualTo(StudyInvitationStatus.CANCELED);
     }
 }

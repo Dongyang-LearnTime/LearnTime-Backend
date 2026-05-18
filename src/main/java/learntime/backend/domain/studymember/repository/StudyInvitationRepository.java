@@ -3,7 +3,12 @@ package learntime.backend.domain.studymember.repository;
 import learntime.backend.domain.studymember.enums.StudyInvitationStatus;
 import learntime.backend.domain.studymember.model.StudyInvitation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
 
 @Repository
 public interface StudyInvitationRepository extends JpaRepository<StudyInvitation, Long> {
@@ -13,6 +18,35 @@ public interface StudyInvitationRepository extends JpaRepository<StudyInvitation
             Long studyId,
             Long invitedUserId,
             StudyInvitationStatus status
+    );
+
+    // 받은 초대 목록
+    @Query("""
+        SELECT si
+        FROM StudyInvitation si
+        JOIN FETCH si.study s
+        JOIN FETCH si.inviterUser iu
+        WHERE si.invitedUser.userId = :userId
+        AND si.status = :status
+    """)
+    List<StudyInvitation> findAllByInvitedUser_UserIdAndStatus(
+            @Param("userId") Long userId,
+            @Param("status") StudyInvitationStatus status
+    );
+
+
+    // 보낸 초대 목록
+    @Query("""
+        SELECT si
+        FROM StudyInvitation si
+        JOIN FETCH si.study s
+        JOIN FETCH si.invitedUser iu
+        WHERE si.inviterUser.userId = :userId
+        AND si.status = :status
+    """)
+    List<StudyInvitation> findAllByInviterUser_UserIdAndStatus(
+            @Param("userId") Long userId,
+            @Param("status") StudyInvitationStatus status
     );
 
 }
