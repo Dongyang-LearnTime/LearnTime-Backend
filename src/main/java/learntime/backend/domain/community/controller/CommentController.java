@@ -16,6 +16,7 @@ import learntime.backend.domain.community.dto.request.CommentCreateRequestDTO;
 import learntime.backend.domain.community.dto.request.CommentUpdateRequestDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import learntime.backend.global.dto.CursorResponse;
 
 @RestController
 @RequestMapping("/api/community/comment")
@@ -27,7 +28,7 @@ public class CommentController {
 
     @GetMapping("/{postId}")
     @Operation(summary = "댓글 목록 조회", description = "댓글 목록을 페이징(커서 기반)으로 가져옵니다.")
-    public ResponseEntity<List<CommentResponseDTO>> getPost(
+    public ResponseEntity<CursorResponse<CommentResponseDTO>> getPost(
             @PathVariable Long postId,
             @RequestParam(required = false) Long lastCommentId,
             @RequestParam(defaultValue = "10") int size) {
@@ -35,7 +36,10 @@ public class CommentController {
         List<CommentResponseDTO> response =
                 commentService.getCommentsByPostId(postId, lastCommentId, size);
 
-        return ResponseEntity.ok(response);
+        boolean hasNext = response.size() == size;
+        Long nextCursor = response.isEmpty() ? null : response.get(response.size() - 1).commentId();
+
+        return ResponseEntity.ok(CursorResponse.of(response, nextCursor, hasNext));
     }
 
     @PostMapping

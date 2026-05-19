@@ -28,6 +28,7 @@ import learntime.backend.domain.community.dto.response.PostListResponseDTO;
 
 import learntime.backend.domain.community.dto.request.PostUpdateRequestDTO;
 import learntime.backend.domain.community.dto.response.PostUpdateDetailDTO;
+import learntime.backend.global.dto.PageResponse;
 
 @RestController
 @RequestMapping("/api/community/post")
@@ -40,10 +41,10 @@ public class PostController {
 
     @GetMapping
     @Operation(summary = "게시글 목록 조회", description = "오프셋 기반 페이징으로 게시글 목록을 조회합니다.")
-    public ResponseEntity<Page<PostListResponseDTO>> getPostList(
+    public ResponseEntity<PageResponse<PostListResponseDTO>> getPostList(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<PostListResponseDTO> response = postService.getPostList(pageable);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(PageResponse.of(response));
     }
 
     @GetMapping("/{postId}")
