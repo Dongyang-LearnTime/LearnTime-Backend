@@ -2,7 +2,7 @@ package learntime.backend.domain.quiz.model;
 
 import jakarta.persistence.*;
 import learntime.backend.domain.quiz.enums.QuizStatus;
-import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.studymember.model.StudyMember;
 import learntime.backend.global.common.BaseTimeEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -16,7 +16,7 @@ import java.util.List;
 @Table(
         name = "study_quiz",
         indexes = {
-                @Index(name = "idx_study_quiz_study_id", columnList = "study_id")
+                @Index(name = "idx_study_quiz_member_created", columnList = "study_member_id, created_at DESC")
         }
 )
 @Getter
@@ -28,8 +28,8 @@ public class StudyQuiz extends BaseTimeEntity {
     private Long studyQuizId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_id", nullable = false)
-    private Study study;
+    @JoinColumn(name = "study_member_id", nullable = false)
+    private StudyMember studyMember;
 
     @Column(name = "quiz_title", nullable = false, length = 120)
     private String quizTitle;
@@ -50,8 +50,8 @@ public class StudyQuiz extends BaseTimeEntity {
     private List<QuizHistory> quizHistories = new ArrayList<>();
 
     @Builder
-    public StudyQuiz(Study study, String quizTitle) {
-        this.study = study;
+    public StudyQuiz(StudyMember studyMember, String quizTitle) {
+        this.studyMember = studyMember;
         this.quizTitle = quizTitle;
         this.quizStatus = QuizStatus.NOT_STARTED;
     }

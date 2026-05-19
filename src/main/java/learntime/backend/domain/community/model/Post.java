@@ -1,7 +1,6 @@
 package learntime.backend.domain.community.model;
 
 import jakarta.persistence.*;
-import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.user.model.User;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
@@ -27,17 +26,15 @@ public class Post extends CommunityBaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long postId;
 
+
     // SET NULL
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private User user;
 
-    // SET NULL
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_id")
-    @OnDelete(action = OnDeleteAction.SET_NULL)
-    private Study study;
+    @Column(columnDefinition = "TEXT")
+    private String studySnapshot;
 
     @Column(nullable = false, length = 100)
     private String title;
@@ -73,15 +70,12 @@ public class Post extends CommunityBaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostViewHistory> postViewHistories = new ArrayList<>();
 
+    // --- 연관관계 편의 메서드 --- //
+
     // 이미지 추가
     public void addImage(PostImage image) {
         images.add(image);
         image.setPost(this);
-    }
-
-    // 좋아요 증가
-    public void incrementLikeCount() {
-        this.likeCount++;
     }
 
     // 좋아요 감소

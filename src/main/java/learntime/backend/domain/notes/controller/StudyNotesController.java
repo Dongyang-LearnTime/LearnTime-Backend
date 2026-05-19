@@ -33,12 +33,12 @@ public class StudyNotesController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/study/{studyId}")
-    @Operation(summary = "공부 ID로 필기 목록 조회", description = "특정 공부(Study)에 속한 모든 필기 목록을 조회합니다.")
-    public ResponseEntity<List<StudyNotesResponseDTO>> getStudyNotesByStudyId(
+    @GetMapping("/list/{studyId}")
+    @Operation(summary = "공부 ID로 필기 목록 조회", description = "특정 스터디(Study)에 속한 본인의 모든 필기 목록을 조회합니다.")
+    public ResponseEntity<List<StudyNotesResponseDTO>> getStudyNotesList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long studyId) {
-        List<StudyNotesResponseDTO> responses = studyNotesService.getNotesByStudyId(studyId, userDetails.userId());
+        List<StudyNotesResponseDTO> responses = studyNotesService.getNotesList(studyId, userDetails.userId());
         return ResponseEntity.ok(responses);
     }
 

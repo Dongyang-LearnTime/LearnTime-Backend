@@ -13,13 +13,13 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    /** 특정 게시글에 달린 댓글 목록을 cursor 기반으로 조회합니다.*/
+    /** 특정 게시글에 달린 댓글 목록을 cursor 기반으로 조회.*/
     @Query("SELECT c FROM Comment c LEFT JOIN FETCH c.user " +
             "WHERE c.post.postId = :postId AND c.commentId < :lastCommentId " +
             "ORDER BY c.commentId DESC")
     List<Comment> findByPostIdWithUserWithCursor(@Param("postId") Long postId, @Param("lastCommentId") Long lastCommentId, org.springframework.data.domain.Pageable pageable);
 
-    /** 첫 페이지 댓글 목록을 cursor 기반으로 조회합니다.*/
+    /** 첫 페이지 댓글 목록을 cursor 기반으로 조회.*/
     @Query("SELECT c FROM Comment c LEFT JOIN FETCH c.user " +
             "WHERE c.post.postId = :postId " +
             "ORDER BY c.commentId DESC")

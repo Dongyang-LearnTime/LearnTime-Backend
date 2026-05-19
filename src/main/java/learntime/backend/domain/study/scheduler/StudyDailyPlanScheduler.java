@@ -16,11 +16,20 @@ public class StudyDailyPlanScheduler {
 
     @EventListener(ApplicationReadyEvent.class)
     public void runOnStartup() {
-        studyDailyPlanService.markIncompletePlansAsFailure();
+        try {
+            studyDailyPlanService.markIncompletePlansAsFailure();
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(StudyDailyPlanScheduler.class).error("[스케줄러 실패] 서버 시작 시 미완료 진도 정리 실패", e);
+        }
     }
 
     @Scheduled(cron = "0 0 5 * * *", zone = "Asia/Seoul")
     public void scheduledTask() {
-        studyDailyPlanService.markIncompletePlansAsFailure();
+        try {
+            studyDailyPlanService.markIncompletePlansAsFailure();
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(StudyDailyPlanScheduler.class).error("[스케줄러 실패] 정기 스케줄러 진도 정리 실패", e);
+        }
     }
+
 }

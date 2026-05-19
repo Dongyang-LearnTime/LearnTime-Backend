@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface QuizHistoryRepository extends JpaRepository<QuizHistory, Long> {
-    Optional<QuizHistory> findFirstByStudyQuiz_StudyQuizIdOrderByAttemptNumberDesc(Long studyQuizId);
 
     @Query("SELECT qh " +
             "FROM QuizHistory qh " +
@@ -18,9 +17,17 @@ public interface QuizHistoryRepository extends JpaRepository<QuizHistory, Long> 
             "ORDER BY qh.attemptNumber DESC")
     List<QuizHistory> findAllWithAnswersByStudyQuizId(@Param("studyQuizId") Long studyQuizId);
 
+
     @Query("SELECT COUNT(qa.quizAnswerId), SUM(CASE WHEN qa.isCorrect = true THEN 1 ELSE 0 END) " +
             "FROM QuizHistory qh " +
             "JOIN qh.answers qa " +
-            "WHERE qh.studyQuiz.study.studyId = :studyId")
+            "WHERE qh.studyQuiz.studyMember.studyMemberId = :studyMemberId")
+    List<Object[]> findQuizStatsByStudyMemberId(@Param("studyMemberId") Long studyMemberId);
+
+    @Query("SELECT COUNT(qa.quizAnswerId), SUM(CASE WHEN qa.isCorrect = true THEN 1 ELSE 0 END) " +
+            "FROM QuizHistory qh " +
+            "JOIN qh.answers qa " +
+            "WHERE qh.studyQuiz.studyMember.study.studyId = :studyId")
     List<Object[]> findQuizStatsByStudyId(@Param("studyId") Long studyId);
+
 }

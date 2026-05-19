@@ -13,7 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "quiz_history")
+@Table(
+        name = "quiz_history",
+        indexes = {
+                @Index(name = "idx_quiz_history_study_quiz", columnList = "study_quiz_id, attempt_number DESC")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -42,6 +47,12 @@ public class QuizHistory {
 
     @OneToMany(mappedBy = "quizHistory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuizAnswer> answers = new ArrayList<>();
+
+    // --- 연관관계 편의 메서드 --- //
+
+    public void addAnswer(QuizAnswer answer) {
+        this.answers.add(answer);
+    }
 
     @Builder
     public QuizHistory(StudyQuiz studyQuiz, Integer attemptNumber, Integer correctCount, Integer earnedPoints) {

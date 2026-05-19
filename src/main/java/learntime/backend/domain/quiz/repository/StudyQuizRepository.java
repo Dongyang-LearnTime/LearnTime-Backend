@@ -14,5 +14,5 @@ public interface StudyQuizRepository extends JpaRepository<StudyQuiz, Long> {
     @Query("SELECT sq FROM StudyQuiz sq JOIN FETCH sq.questions WHERE sq.studyQuizId = :studyQuizId")
     Optional<StudyQuiz> findByIdWithQuestions(@Param("studyQuizId") Long studyQuizId);
 
-    List<StudyQuiz> findAllByStudy_StudyIdOrderByCreatedAtDesc(Long studyId);
+    List<StudyQuiz> findAllByStudyMember_StudyMemberIdOrderByCreatedAtDesc(Long studyId);
 }

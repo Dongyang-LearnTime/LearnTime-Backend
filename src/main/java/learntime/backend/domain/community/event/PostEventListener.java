@@ -2,7 +2,6 @@ package learntime.backend.domain.community.event;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import learntime.backend.domain.community.dto.PostViewEventDTO;
 import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.model.PostViewHistory;
 import learntime.backend.domain.community.repository.PostRepository;

@@ -10,12 +10,12 @@ import learntime.backend.domain.quiz.dto.response.QuizQuestionResponseDTO;
 import learntime.backend.domain.quiz.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
-import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.quiz.model.StudyQuiz;
 import learntime.backend.domain.quiz.model.QuizQuestion;
 import learntime.backend.domain.quiz.converter.StudyQuizConverter;
 import learntime.backend.domain.quiz.repository.QuizQuestionRepository;
 import learntime.backend.domain.quiz.repository.StudyQuizRepository;
+import learntime.backend.domain.studymember.model.StudyMember;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
 import learntime.backend.domain.quiz.model.QuizAnswer;
 import learntime.backend.domain.quiz.model.QuizHistory;
 import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 
 @Service
 @RequiredArgsConstructor
@@ -40,13 +38,12 @@ public class StudyQuizService {
     private final QuizQuestionRepository quizQuestionRepository;
     private final QuizHistoryRepository quizHistoryRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final CacheManager cacheManager;
 
     private static final int CORRECT_ANSWER_BONUS = 5; // 정답 하나 당 추가 포인트
 
     @Transactional(readOnly = true)
-    public StudyQuizListResponseDTO getStudyQuizList(Long studyId) {
-        List<StudyQuiz> quizzes = studyQuizRepository.findAllByStudy_StudyIdOrderByCreatedAtDesc(studyId);
+    public StudyQuizListResponseDTO getStudyQuizList(Long studyMemberId) {
+        List<StudyQuiz> quizzes = studyQuizRepository.findAllByStudyMember_StudyMemberIdOrderByCreatedAtDesc(studyMemberId);
         return StudyQuizConverter.toStudyQuizListResponseDTO(quizzes);
     }
 
@@ -66,10 +63,10 @@ public class StudyQuizService {
     }
 
     @Transactional
-    public Long saveStudyQuiz(Study study, List<QuizQuestionResponseDTO> questionDos) {
-        String quizTitle = study.getStudyTitle() + " 퀴즈 " + UUID.randomUUID().toString().substring(0, 8);
+    public Long saveStudyQuiz(StudyMember studyMember, List<QuizQuestionResponseDTO> questionDos) {
+        String quizTitle = "퀴즈 " + UUID.randomUUID().toString().substring(0, 8);
 
-        StudyQuiz quiz = StudyQuizConverter.toStudyQuizEntity(study, quizTitle);
+        StudyQuiz quiz = StudyQuizConverter.toStudyQuizEntity(studyMember, quizTitle);
 
         List<QuizQuestion> questions = questionDos.stream()
                 .map(dto -> StudyQuizConverter.toQuizQuestionEntity(quiz, dto))
@@ -94,6 +91,12 @@ public class StudyQuizService {
         }
 
         StudyQuiz studyQuiz = questions.getFirst().getStudyQuiz(); // 공부 퀴즈 정보 가져옴
+        
+        // 본인만 본인의 퀴즈를 풀 수 있음
+        if (!studyQuiz.getStudyMember().getUser().getUserId().equals(userId)) {
+            throw new StudyException(StudyErrorCode.STUDY_UNAUTHORIZED_ACCESS);
+        }
+
         boolean isFirstTime = studyQuiz.getCompletedCount() == 0; // 처음 푸는지 여부 확인
 
         Map<Long, QuizQuestion> questionMap = questions.stream()
@@ -143,13 +146,8 @@ public class StudyQuizService {
             ));
         }
 
-        // 퀴즈 결과가 통계에 반영되므로 캐시 무효화
-        Cache cache = cacheManager.getCache("studyTotalIndicator");
-        if (cache != null) {
-            cache.evict(studyQuiz.getStudy().getStudyId());
-        }
-
         return quizHistory.getQuizHistoryId();
     }
 
 }
+

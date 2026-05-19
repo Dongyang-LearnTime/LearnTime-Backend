@@ -44,5 +44,11 @@ public record StudyDailyPlanInfoResponseDTO(
         CompletionStatus completionStatus,
 
         @Schema(description = "이해도 점수 (계획이 없으면 null)")
-        Integer understandingScore
+        Integer understandingScore,
+
+        @Schema(description = "조회한 사용자의 스터디 멤버 ID")
+        Long studyMemberId,
+
+        @Schema(description = "모든 스터디 멤버 ID 목록")
+        List<Long> allStudyMemberIds
 ) {}

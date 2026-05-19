@@ -1,6 +1,7 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.studymember.model.StudyMember;
 import learntime.backend.global.common.BaseTimeEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,7 +9,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "study_feedback")
+@Table(
+        name = "study_feedback",
+        indexes = {
+                @Index(name = "idx_study_feedback_member_created", columnList = "study_member_id, created_at DESC")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StudyFeedback extends BaseTimeEntity {
@@ -18,8 +24,8 @@ public class StudyFeedback extends BaseTimeEntity {
     private Long studyFeedbackId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_id", nullable = false)
-    private Study study;
+    @JoinColumn(name = "study_member_id", nullable = false)
+    private StudyMember studyMember;
 
     @Column(nullable = false, length = 150)
     private String feedbackTitle;
@@ -28,8 +34,8 @@ public class StudyFeedback extends BaseTimeEntity {
     private String feedbackContent;
 
     @Builder
-    public StudyFeedback(Study study, String feedbackTitle, String feedbackContent) {
-        this.study = study;
+    public StudyFeedback(StudyMember studyMember, String feedbackTitle, String feedbackContent) {
+        this.studyMember = studyMember;
         this.feedbackTitle = feedbackTitle;
         this.feedbackContent = feedbackContent;
     }

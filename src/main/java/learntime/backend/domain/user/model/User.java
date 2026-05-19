@@ -8,8 +8,10 @@ import learntime.backend.domain.community.model.PostLike;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
+import learntime.backend.domain.notification.model.Notification;
 import learntime.backend.domain.point.model.PointHistory;
-import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.studymember.model.StudyInvitation;
 import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.domain.user.enums.Role;
 import lombok.*;
@@ -84,9 +86,17 @@ public class User {
 
     // ==================== 연관관계 매핑 ====================
 
-    // 진도
+    // 진도 맴버
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<Study> study = new ArrayList<>();
+    private List<StudyMember> studyMembers = new ArrayList<>();
+
+    // 진도 초대 받은 사용자
+    @OneToMany(mappedBy = "invitedUser", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<StudyInvitation> receivedStudyInvitations = new ArrayList<>();
+
+    // 진도 초대한 사용자
+    @OneToMany(mappedBy = "inviterUser", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<StudyInvitation> sentStudyInvitations = new ArrayList<>();
 
     // 운동 기록
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
@@ -131,6 +141,22 @@ public class User {
     // 약관 동의 여부
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserTerms> userTerms = new ArrayList<>();
+
+    // 친구 목록
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Friend> friends = new ArrayList<>();
+
+    // 보낸 친구 요청
+    @OneToMany(mappedBy = "requester", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<FriendRequest> sentFriendRequests = new ArrayList<>();
+
+    // 받은 친구 요청
+    @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<FriendRequest> receivedFriendRequests = new ArrayList<>();
+
+    // 알림 목록
+    @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Notification> notifications = new ArrayList<>();
 
     @Builder
     public User(String email, String password, String name, String socialId, AuthProvider socialProvider, Role role) {

@@ -28,8 +28,6 @@ public class StudyFacade {
     private final TocExtractionService tocExtractionService;
     private final GeminiStudyService geminiStudyService;
     private final StudyManagementService studyManagementService;
-    private final StudyQueryService studyQueryService;
-    private final StudyRepository studyRepository;
 
     // 업로드된 이미지에서 AI를 활용하여 목차 정보를 추출합니다.
     public List<TocListResponseDTO> extractToc(MultipartFile imageFile) {
@@ -37,32 +35,21 @@ public class StudyFacade {
         return tocExtractionService.extractTocAsJson(imageFile);
     }
 
-    // AI를 활용해 새로운 스마트 학습 계획을 생성하고 저장합니다.
-    public void generateAndSaveStudyPlan(GeminiStudyRequestDTO request, Long userId) {
-        StudyPlanResponseDTO geminiResult = geminiStudyService.generateSmartStudyPlan(request, userId);
-        studyManagementService.saveStudyPlan(request, geminiResult, userId);
-    }
+    // AI를 활용해 새로운 스마트 학습 계획을 생성하고 저장합니다. (비동기 처리)
+    public Long generateAndSaveStudyPlan(GeminiStudyRequestDTO request, Long userId) {
+        // 1. 초기 정보 저장 (PLANNING 상태)
+        Long studyId = studyManagementService.initializeStudy(request, userId);
 
-    // 기존 학습 내용을 바탕으로 AI 재계획을 생성하고 시스템에 반영합니다.
-    public StudyPlanResponseDTO replanAndSaveStudy(Long studyId, GeminiReplanRequestDTO request, Long userId) {
-        String remainingContent = studyQueryService.getRemainingStudyContent(studyId, userId);
-        int remainingDays = studyQueryService.calculateRemainingStudyDays(studyId, request, userId);
+        // 2. 비동기로 AI 계획 생성 및 상세 일정 조립 (백그라운드 처리)
+        studyManagementService.generateAndSavePlanAsync(studyId, request, userId);
 
-        StudyPlanResponseDTO result = geminiStudyService.generateReplan(request, remainingContent, remainingDays, userId);
-        studyManagementService.replanStudy(studyId, request, result, userId);
-
-        return result;
+        return studyId;
     }
 
     // 특정 스터디와 관련된 모든 데이터를 삭제합니다.
     @Transactional
     public void deleteStudy(Long studyId, Long userId) {
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new IllegalArgumentException("공부 진도를 찾을 수 없습니다."));
-
-        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
-
-        studyRepository.deleteById(studyId);
+        studyManagementService.deleteStudyBulk(studyId, userId);
     }
 
 }

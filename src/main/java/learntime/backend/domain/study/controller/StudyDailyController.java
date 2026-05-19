@@ -6,7 +6,6 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyUserContentRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
-import learntime.backend.domain.study.model.StudyUserContent;
 import learntime.backend.domain.study.service.core.StudyDailyService;
 import learntime.backend.domain.study.service.core.StudyUserContentService;
 import learntime.backend.global.dto.CustomUserDetails;
@@ -18,7 +17,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-
 
 @RestController
 @RequestMapping("/api/study/daily")
@@ -39,23 +37,21 @@ public class StudyDailyController {
         return ResponseEntity.ok(response);
     }
 
-
-    @PostMapping("/content")
-    @Operation(summary = "사용자 일정 내용 생성",
-            description = "일일 진도 내의 사용자가 직접 일정 내용을 넣습니다.")
-    public ResponseEntity<Long> createStudyDailyUserContent(@Valid @RequestBody StudyUserContentRequestDTO request,
-                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long studyUserContentId = studyUserContentService.createUserContent(request, userDetails.userId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(studyUserContentId);
-    }
-
-
     @PatchMapping("/completion")
     @Operation(summary = "일일 진도 완료", description = "공부 일일진도를 완료로 변경하고 포인트를 지급합니다.")
     public ResponseEntity<String> completePlan(@Valid @RequestBody PlanCompleteRequestDTO request,
                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
         int resultPoint = studyDailyService.completeStudyDailyPlan(request, userDetails.userId());
         return ResponseEntity.ok("포인트 " + resultPoint + "지급 완료!");
+    }
+
+    @PostMapping("/content")
+    @Operation(summary = "일일 진도 내용 추가/수정",
+            description = "특정 일차의 공부 내용을 추가하거나 수정합니다. 저장 시 해당 계획의 상태가 '진행 중'으로 변경됩니다.")
+    public ResponseEntity<Long> upsertUserContent(@Valid @RequestBody StudyUserContentRequestDTO request,
+                                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long studyUserContentId = studyUserContentService.upsertUserContent(request, userDetails.userId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(studyUserContentId);
     }
 
 }

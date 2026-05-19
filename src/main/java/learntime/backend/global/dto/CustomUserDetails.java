@@ -8,10 +8,12 @@ import org.jspecify.annotations.NonNull;
 import java.util.Collection;
 import java.util.Collections;
 
-public record CustomUserDetails(Long userId, String email, String role, boolean isLocked) implements UserDetails {
+public record CustomUserDetails(Long userId, String email, String name, String role, boolean isLocked) implements UserDetails {
 
     // 유저의 리마인더를 빠르게 조회하기 위해 추가
     public Long getUserId() { return userId; }
+
+    public String getNickName() { return name; }
 
     @Override
     public @NonNull Collection<? extends GrantedAuthority> getAuthorities() {

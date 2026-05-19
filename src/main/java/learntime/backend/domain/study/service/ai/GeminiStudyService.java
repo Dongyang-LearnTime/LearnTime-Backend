@@ -6,11 +6,14 @@ import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.global.common.GeminiModel;
+import learntime.backend.domain.study.error.code.StudyErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.infra.gemini.GeminiClient;
 import learntime.backend.global.utils.GeminiPromptParser;
 import learntime.backend.global.utils.PromptQuotaUtil;
+import learntime.backend.domain.study.service.util.StudyPlanEngine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,9 +37,15 @@ public class GeminiStudyService {
     private final GeminiClient geminiClient;
     private final GeminiPromptParser promptParser;
     private final PromptQuotaUtil promptQuotaUtil;
+    private final StudyPlanEngine studyPlanEngine;
 
     private static final Map<String, Object> STUDY_SYSTEM_INSTRUCTION = Map.of(
             "parts", List.of(Map.of("text", "너는 도서의 커리큘럼을 짜는 학습 계획 전문가야."))
+    );
+
+    private static final Map<String, Object> LIST_SCHEMA = Map.of(
+            "type", "ARRAY",
+            "items", Map.of("type", "STRING")
     );
 
     private static final double STUDY_AI_TEMPERATURE = 0.2;
@@ -58,7 +67,8 @@ public class GeminiStudyService {
             this.promptTemplate = promptResource.getContentAsString(StandardCharsets.UTF_8);
             this.replanPromptTemplate = replanPromptResource.getContentAsString(StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new RuntimeException("프롬프트 초기화 실패", e);
+            log.error("프롬프트 초기화 실패", e);
+            throw new StudyException(StudyErrorCode.PROMPT_INIT_FAILED);
         }
     }
 
@@ -81,11 +91,11 @@ public class GeminiStudyService {
 
         String userPrompt = promptTemplate.formatted(
                 periodDays,
-                request.bookTitle(),
                 bookToc
         );
 
-        return executeGeminiRequest(userPrompt, userId);
+        List<String> distributedTopics = executeGeminiListRequest(userPrompt, userId);
+        return studyPlanEngine.buildFullPlan(distributedTopics);
     }
 
     /** 남은 학습 내용과 기간을 바탕으로 AI 재계획을 생성한다. */
@@ -97,22 +107,24 @@ public class GeminiStudyService {
                 remainingContent
         );
 
-        return executeGeminiRequest(userPrompt, userId);
+        List<String> distributedTopics = executeGeminiListRequest(userPrompt, userId);
+        return studyPlanEngine.buildFullPlan(distributedTopics);
     }
 
-    /** Gemini 모델에 요청을 보내고 응답을 파싱하여 반환한다. */
-    private StudyPlanResponseDTO executeGeminiRequest(String userPrompt, Long userId) {
+    /** Gemini 모델에 요청을 보내고 단순 목차 리스트를 반환한다. */
+    private List<String> executeGeminiListRequest(String userPrompt, Long userId) {
         promptQuotaUtil.decreasePromptQuota(userId);
 
         Map<String, Object> requestBody = promptParser.createRequestBody(
                 userPrompt,
                 STUDY_SYSTEM_INSTRUCTION,
-                STUDY_AI_TEMPERATURE
+                STUDY_AI_TEMPERATURE,
+                LIST_SCHEMA
         );
 
         try {
             String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
-            return promptParser.parseResponse(rawJson);
+            return promptParser.parseListResponse(rawJson);
 
         } catch (Exception e) {
             log.error("AI 학습 계획 생성 실패.", e);

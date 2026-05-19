@@ -8,14 +8,14 @@ import learntime.backend.domain.quiz.dto.request.QuizCreateRequestDTO;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.quiz.model.QuizHistory;
-import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.notes.model.StudyNotes;
 import learntime.backend.domain.quiz.model.StudyQuiz;
 import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
 import learntime.backend.domain.notes.repository.StudyNotesRepository;
 import learntime.backend.domain.quiz.repository.StudyQuizRepository;
-import learntime.backend.domain.study.repository.StudyRepository;
-import learntime.backend.global.utils.AuthorizationUtil;
+import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.studymember.repository.StudyMemberRepository;
+import learntime.backend.global.utils.StudyAuthUtil;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StudyQuizFacade {
 
-    private final StudyRepository studyRepository;
+    private final StudyMemberRepository studyMemberRepository;
     private final StudyQuizRepository studyQuizRepository;
     private final StudyNotesRepository studyNotesRepository;
     private final QuizHistoryRepository quizHistoryRepository;
@@ -44,17 +44,20 @@ public class StudyQuizFacade {
 
     @Transactional(readOnly = true)
     public StudyQuizListResponseDTO getStudyQuizList(Long studyId, Long userId) {
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
-        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId());
-        return studyQuizService.getStudyQuizList(studyId);
+        StudyMember studyMember = findByStudyIdAndUserId(studyId, userId);
+        // 스터디 멤버이면 조회 가능
+        StudyAuthUtil.verifyStudyMember(studyMember.getStudy(), userId);
+
+        return studyQuizService.getStudyQuizList(studyMember.getStudyMemberId());
     }
 
     @Transactional(readOnly = true)
     public QuizHistoryListResponseDTO getQuizHistoryList(Long studyQuizId, Long userId) {
         StudyQuiz studyQuiz = studyQuizRepository.findById(studyQuizId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
-        AuthorizationUtil.verifyOwnership(userId, studyQuiz.getStudy().getUser().getUserId());
+        // 본인만 조회 가능
+        StudyAuthUtil.verifyOwnership(studyQuiz.getStudyMember(), userId);
+
         return studyQuizService.getQuizHistoryList(studyQuizId);
     }
 
@@ -64,7 +67,8 @@ public class StudyQuizFacade {
         StudyQuiz studyQuiz = studyQuizRepository.findByIdWithQuestions(studyQuizId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
 
-        AuthorizationUtil.verifyOwnership(userId, studyQuiz.getStudy().getUser().getUserId());
+        // 본인만 퀴즈 문항 열람 가능
+        StudyAuthUtil.verifyOwnership(studyQuiz.getStudyMember(), userId);
 
         return StudyQuizConverter.toResponseDTO(studyQuiz, studyQuiz.getQuestions());
     }
@@ -73,16 +77,19 @@ public class StudyQuizFacade {
     public StudyQuizResultResponseDTO getQuizResult(Long quizHistoryId, Long userId) {
         QuizHistory quizHistory = quizHistoryRepository.findById(quizHistoryId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_HISTORY_NOT_FOUND));
-        AuthorizationUtil.verifyOwnership(userId, quizHistory.getStudyQuiz().getStudy().getUser().getUserId());
+                
+        // 본인만 조회 가능
+        StudyAuthUtil.verifyOwnership(quizHistory.getStudyQuiz().getStudyMember(), userId);
+
         return studyQuizService.getQuizResult(quizHistoryId);
     }
 
     // 필기를 기반으로 퀴즈 추출
     public Long generateAndSaveStudyQuiz(QuizCreateRequestDTO request, Long userId) {
-        Study study = studyRepository.findById(request.studyId())
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+        StudyMember studyMember = findByStudyIdAndUserId(request.studyId(), userId);
 
-        AuthorizationUtil.verifyOwnership(userId, study.getUser().getUserId()); // 본인 확인
+        // 본인만 생성 가능
+        StudyAuthUtil.verifyOwnership(studyMember, userId);
 
         // 노트 정보 가져옴
         StudyNotes studyNotes = studyNotesRepository.findById(request.studyNotesId())
@@ -98,32 +105,22 @@ public class StudyQuizFacade {
                     quizTotalCount, OX_COUNT, MULTIPLE_COUNT, cleanedText
             ); // DTO로 파싱된 AI 응답
 
-            return studyQuizService.saveStudyQuiz(study, questionDos); // DB에 퀴즈 저장 및 퀴즈 ID return
+            return studyQuizService.saveStudyQuiz(studyMember, questionDos); // DB에 퀴즈 저장 및 퀴즈 ID return
         } catch (Exception e) {
             promptQuotaUtil.restorePromptQuota(userId); // 예외 일어나면 할당 되돌려줌
             throw e;
         }
     }
 
-    // 필기 내용에서 HTML 태그를 뺀 문장만 추출
-    private String preprocessNoteContent(String htmlContent) {
-        if (htmlContent == null || htmlContent.isBlank()) return "";
-        Document doc = Jsoup.parse(htmlContent);
-        doc.select("s, strike, del").remove(); // 취소줄 등은 제외
-        return doc.text();
-    }
-
     public Long solveStudyQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
         return studyQuizService.solveQuiz(requests, userId);
     }
 
-
     @Transactional
     public void updateTitle(UpdateQuizTitleRequestDTO request, Long userId) {
-        StudyQuiz studyQuiz = studyQuizRepository.findById(request.studyQuizId())
-                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
-
-        AuthorizationUtil.verifyOwnership(userId, studyQuiz.getStudy().getUser().getUserId());
+        StudyQuiz studyQuiz = findByStudyQuizId(request.studyQuizId());
+        // 본인만 수정 가능
+        StudyAuthUtil.verifyOwnership(studyQuiz.getStudyMember(), userId);
 
         studyQuiz.setTitle(request.quizTitle());
     }
@@ -131,10 +128,9 @@ public class StudyQuizFacade {
     // 퀴즈 삭제
     @Transactional
     public void deleteStudyQuiz(Long studyQuizId, Long userId) {
-        StudyQuiz studyQuiz = studyQuizRepository.findById(studyQuizId)
-                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
-
-        AuthorizationUtil.verifyOwnership(userId, studyQuiz.getStudy().getUser().getUserId());
+        StudyQuiz studyQuiz = findByStudyQuizId(studyQuizId);
+        // 본인만 삭제 가능
+        StudyAuthUtil.verifyOwnership(studyQuiz.getStudyMember(), userId);
         
         studyQuizRepository.deleteById(studyQuizId);
     }
@@ -144,10 +140,30 @@ public class StudyQuizFacade {
     public void deleteQuizHistory(Long quizHistoryId, Long userId) {
         QuizHistory quizHistory = quizHistoryRepository.findById(quizHistoryId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_HISTORY_NOT_FOUND));
-                
-        AuthorizationUtil.verifyOwnership(userId, quizHistory.getStudyQuiz().getStudy().getUser().getUserId());
+
+        // 본인만 삭제 가능
+        StudyAuthUtil.verifyOwnership(quizHistory.getStudyQuiz().getStudyMember(), userId);
 
         quizHistoryRepository.deleteById(quizHistoryId);
+    }
+
+    private StudyMember findByStudyIdAndUserId(Long studyId, Long userId) {
+        return studyMemberRepository.findByStudy_StudyIdAndUser_UserId(studyId, userId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+    }
+
+    private StudyQuiz findByStudyQuizId(Long studyQuizId){
+        return studyQuizRepository.findById(studyQuizId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
+    }
+
+
+    // 필기 내용에서 HTML 태그를 뺀 문장만 추출
+    private String preprocessNoteContent(String htmlContent) {
+        if (htmlContent == null || htmlContent.isBlank()) return "";
+        Document doc = Jsoup.parse(htmlContent);
+        doc.select("s, strike, del").remove(); // 취소줄 등은 제외
+        return doc.text();
     }
 
 }

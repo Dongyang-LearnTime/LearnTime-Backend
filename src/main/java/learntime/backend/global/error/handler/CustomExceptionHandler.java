@@ -42,6 +42,8 @@ public class CustomExceptionHandler {
     // 개발자가 만든 에러는 다 여기에
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ErrorResponseDTO> handleCustomException(BaseException e) {
+        log.error("BaseException: ", e);
+
         BaseErrorCode errorCode = e.getErrorCode();
 
         ErrorResponseDTO response = new ErrorResponseDTO(

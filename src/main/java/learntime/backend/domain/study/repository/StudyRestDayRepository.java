@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface StudyRestDayRepository extends JpaRepository<StudyRestDay, Long>  {
-    boolean existsByStudy_StudyIdAndDayOfWeek(Long studyId, DayOfWeek dayOfWeek);
+    // 특정 스터디의 정기 휴무 요일을 모두 조회함
     List<StudyRestDay> findAllByStudy_StudyId(Long studyId);
 }

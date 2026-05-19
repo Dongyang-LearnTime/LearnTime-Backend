@@ -1,10 +1,9 @@
 package learntime.backend.domain.study.converter;
 
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
-import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyFeedbackResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
-import learntime.backend.domain.study.dto.response.StudyRecentWeekInfoResponseDTO;
+import learntime.backend.domain.study.dto.response.*;
+import learntime.backend.domain.study.enums.ProgressStatus;
+import learntime.backend.domain.studymember.enums.StudyPlanStatus;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
@@ -23,11 +22,11 @@ public class StudyConverter {
         throw new BusinessException(ErrorCode.UTILITY_CLASS_INSTANTIATION);
     }
 
-    public static StudyDailyPlanInfoResponseDTO toStudyDailyPlanInfoResponseDTO(LocalDate planDate, Study study, List<DayOfWeek> restDays, List<LocalDate> restDates, StudyDailyPlan plan) {
+    public static StudyDailyPlanInfoResponseDTO toStudyDailyPlanInfoResponseDTO(LocalDate planDate, Study study, List<DayOfWeek> restDays, List<LocalDate> restDates, StudyDailyPlan plan, StudyStatus status, Long studyMemberId, List<Long> allStudyMemberIds) {
         if (plan == null) {
             return new StudyDailyPlanInfoResponseDTO(
                     planDate, study.getStartDate(), study.getEndDate(), restDays, restDates,
-                    null, null, null, null, null, null, null
+                    null, null, null, null, null, null, null, studyMemberId, allStudyMemberIds
             );
         }
         return new StudyDailyPlanInfoResponseDTO(
@@ -35,10 +34,12 @@ public class StudyConverter {
                 plan.getStudyDailyPlanId(),
                 plan.getDayNumber(),
                 plan.getPlanContent(),
-                plan.getFocusTime(),
-                plan.getProgressStatus(),
-                plan.getCompletionStatus(),
-                plan.getUnderstandingScore()
+                status != null ? status.getFocusTime() : null,
+                status != null && status.getProgressStatus() != null ? status.getProgressStatus() : ProgressStatus.NOT_STARTED,
+                status != null ? status.getCompletionStatus() : null,
+                status != null ? status.getUnderstandingScore() : null,
+                studyMemberId,
+                allStudyMemberIds
         );
     }
 
@@ -53,6 +54,7 @@ public class StudyConverter {
 
     public static List<StudyRecentWeekInfoResponseDTO> toRecentWeekStudyInfoResponseDTOs(
             List<StudyDailyPlan> plans,
+            List<StudyStatus> statuses,
             LocalDate today,
             Set<DayOfWeek> restDays,
             Set<LocalDate> restDates
@@ -68,24 +70,34 @@ public class StudyConverter {
                         (first, second) -> first
                 ));
 
+        Map<LocalDate, StudyStatus> statusByDate = statuses.stream()
+                .filter(status -> status.getStudyDailyPlan() != null && status.getStudyDailyPlan().getPlanDate() != null)
+                .collect(Collectors.toMap(
+                        status -> status.getStudyDailyPlan().getPlanDate(),
+                        status -> status,
+                        (first, second) -> first
+                ));
+
         return startDate.datesUntil(today)
-                .filter(date -> !restDays.contains(date.getDayOfWeek()))
-                .filter(date -> !restDates.contains(date))
-                .map(date -> toStudyRecentWeekInfoResponseDTO(date, planByDate.get(date)))
+                .map(date -> {
+                    boolean isRestDay = restDays.contains(date.getDayOfWeek()) || restDates.contains(date);
+                    return toStudyRecentWeekInfoResponseDTO(date, planByDate.get(date), statusByDate.get(date), isRestDay);
+                })
                 .toList();
     }
 
-    private static StudyRecentWeekInfoResponseDTO toStudyRecentWeekInfoResponseDTO(LocalDate planDate, StudyDailyPlan plan) {
+    private static StudyRecentWeekInfoResponseDTO toStudyRecentWeekInfoResponseDTO(LocalDate planDate, StudyDailyPlan plan, StudyStatus status, boolean isRestDay) {
         if (plan == null) {
-            return new StudyRecentWeekInfoResponseDTO(planDate, null, null, null, null);
+            return new StudyRecentWeekInfoResponseDTO(planDate, null, null, null, null, isRestDay);
         }
 
         return new StudyRecentWeekInfoResponseDTO(
                 planDate,
-                plan.getFocusTime(),
-                plan.getProgressStatus(),
-                plan.getCompletionStatus(),
-                plan.getUnderstandingScore()
+                status != null ? status.getFocusTime() : null,
+                status != null && status.getProgressStatus() != null ? status.getProgressStatus() : ProgressStatus.NOT_STARTED,
+                status != null ? status.getCompletionStatus() : null,
+                status != null ? status.getUnderstandingScore() : null,
+                isRestDay
         );
     }
 
@@ -96,7 +108,7 @@ public class StudyConverter {
                 .bookTitle(request.bookTitle())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
-                .user(user)
+                .status(StudyPlanStatus.PLANNING)
                 .build();
     }
 
@@ -104,15 +116,6 @@ public class StudyConverter {
         return StudyDailyPlan.builder()
                 .study(study)
                 .dayNumber(planDto.day())
-                .planDate(planDate)
-                .planContent(planDto.tasks())
-                .build();
-    }
-
-    public static StudyDailyPlan toStudyDailyPlanEntity(Study study, StudyPlanResponseDTO.DailyPlan planDto, LocalDate planDate, int lastDayNumber) {
-        return StudyDailyPlan.builder()
-                .study(study)
-                .dayNumber(lastDayNumber + planDto.day())
                 .planDate(planDate)
                 .planContent(planDto.tasks())
                 .build();

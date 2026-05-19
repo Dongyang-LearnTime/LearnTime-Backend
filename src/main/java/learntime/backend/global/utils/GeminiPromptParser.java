@@ -35,7 +35,22 @@ public class GeminiPromptParser {
         return buildBaseRequest(
                 List.of(Map.of("text", userPrompt)),
                 systemInstruction,
-                temperature
+                temperature,
+                null
+        );
+    }
+
+    public Map<String, Object> createRequestBody(
+            String userPrompt,
+            Map<String, Object> systemInstruction,
+            double temperature,
+            Map<String, Object> responseSchema) {
+
+        return buildBaseRequest(
+                List.of(Map.of("text", userPrompt)),
+                systemInstruction,
+                temperature,
+                responseSchema
         );
     }
 
@@ -46,18 +61,25 @@ public class GeminiPromptParser {
                         Map.of("inlineData", Map.of("mimeType", mimeType, "data", base64Data))
                 ),
                 OCR_SYSTEM_INSTRUCTION,
-                0.1
+                0.1,
+                null
         );
     }
 
-    private Map<String, Object> buildBaseRequest(List<Map<String, Object>> parts, Map<String, Object> systemInstruction, double temperature) {
+    private Map<String, Object> buildBaseRequest(List<Map<String, Object>> parts, Map<String, Object> systemInstruction, double temperature, Map<String, Object> responseSchema) {
+        Map<String, Object> generationConfig = new java.util.HashMap<>(Map.of(
+                "temperature", temperature,
+                "responseMimeType", "application/json"
+        ));
+        
+        if (responseSchema != null) {
+            generationConfig.put("responseSchema", responseSchema);
+        }
+
         return Map.of(
                 "contents", List.of(Map.of("parts", parts)),
                 "system_instruction", systemInstruction,
-                "generationConfig", Map.of(
-                        "temperature", temperature,
-                        "responseMimeType", "application/json"
-                )
+                "generationConfig", generationConfig
         );
     }
 
@@ -79,6 +101,11 @@ public class GeminiPromptParser {
     public AiFeedbackResponseDTO parseFeedbackResponse(String rawJson) throws Exception {
         String jsonContent = extractJsonContent(rawJson);
         return objectMapper.readValue(jsonContent, AiFeedbackResponseDTO.class);
+    }
+
+    public List<String> parseListResponse(String rawJson) throws Exception {
+        String jsonContent = extractJsonContent(rawJson);
+        return objectMapper.readValue(jsonContent, new TypeReference<List<String>>() {});
     }
 
     private String extractJsonContent(String rawJson) throws JsonProcessingException {

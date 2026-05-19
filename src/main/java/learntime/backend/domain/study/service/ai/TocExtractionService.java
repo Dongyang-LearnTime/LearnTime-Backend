@@ -2,9 +2,13 @@ package learntime.backend.domain.study.service.ai;
 
 import jakarta.annotation.PostConstruct;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
+import learntime.backend.domain.study.error.code.StudyErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.global.error.code.FileErrorCode;
+import learntime.backend.global.error.exception.FileException;
 import learntime.backend.global.infra.gemini.GeminiClient;
 import learntime.backend.global.utils.GeminiPromptParser;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +48,8 @@ public class TocExtractionService {
         try {
             this.promptTemplate = promptResource.getContentAsString(StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new RuntimeException("OCR 프롬프트 초기화 실패", e);
+            log.error("OCR 프롬프트 초기화 실패", e);
+            throw new StudyException(StudyErrorCode.PROMPT_INIT_FAILED);
         }
     }
 
@@ -67,7 +72,7 @@ public class TocExtractionService {
             return promptParser.parseOcrResponse(rawJson);
         } catch (IOException e) {
             log.error("OCR 이미지 파일 리사이징/읽기 실패", e);
-            throw new RuntimeException("이미지 파일 처리 실패");
+            throw new FileException(FileErrorCode.FILE_READ_ERROR);
         } catch (Exception e) {
             log.error("AI 목차 추출 실패", e);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED);

@@ -10,9 +10,6 @@ public record PostUpdateDetailDTO(
         @Schema(description = "게시글 식별자(ID)", example = "1")
         Long postId,
         
-        @Schema(description = "연관된 공부 식별자(ID). 없을 경우 null", example = "456")
-        Long studyId,
-        
         @Schema(description = "게시글 제목", example = "수정할 제목입니다.")
         String title,
         

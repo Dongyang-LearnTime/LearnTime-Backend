@@ -39,7 +39,7 @@ public class StudyRestManager {
     }
 
 
-    // 스터디의 정기 휴무 요일 정보를 저장합니다.
+    // 스터디의 정기 휴무 요일 정보를 저장함
     @Transactional(propagation = Propagation.REQUIRED)
     public void saveRestDays(Study study, List<DayOfWeek> restDays) {
         if (CollectionUtils.isEmpty(restDays)) {
@@ -52,4 +52,5 @@ public class StudyRestManager {
 
         studyRestDayRepository.saveAll(studyRestDays);
     }
+
 }

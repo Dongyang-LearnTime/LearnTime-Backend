@@ -8,7 +8,6 @@ import learntime.backend.domain.study.dto.response.StudyFeedbackResponseDTO;
 import learntime.backend.domain.study.service.core.StudyFeedbackService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -18,43 +17,39 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/study/feedback")
 @RequiredArgsConstructor
-@Tag(name = "AI 학습 피드백 API", description = "학습 통계 기반 AI 분석 및 피드백 관리 API")
+@Tag(name = "학습 피드백 API", description = "AI 기반 학습 피드백 생성 및 관리 API")
 public class StudyFeedbackController {
 
     private final StudyFeedbackService studyFeedbackService;
 
-    @PostMapping("/{studyId}/generate")
-    @Operation(summary = "AI 피드백 생성", description = "현재 학습 상태를 분석하여 AI 피드백을 생성하고 DB에 저장합니다.")
+    @PostMapping("/{studyId}")
+    @Operation(summary = "AI 학습 피드백 생성", description = "최근 학습 데이터를 바탕으로 AI 피드백을 생성하고 저장합니다.")
     public ResponseEntity<StudyFeedbackResponseDTO> generateFeedback(@PathVariable Long studyId,
                                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
-        StudyFeedbackResponseDTO response = studyFeedbackService.generateAndSaveFeedback(studyId, userDetails.userId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.ok(studyFeedbackService.generateAndSaveFeedback(studyId, userDetails.userId()));
     }
 
-    @GetMapping("/{studyId}/list")
-    @Operation(summary = "AI 피드백 목록 조회", description = "특정 스터디에 대해 생성된 모든 AI 피드백 목록을 조회합니다.")
-    public ResponseEntity<List<StudyFeedbackResponseDTO>> getFeedbackList(@PathVariable Long studyId,
+    @GetMapping("/list/{studyMemberId}")
+    @Operation(summary = "피드백 목록 조회", description = "특정 스터디 멤버의 모든 피드백 기록을 조회합니다.")
+    public ResponseEntity<List<StudyFeedbackResponseDTO>> getFeedbackList(@PathVariable Long studyMemberId,
                                                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<StudyFeedbackResponseDTO> response = studyFeedbackService.getFeedbackList(studyId, userDetails.userId());
+        List<StudyFeedbackResponseDTO> response = studyFeedbackService.getMemberFeedbacks(studyMemberId, userDetails.userId());
         return ResponseEntity.ok(response);
     }
 
-
     @PatchMapping("/title")
-    @Operation(summary = "AI 피드백 제목 수정", description = "생성된 AI 피드백의 제목을 사용자가 수정합니다.")
+    @Operation(summary = "피드백 제목 수정", description = "생성된 피드백의 제목을 수정합니다.")
     public ResponseEntity<Void> updateFeedbackTitle(@Valid @RequestBody UpdateFeedbackTitleRequestDTO request,
                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
         studyFeedbackService.updateFeedbackTitle(request, userDetails.userId());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
-
     @DeleteMapping("/{feedbackId}")
-    @Operation(summary = "AI 피드백 삭제", description = "특정 AI 피드백 데이터를 삭제합니다.")
+    @Operation(summary = "피드백 삭제", description = "특정 피드백 기록을 삭제합니다.")
     public ResponseEntity<Void> deleteFeedback(@PathVariable Long feedbackId,
                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
         studyFeedbackService.deleteFeedback(feedbackId, userDetails.userId());
         return ResponseEntity.noContent().build();
     }
-
 }

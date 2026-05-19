@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface PostRepository extends JpaRepository<Post, Long> {
 
     /** 게시글 목록을 DTO로 바로 조회하며, 페이징 처리를 최적화합니다. */
-    @Query(value = "SELECT new learntime.backend.domain.community.dto.response.PostListResponseDTO(" +
+    @Query(value = "SELECT PostListResponseDTO(" +
             "p.postId, u.userId, u.name, p.title, p.viewCount, p.likeCount, " +
             "(SELECT COUNT(c) FROM Comment c WHERE c.post.postId = p.postId), " +
             "p.createdAt) " +
@@ -37,11 +37,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "(SELECT post_id FROM post WHERE deleted_at <= :threshold)", nativeQuery = true)
     List<String> findDeletedPostImageUrlsBefore(@Param("threshold") LocalDateTime threshold);
 
-    /** 게시글과 연관된 작성자(User), 스터디(Study)를 FETCH JOIN으로 한 번의 쿼리로 가져옴. (이미지는 별도 조회) */
+    /** 게시글과 연관된 작성자(User)를 FETCH JOIN으로 한 번의 쿼리로 가져옴. (이미지는 별도 조회) */
     @Query("SELECT p " +
             "FROM Post p " +
             "LEFT JOIN FETCH p.user " +
-            "LEFT JOIN FETCH p.study " +
             "WHERE p.postId = :postId")
     Optional<Post> findByIdWithDetails(@Param("postId") Long postId);
 

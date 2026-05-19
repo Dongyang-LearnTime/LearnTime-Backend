@@ -3,6 +3,8 @@ package learntime.backend.domain.study.service.ai;
 import jakarta.annotation.PostConstruct;
 import learntime.backend.domain.study.dto.response.AiFeedbackResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyAnalysisDataDTO;
+import learntime.backend.domain.study.error.code.StudyErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.global.common.GeminiModel;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
@@ -46,12 +48,13 @@ public class GeminiFeedbackService {
         try {
             this.feedbackPromptTemplate = feedbackPromptTemplateResource.getContentAsString(StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new RuntimeException("피드백 프롬프트 초기화 실패", e);
+            log.error("피드백 프롬프트 초기화 실패", e);
+            throw new StudyException(StudyErrorCode.PROMPT_INIT_FAILED);
         }
     }
 
     /** 사용자의 학습 데이터를 바탕으로 AI 피드백을 생성합니다. */
-    public AiFeedbackResponseDTO generateFeedback(StudyAnalysisDataDTO analysisData, Long userId) {
+    public AiFeedbackResponseDTO generateStudyFeedback(StudyAnalysisDataDTO analysisData, String userName, Long userId) {
         String totalFocusedTimeStr = analysisData.totalFocusedTime() != null 
                 ? formatSeconds(analysisData.totalFocusedTime()) 
                 : "0시간 0분";
@@ -68,6 +71,7 @@ public class GeminiFeedbackService {
         promptQuotaUtil.decreasePromptQuota(userId);
 
         String userPrompt = feedbackPromptTemplate.formatted(
+                userName,
                 analysisData.studyCompletionRate(),
                 analysisData.studySuccessRate(),
                 totalFocusedTimeStr,
@@ -81,7 +85,6 @@ public class GeminiFeedbackService {
         );
 
         try {
-            // Gemini 3.1 Flash 모델 사용
             String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
             return promptParser.parseFeedbackResponse(rawJson);
         } catch (Exception e) {
