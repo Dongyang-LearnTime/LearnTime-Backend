@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -62,6 +63,10 @@ public class StudyInvitation {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime requestedAt;
+
+    // 초대 상태 수정 시간 (거절/취소 등 상태 변경 시간)
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     @Builder
     public StudyInvitation(Study study, User invitedUser, User inviterUser) {

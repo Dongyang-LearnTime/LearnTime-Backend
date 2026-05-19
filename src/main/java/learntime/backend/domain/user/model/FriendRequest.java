@@ -6,6 +6,9 @@ import learntime.backend.global.common.BaseTimeEntity;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.springframework.data.annotation.LastModifiedDate;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "friend_request")
@@ -44,6 +47,12 @@ public class FriendRequest extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private FriendRequestStatus status;
+
+    /**
+     * 상태 변경 시간 (거절 시간 추적용)
+     */
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     // 친구 요청 수락 상태로 변경
     public void accept() {

@@ -16,6 +16,7 @@ import learntime.backend.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -120,6 +121,7 @@ public class StudyQueryService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "recentWeekStudyIndicator", key = "#studyId + ':' + #userId")
     public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));

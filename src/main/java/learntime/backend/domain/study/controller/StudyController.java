@@ -9,7 +9,6 @@ import learntime.backend.domain.study.dto.response.StudyStatusResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
 import learntime.backend.domain.study.service.facade.StudyFacade;
-import learntime.backend.domain.study.service.core.StudyManagementService;
 import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,6 @@ public class StudyController {
 
     private final StudyFacade studyFacade;
     private final StudyQueryService studyQueryService;
-    private final StudyManagementService studyManagementService;
 
     @GetMapping("/{studyId}/total")
     @Operation(

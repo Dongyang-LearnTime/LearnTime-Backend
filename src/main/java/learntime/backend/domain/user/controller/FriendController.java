@@ -22,6 +22,22 @@ public class FriendController {
 
     private final FriendService friendService;
 
+    @GetMapping
+    @Operation(summary = "친구 목록 조회", description = "사용자의 친구 목록을 조회합니다.")
+    public ResponseEntity<List<FriendResponseDTO>> getFriends(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(friendService.getFriends(userDetails.userId()));
+    }
+
+    @DeleteMapping("/{friendUserId}")
+    @Operation(summary = "친구 삭제", description = "사용자와 특정 사용자 사이의 친구 관계를 삭제합니다.")
+    public ResponseEntity<Void> deleteFriend(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long friendUserId) {
+        friendService.deleteFriend(userDetails.userId(), friendUserId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/requests/{receiverId}")
     @Operation(summary = "친구 요청 보내기", description = "상대방에게 친구 요청을 보냅니다. 상대방이 승인해야 친구가 됩니다.")
     public ResponseEntity<Long> sendFriendRequest(
@@ -49,34 +65,19 @@ public class FriendController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    @Operation(summary = "친구 목록 조회", description = "현재 로그인한 사용자의 친구 목록을 조회합니다.")
-    public ResponseEntity<List<FriendResponseDTO>> getFriends(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(friendService.getFriends(userDetails.userId()));
-    }
-
     @GetMapping("/requests/received")
-    @Operation(summary = "받은 친구 요청 목록 조회", description = "현재 로그인한 사용자가 받은 대기 중인 친구 요청을 조회합니다.")
+    @Operation(summary = "받은 친구 요청 목록 조회", description = "사용자가 받은 대기 중인 친구 요청을 조회합니다.")
     public ResponseEntity<List<FriendRequestResponseDTO>> getReceivedPendingRequests(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(friendService.getReceivedPendingRequests(userDetails.userId()));
     }
 
     @GetMapping("/requests/sent")
-    @Operation(summary = "보낸 친구 요청 목록 조회", description = "현재 로그인한 사용자가 보낸 대기 중인 친구 요청을 조회합니다.")
+    @Operation(summary = "보낸 친구 요청 목록 조회", description = "사용자가 보낸 대기 중인 친구 요청을 조회합니다.")
     public ResponseEntity<List<FriendRequestResponseDTO>> getSentPendingRequests(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(friendService.getSentPendingRequests(userDetails.userId()));
     }
 
-    @DeleteMapping("/{friendUserId}")
-    @Operation(summary = "친구 삭제", description = "현재 로그인한 사용자와 특정 사용자 사이의 친구 관계를 삭제합니다.")
-    public ResponseEntity<Void> deleteFriend(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long friendUserId) {
-        friendService.deleteFriend(userDetails.userId(), friendUserId);
-        return ResponseEntity.noContent().build();
-    }
 
 }

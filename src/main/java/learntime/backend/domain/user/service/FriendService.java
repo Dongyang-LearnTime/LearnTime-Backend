@@ -18,6 +18,7 @@ import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 // 친구 요청, 승인/거절, 친구 관계 조회와 삭제를 담당하는 Service
 public class FriendService {
 
@@ -64,6 +66,7 @@ public class FriendService {
         );
 
         if (hasPendingRequest) {
+            log.warn("[검증 실패] 이미 대기 중인 친구 요청이 존재합니다. requester={}, receiver={}", requesterId, receiverId);
             throw new FriendException(FriendErrorCode.FRIEND_REQUEST_ALREADY_EXISTS);
         }
 
@@ -75,6 +78,7 @@ public class FriendService {
 
         FriendRequest savedRequest = friendRequestRepository.save(friendRequest);
 
+        log.info("[친구 요청 성공] requestId={}, requester={}, receiver={}", savedRequest.getFriendRequestId(), requesterId, receiverId);
         // 알림 생성
         eventPublisher.publishEvent(new FriendRequestSentEvent(
                 savedRequest.getFriendRequestId(),
@@ -109,6 +113,7 @@ public class FriendService {
         friendRequest.accept();
         Friend savedFriend = friendRepository.save(friend);
 
+        log.info("[친구 수락 성공] friendId={}, requester={}, receiver={}", savedFriend.getFriendId(), requesterId, receiverId);
         // 알림 생성
         eventPublisher.publishEvent(new FriendRequestAcceptedEvent(
                 friendRequest.getFriendRequestId(),
@@ -129,6 +134,7 @@ public class FriendService {
         // 요청 상태를 REJECTED로 변경
         friendRequest.reject();
 
+        log.info("[친구 거절 성공] requestId={}, receiver={}", friendRequestId, receiverId);
         // 알림 생성
         eventPublisher.publishEvent(new FriendRequestRejectedEvent(
                 friendRequest.getFriendRequestId(),
@@ -181,6 +187,7 @@ public class FriendService {
     public void deleteFriend(Long userId, Long friendUserId) {
         Friend friend = friendRepository.findFriendship(userId, friendUserId)
                 .orElseThrow(() -> new FriendException(FriendErrorCode.FRIEND_NOT_FOUND));
+        log.info("[친구 삭제 성공] userId={}, friendUserId={}", userId, friendUserId);
         friendRepository.delete(friend);
     }
 
@@ -193,7 +200,10 @@ public class FriendService {
                         receiverId,
                         FriendRequestStatus.PENDING
                 )
-                .orElseThrow(() -> new FriendException(FriendErrorCode.FRIEND_REQUEST_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("[검증 실패] 대기 중인 친구 요청을 찾을 수 없습니다. requestId={}, receiver={}", friendRequestId, receiverId);
+                    return new FriendException(FriendErrorCode.FRIEND_REQUEST_NOT_FOUND);
+                });
     }
 
     /**

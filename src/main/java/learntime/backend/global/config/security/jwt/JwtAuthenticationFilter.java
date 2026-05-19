@@ -46,11 +46,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (claims != null) {
                 // 토큰에서 데이터 추출
                 String email = claims.getSubject();
+                String name = claims.get("name", String.class); // 이름 추출
                 String role = claims.get("role", String.class);
                 Long userId = claims.get("userId", Long.class); // PK 추출
 
                 // 2. CustomUserDetails 객체 생성 (Record 사용)
-                CustomUserDetails principal = new CustomUserDetails(userId, email, role, true);
+                CustomUserDetails principal = new CustomUserDetails(userId, email, name, role, true);
 
                 // Spring Security 인증 객체 생성
                 UsernamePasswordAuthenticationToken authentication =

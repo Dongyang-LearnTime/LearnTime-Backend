@@ -3,6 +3,9 @@ package learntime.backend.domain.user.repository;
 import learntime.backend.domain.user.enums.FriendRequestStatus;
 import learntime.backend.domain.user.model.FriendRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -36,6 +39,13 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
     List<FriendRequest> findAllByRequester_UserIdAndStatusOrderByCreatedAtDesc(
             Long requesterId,
             FriendRequestStatus status
+    );
+
+    @Modifying
+    @Query("DELETE FROM FriendRequest f WHERE f.status = :status AND f.updatedAt <= :cutoffDate")
+    void deleteOldRequestsByStatus(
+            @Param("status") FriendRequestStatus status,
+            @Param("cutoffDate") java.time.LocalDateTime cutoffDate
     );
 
 }
