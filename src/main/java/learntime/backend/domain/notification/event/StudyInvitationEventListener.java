@@ -1,5 +1,6 @@
 package learntime.backend.domain.notification.event;
 
+import learntime.backend.domain.notification.enums.NotificationReferenceType;
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.notification.service.NotificationService;
 import learntime.backend.domain.studymember.event.StudyInvitationAcceptedEvent;
@@ -33,7 +34,7 @@ public class StudyInvitationEventListener {
                     "공부 진도 참여 요청",
                     eventMessage,
                     event.studyInvitationId(),
-                    "STUDY_INVITATION"
+                    NotificationReferenceType.STUDY_INVITATION
             );
         } catch (Exception e) {
             log.error("공부 진도 초대 실패. studyInvitationId: {}", event.studyInvitationId(), e);
@@ -54,7 +55,7 @@ public class StudyInvitationEventListener {
                     "공부 진도 초대 승인",
                     eventMessage,
                     event.studyInvitationId(),
-                    "STUDY_INVITATION"
+                    NotificationReferenceType.STUDY_INVITATION
             );
         } catch (Exception e) {
             log.error("공부 진도 초대 승인 알림 생성 실패. studyInvitationId: {}", event.studyInvitationId(), e);
@@ -75,7 +76,7 @@ public class StudyInvitationEventListener {
                     "공부 진도 초대 거절",
                     eventMessage,
                     event.studyInvitationId(),
-                    "STUDY_INVITATION"
+                    NotificationReferenceType.STUDY_INVITATION
             );
         } catch (Exception e) {
             log.error("공부 진도 초대 거절 알림 생성 실패. studyInvitationId: {}", event.studyInvitationId(), e);

@@ -1,6 +1,7 @@
 package learntime.backend.domain.notification.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.notification.enums.NotificationReferenceType;
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.common.BaseTimeEntity;
@@ -52,8 +53,9 @@ public class Notification extends BaseTimeEntity {
     private Long referenceId;
 
     /** 알림과 연결된 대상 종류 */
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "reference_type", length = 50)
-    private String referenceType;
+    private NotificationReferenceType referenceType;
 
     /** 사용자가 알림을 읽었는지 여부 */
     @Builder.Default

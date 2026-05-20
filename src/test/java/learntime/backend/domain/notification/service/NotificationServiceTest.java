@@ -1,5 +1,6 @@
 package learntime.backend.domain.notification.service;
 
+import learntime.backend.domain.notification.enums.NotificationReferenceType;
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.notification.model.Notification;
 import learntime.backend.domain.notification.repository.NotificationRepository;
@@ -61,7 +62,7 @@ class NotificationServiceTest {
                 "친구 요청",
                 "테스트 알림 메시지",
                 2L,
-                "FRIEND_REQUEST"
+                NotificationReferenceType.FRIEND_REQUEST
         );
 
         // then
@@ -72,7 +73,7 @@ class NotificationServiceTest {
                 notification.getReceiver().getUserId().equals(receiverId) &&
                 notification.getType() == NotificationType.FRIEND_REQUEST_RECEIVED &&
                 notification.getReferenceId().equals(2L) &&
-                notification.getReferenceType().equals("FRIEND_REQUEST")
+                notification.getReferenceType() == NotificationReferenceType.FRIEND_REQUEST
         ));
     }
 

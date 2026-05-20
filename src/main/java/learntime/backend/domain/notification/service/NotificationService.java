@@ -2,6 +2,7 @@ package learntime.backend.domain.notification.service;
 
 import learntime.backend.domain.notification.converter.NotificationConverter;
 import learntime.backend.domain.notification.dto.response.NotificationResponseDTO;
+import learntime.backend.domain.notification.enums.NotificationReferenceType;
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.notification.error.code.NotificationErrorCode;
 import learntime.backend.domain.notification.error.exception.NotificationException;
@@ -68,7 +69,7 @@ public class NotificationService {
             String title, // 알림 제목
             String message, // 사용자에게 보여줄 알림 내용
             Long referenceId, // 관련 리소스 PK (친구 요청 ID, 스터디 초대 ID 등)
-            String referenceType // 관련 리소스 타입명
+            NotificationReferenceType referenceType // 관련 리소스 타입
     ) {
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
@@ -138,9 +139,9 @@ public class NotificationService {
                 emitter.send(SseEmitter.event()
                         .name(eventName)
                         .data(data));
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
                 removeEmitter(userId, emitter);
-                log.error("알림 발송 실패", e);
+                log.warn("종료된 SSE 커넥션 감지 및 제거 완료: userId={}", userId);
             }
         }
     }

@@ -8,6 +8,7 @@ import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BaseException;
 import learntime.backend.global.error.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -24,6 +26,16 @@ import java.util.Objects;
 @Slf4j
 @RestControllerAdvice
 public class CustomExceptionHandler {
+
+    // SSE 클라이언트 연결 단절(브라우저 종료 등) 시 발생하는 예외 무시
+    @ExceptionHandler({
+            AsyncRequestNotUsableException.class,
+            ClientAbortException.class
+    })
+    public ResponseEntity<Void> handleClientAbortException(Exception e) {
+        log.debug("클라이언트 연결 단절: {}", e.getMessage());
+        return ResponseEntity.noContent().build(); // 빈 응답 반환으로 HttpMessageNotWritableException 방지
+    }
 
     // 설정한 예외 외의 모든 예외 처리
     @ExceptionHandler(Exception.class)

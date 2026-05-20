@@ -2,8 +2,10 @@ package learntime.backend.domain.notification.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import learntime.backend.domain.notification.dto.response.NotificationCountResponseDTO;
 import learntime.backend.domain.notification.dto.response.NotificationResponseDTO;
 import learntime.backend.domain.notification.service.NotificationService;
+import learntime.backend.global.dto.CursorResponse;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -31,21 +33,24 @@ public class SseController {
 
     @GetMapping
     @Operation(summary = "알림 목록 조회", description = "사용자의 알림 목록을 커서 기반으로 조회합니다.")
-    public ResponseEntity<List<NotificationResponseDTO>> getNotifications(
+    public ResponseEntity<CursorResponse<NotificationResponseDTO>> getNotifications(
             @RequestParam(required = false) Long cursorId, // 마지막 notificationId
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        List<NotificationResponseDTO> result = notificationService
+        List<NotificationResponseDTO> notifications = notificationService
                 .getNotifications(userDetails.getUserId(), cursorId);
 
-        return ResponseEntity.ok(result);
+        boolean hasNext = notifications.size() == 20; // Repository Top20 limit
+        Long nextCursor = notifications.isEmpty() ? null : notifications.getLast().notificationId();
+
+        return ResponseEntity.ok(CursorResponse.of(notifications, nextCursor, hasNext));
     }
 
     @GetMapping("/unread-count")
     @Operation(summary = "읽지 않은 알림 수 조회", description = "사용자의 읽지 않은 알림 개수를 조회합니다.")
-    public ResponseEntity<Long> getUnreadCount(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<NotificationCountResponseDTO> getUnreadCount(@AuthenticationPrincipal CustomUserDetails userDetails) {
         Long alarmCount = notificationService.getUnreadCount(userDetails.getUserId());
-        return ResponseEntity.ok(alarmCount);
+        return ResponseEntity.ok(new NotificationCountResponseDTO(alarmCount));
     }
 
     @PatchMapping("/{notificationId}/read")
@@ -81,4 +86,15 @@ public class SseController {
         return ResponseEntity.noContent().build();
     }
 
+    // --- 프론트엔드 연동 테스트용 API ---
+    @PostMapping("/test-send")
+    @Operation(summary = "SSE 테스트 알림 발송 (테스트용)", description = "현재 로그인한 사용자 본인에게 테스트 SSE 이벤트를 강제로 발송하여 연결을 확인합니다.")
+    public ResponseEntity<String> sendTestNotification(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        String testMessage = "서버 테스트 메시지입니다. 발송 시간: " + java.time.LocalDateTime.now();
+        
+        // DB에 저장하지 않고 현재 연결된 SSE로만 이벤트를 쏩니다 (이름: "test-event")
+        notificationService.send(userDetails.getUserId(), testMessage, "test-event");
+        
+        return ResponseEntity.ok("테스트 알림 발송 성공: " + testMessage);
+    }
 }

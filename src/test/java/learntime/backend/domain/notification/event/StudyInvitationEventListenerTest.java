@@ -1,5 +1,6 @@
 package learntime.backend.domain.notification.event;
 
+import learntime.backend.domain.notification.enums.NotificationReferenceType;
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.notification.service.NotificationService;
 import learntime.backend.domain.studymember.event.StudyInvitationAcceptedEvent;
@@ -44,7 +45,7 @@ class StudyInvitationEventListenerTest {
                 eq("공부 진도 참여 요청"),
                 eq(expectedMessage),
                 eq(1L),
-                eq("STUDY_INVITATION")
+                eq(NotificationReferenceType.STUDY_INVITATION)
         );
     }
 
@@ -67,7 +68,7 @@ class StudyInvitationEventListenerTest {
                 eq("공부 진도 초대 승인"),
                 eq(expectedMessage),
                 eq(1L),
-                eq("STUDY_INVITATION")
+                eq(NotificationReferenceType.STUDY_INVITATION)
         );
     }
 
@@ -90,7 +91,7 @@ class StudyInvitationEventListenerTest {
                 eq("공부 진도 초대 거절"),
                 eq(expectedMessage),
                 eq(1L),
-                eq("STUDY_INVITATION")
+                eq(NotificationReferenceType.STUDY_INVITATION)
         );
     }
 }
