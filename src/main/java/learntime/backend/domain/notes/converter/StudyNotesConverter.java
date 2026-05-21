@@ -2,7 +2,7 @@ package learntime.backend.domain.notes.converter;
 
 import learntime.backend.domain.notes.dto.response.StudyNotesResponseDTO;
 import learntime.backend.domain.notes.model.StudyNotes;
-import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
 

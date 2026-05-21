@@ -1,7 +1,7 @@
 package learntime.backend.global.scheduler;
 
-import learntime.backend.domain.studymember.enums.StudyInvitationStatus;
-import learntime.backend.domain.studymember.repository.StudyInvitationRepository;
+import learntime.backend.domain.study_member.enums.StudyInvitationStatus;
+import learntime.backend.domain.study_member.repository.StudyInvitationRepository;
 import learntime.backend.domain.user.enums.FriendRequestStatus;
 import learntime.backend.domain.user.repository.FriendRequestRepository;
 import lombok.RequiredArgsConstructor;

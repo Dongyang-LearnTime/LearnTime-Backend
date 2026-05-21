@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 @Repository
 public interface PromptQuotaRepository extends JpaRepository<PromptQuotas, Long>  {
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM PromptQuotas q WHERE q.userId = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
+
     /**
      * [프롬프트 사용 시 할당량 차감 or 리셋]
      */

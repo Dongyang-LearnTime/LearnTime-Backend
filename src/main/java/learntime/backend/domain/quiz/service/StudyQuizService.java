@@ -15,7 +15,7 @@ import learntime.backend.domain.quiz.model.QuizQuestion;
 import learntime.backend.domain.quiz.converter.StudyQuizConverter;
 import learntime.backend.domain.quiz.repository.QuizQuestionRepository;
 import learntime.backend.domain.quiz.repository.StudyQuizRepository;
-import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyMember;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;

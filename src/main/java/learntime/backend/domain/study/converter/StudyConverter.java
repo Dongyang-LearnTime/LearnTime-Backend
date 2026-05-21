@@ -3,7 +3,8 @@ package learntime.backend.domain.study.converter;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.*;
 import learntime.backend.domain.study.enums.ProgressStatus;
-import learntime.backend.domain.studymember.enums.StudyPlanStatus;
+import learntime.backend.domain.study_member.enums.StudyPlanStatus;
+import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
@@ -50,6 +51,24 @@ public class StudyConverter {
                 .feedbackContent(feedback.getFeedbackContent())
                 .createdAt(feedback.getCreatedAt())
                 .build();
+    }
+
+    public static StudyMemberRecentWeekInfoResponseDTO toStudyMemberRecentWeekInfoResponseDTO(
+            StudyMember member,
+            List<StudyDailyPlan> plans,
+            List<StudyStatus> statuses,
+            LocalDate today,
+            Set<DayOfWeek> restDays,
+            Set<LocalDate> restDates
+    ) {
+        List<StudyRecentWeekInfoResponseDTO> memberRecentWeekInfos = toRecentWeekStudyInfoResponseDTOs(
+                plans, statuses, today, restDays, restDates
+        );
+        return new StudyMemberRecentWeekInfoResponseDTO(
+                member.getStudyMemberId(),
+                member.getUser().getName(),
+                memberRecentWeekInfos
+        );
     }
 
     public static List<StudyRecentWeekInfoResponseDTO> toRecentWeekStudyInfoResponseDTOs(
@@ -134,4 +153,14 @@ public class StudyConverter {
                 .dayOfWeek(dayOfWeek)
                 .build();
     }
+
+    public static StudyMemberContentResponseDTO toStudyMemberContentResponseDTO(StudyMemberContent content) {
+        return new StudyMemberContentResponseDTO(
+                content.getStudyMemberContentId(),
+                content.getStudyDailyPlan().getStudyDailyPlanId(),
+                content.getStudyDailyPlan().getDayNumber(),
+                content.getMemberContent()
+        );
+    }
+
 }

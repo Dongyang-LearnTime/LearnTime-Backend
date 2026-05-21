@@ -13,8 +13,9 @@ import learntime.backend.domain.quiz.model.StudyQuiz;
 import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
 import learntime.backend.domain.notes.repository.StudyNotesRepository;
 import learntime.backend.domain.quiz.repository.StudyQuizRepository;
-import learntime.backend.domain.studymember.model.StudyMember;
-import learntime.backend.domain.studymember.repository.StudyMemberRepository;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
+import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.global.utils.StudyAuthUtil;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
@@ -148,7 +149,11 @@ public class StudyQuizFacade {
     }
 
     private StudyMember findByStudyIdAndUserId(Long studyId, Long userId) {
-        return studyMemberRepository.findByStudy_StudyIdAndUser_UserId(studyId, userId)
+        return studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                        studyId,
+                        userId,
+                        StudyMemberStatus.ACTIVE
+                )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
     }
 

@@ -30,7 +30,7 @@ import learntime.backend.domain.study.model.StudyRestDate;
 import learntime.backend.domain.study.converter.StudyConverter;
 
 import learntime.backend.domain.study.model.StudyStatus;
-import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study.repository.StudyStatusRepository;
 
 // 일일 진도 및 포인트 지급 관련 비즈니스 로직 담당 서비스
@@ -65,21 +65,25 @@ public class StudyDailyService {
 
         Long studyMemberId = study.getStudyMembers().stream()
                 .filter(m -> m.getUser().getUserId().equals(userId))
+                .filter(StudyMember::isActive)
                 .map(StudyMember::getStudyMemberId)
                 .findFirst()
                 .orElse(null);
 
         List<Long> allStudyMemberIds = study.getStudyMembers().stream()
+                .filter(StudyMember::isActive)
                 .map(StudyMember::getStudyMemberId)
                 .toList();
 
         StudyStatus studyStatus = null;
         if (studyDailyPlan != null && studyMemberId != null) {
-            studyStatus = studyStatusRepository.findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMemberId, studyDailyPlan.getStudyDailyPlanId())
+            studyStatus = studyStatusRepository.
+                    findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMemberId, studyDailyPlan.getStudyDailyPlanId())
                     .orElse(null);
         }
 
-        return StudyConverter.toStudyDailyPlanInfoResponseDTO(planDate, study, restDays, restDates, studyDailyPlan, studyStatus, studyMemberId, allStudyMemberIds);
+        return StudyConverter.toStudyDailyPlanInfoResponseDTO
+                (planDate, study, restDays, restDates, studyDailyPlan, studyStatus, studyMemberId, allStudyMemberIds);
     }
 
     // 일일 학습 계획을 완료 처리하고 포인트를 지급합니다.
@@ -98,6 +102,7 @@ public class StudyDailyService {
         
         StudyMember studyMember = study.getStudyMembers().stream()
                 .filter(m -> m.getUser().getUserId().equals(userId))
+                .filter(StudyMember::isActive)
                 .findFirst()
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 

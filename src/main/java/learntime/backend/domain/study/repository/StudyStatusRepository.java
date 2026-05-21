@@ -46,6 +46,17 @@ public interface StudyStatusRepository extends JpaRepository<StudyStatus, Long> 
                                                        @Param("startDate") LocalDate startDate,
                                                        @Param("endDate") LocalDate endDate);
 
+    // 기간 내 여러 멤버들의 상태를 날짜 순으로 조회함 (N+1 방지)
+    @Query("SELECT s FROM StudyStatus s " +
+           "JOIN FETCH s.studyDailyPlan " +
+           "JOIN FETCH s.studyMember sm " +
+           "WHERE sm.studyMemberId IN :studyMemberIds " +
+           "AND s.studyDailyPlan.planDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY s.studyDailyPlan.planDate ASC")
+    List<StudyStatus> findByStudyMemberIdInAndPlanDateBetween(@Param("studyMemberIds") List<Long> studyMemberIds,
+                                                              @Param("startDate") LocalDate startDate,
+                                                              @Param("endDate") LocalDate endDate);
+
     // 멤버 ID와 일일 계획 ID로 특정 상태를 찾음
     Optional<StudyStatus> findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(Long studyMemberId, Long studyDailyPlanId);
 

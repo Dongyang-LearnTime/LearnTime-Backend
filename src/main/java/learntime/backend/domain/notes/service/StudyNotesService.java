@@ -8,8 +8,9 @@ import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.notes.model.StudyNotes;
 import learntime.backend.domain.notes.converter.StudyNotesConverter;
 import learntime.backend.domain.notes.repository.StudyNotesRepository;
-import learntime.backend.domain.studymember.model.StudyMember;
-import learntime.backend.domain.studymember.repository.StudyMemberRepository;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
+import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -84,7 +85,11 @@ public class StudyNotesService {
     }
 
     private StudyMember findByStudyIdAndUserId(Long studyId, Long userId) {
-        return studyMemberRepository.findByStudy_StudyIdAndUser_UserId(studyId, userId)
+        return studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                        studyId,
+                        userId,
+                        StudyMemberStatus.ACTIVE
+                )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
     }
 

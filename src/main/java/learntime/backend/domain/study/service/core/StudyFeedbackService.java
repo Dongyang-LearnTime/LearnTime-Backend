@@ -8,9 +8,10 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.StudyFeedbackRepository;
-import learntime.backend.domain.studymember.repository.StudyMemberRepository;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study.service.ai.GeminiFeedbackService;
-import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyMember;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +31,11 @@ public class StudyFeedbackService {
     /** 사용자의 최근 학습 데이터를 바탕으로 AI 피드백을 생성하고 저장합니다. */
     @Transactional
     public StudyFeedbackResponseDTO generateAndSaveFeedback(Long studyId, Long userId) {
-        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserId(studyId, userId)
+        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                        studyId,
+                        userId,
+                        StudyMemberStatus.ACTIVE
+                )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         // 1. 피드백 생성을 위한 분석 데이터 추출

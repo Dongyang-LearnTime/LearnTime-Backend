@@ -31,6 +31,7 @@ public record StudyDailyPlanInfoResponseDTO(
 
         @Schema(description = "학습 일차 (계획이 없으면 null)")
         Integer dayNumber,
+
         @Schema(description = "학습 계획 내용 (계획이 없으면 null)")
         String planContent,
 

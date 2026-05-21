@@ -10,9 +10,7 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
-import learntime.backend.domain.studymember.model.StudyMember;
-import learntime.backend.global.error.code.ErrorCode;
-import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.domain.study_member.model.StudyMember;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +19,7 @@ import org.springframework.cache.annotation.Cacheable;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,6 +51,7 @@ public class StudyQueryService {
 
         StudyMember member = study.getStudyMembers().stream()
                 .filter(m -> m.getUser().getUserId().equals(userId))
+                .filter(StudyMember::isActive)
                 .findFirst()
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
@@ -83,6 +83,7 @@ public class StudyQueryService {
 
         Long studyMemberId = study.getStudyMembers().stream()
                 .filter(m -> m.getUser().getUserId().equals(userId))
+                .filter(StudyMember::isActive)
                 .map(StudyMember::getStudyMemberId)
                 .findFirst()
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
@@ -123,7 +124,7 @@ public class StudyQueryService {
     @Transactional(readOnly = true)
     @Cacheable(value = "recentWeekStudyIndicator", key = "#studyId + ':' + #userId")
     public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId, Long userId) {
-        Study study = studyRepository.findById(studyId)
+        Study study = studyRepository.findByIdWithStudyMembersAndUser(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
         LocalDate today = LocalDate.now(java.util.TimeZone.getTimeZone("Asia/Seoul").toZoneId());
@@ -143,15 +144,26 @@ public class StudyQueryService {
                 .map(StudyRestDate::getRestDate)
                 .collect(Collectors.toSet());
 
-        return study.getStudyMembers().stream()
+        List<StudyMember> studyMembers = study.getStudyMembers().stream()
+                .filter(StudyMember::isActive)
+                .toList();
+        List<Long> studyMemberIds = studyMembers.stream()
+                .map(StudyMember::getStudyMemberId)
+                .toList();
+
+        List<StudyStatus> allStatuses = studyStatusRepository.findByStudyMemberIdInAndPlanDateBetween(
+                studyMemberIds,
+                today.minusDays(7),
+                today.minusDays(1)
+        );
+
+        Map<Long, List<StudyStatus>> statusMap = allStatuses.stream()
+                .collect(Collectors.groupingBy(status -> status.getStudyMember().getStudyMemberId()));
+
+        return studyMembers.stream()
                 .map(member -> {
-                    List<StudyStatus> statuses = studyStatusRepository.findByMemberIdAndPlanDateBetween(
-                            member.getStudyMemberId(),
-                            today.minusDays(7),
-                            today.minusDays(1)
-                    );
-                    List<StudyRecentWeekInfoResponseDTO> memberRecentWeekInfos = StudyConverter.toRecentWeekStudyInfoResponseDTOs(recentPlans, statuses, today, restDays, restDates);
-                    return new StudyMemberRecentWeekInfoResponseDTO(member.getStudyMemberId(), memberRecentWeekInfos);
+                    List<StudyStatus> statuses = statusMap.getOrDefault(member.getStudyMemberId(), List.of());
+                    return StudyConverter.toStudyMemberRecentWeekInfoResponseDTO(member, recentPlans, statuses, today, restDays, restDates);
                 })
                 .collect(Collectors.toList());
     }

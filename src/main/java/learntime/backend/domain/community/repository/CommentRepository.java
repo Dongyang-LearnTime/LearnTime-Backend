@@ -25,6 +25,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             "ORDER BY c.commentId DESC")
     List<Comment> findFirstPageByPostIdWithUser(@Param("postId") Long postId, org.springframework.data.domain.Pageable pageable);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Comment c SET c.user = null WHERE c.user.userId = :userId")
+    void detachAuthorByUserId(@Param("userId") Long userId);
+
     @Modifying(clearAutomatically = true)
     @Query(value = "DELETE FROM comment WHERE deleted_at <= :threshold", nativeQuery = true)
     int hardDeleteCommentByThreshold(@Param("threshold") LocalDateTime threshold);

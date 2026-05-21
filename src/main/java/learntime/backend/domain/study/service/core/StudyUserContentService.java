@@ -1,14 +1,18 @@
 package learntime.backend.domain.study.service.core;
 
+import learntime.backend.domain.study.converter.StudyConverter;
 import learntime.backend.domain.study.dto.request.StudyUserContentRequestDTO;
+import learntime.backend.domain.study.dto.response.StudyMemberContentResponseDTO;
+import java.util.List;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.StudyDailyPlan;
-import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
+import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study.model.StudyMemberContent;
 import learntime.backend.domain.study.model.StudyStatus;
 import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
-import learntime.backend.domain.studymember.repository.StudyMemberRepository;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study.repository.StudyStatusRepository;
 import learntime.backend.domain.study.repository.StudyUserContentRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +35,11 @@ public class StudyUserContentService {
         StudyDailyPlan dailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
 
-        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserId(
-                        dailyPlan.getStudy().getStudyId(), userId)
+        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                        dailyPlan.getStudy().getStudyId(),
+                        userId,
+                        StudyMemberStatus.ACTIVE
+                )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         StudyMemberContent content = studyUserContentRepository.findByStudyMemberAndStudyDailyPlan(member, dailyPlan)
@@ -60,5 +67,22 @@ public class StudyUserContentService {
         }
         
         return content.getStudyMemberContentId();
+    }
+
+    /** 사용자의 모든 공부 내용을 조회합니다. */
+    @Transactional(readOnly = true)
+    public List<StudyMemberContentResponseDTO> getUserContents(Long studyId, Long userId) {
+        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                        studyId,
+                        userId,
+                        StudyMemberStatus.ACTIVE
+                )
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        List<StudyMemberContent> contents = studyUserContentRepository.findAllByStudyMember_StudyMemberIdWithDailyPlan(member.getStudyMemberId());
+
+        return contents.stream()
+                .map(StudyConverter::toStudyMemberContentResponseDTO)
+                .toList();
     }
 }

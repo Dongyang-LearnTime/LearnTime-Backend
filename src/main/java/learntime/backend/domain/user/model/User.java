@@ -10,8 +10,8 @@ import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.notification.model.Notification;
 import learntime.backend.domain.point.model.PointHistory;
-import learntime.backend.domain.studymember.model.StudyMember;
-import learntime.backend.domain.studymember.model.StudyInvitation;
+import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyInvitation;
 import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.domain.user.enums.Role;
 import lombok.*;
@@ -27,9 +27,7 @@ import java.util.List;
 
 @Entity
 @Table(uniqueConstraints = {
-        @UniqueConstraint(name = "uq_user_email", columnNames = {"email", "deleted_at"}),
-        @UniqueConstraint(name = "uq_user_name", columnNames = {"name", "deleted_at"}),
-        @UniqueConstraint(name = "uq_social_user", columnNames = {"social_id", "social_provider", "deleted_at"})
+        @UniqueConstraint(name = "uq_social_user", columnNames = {"social_id", "social_provider"})
 })
 @SQLDelete(sql = "UPDATE user SET deleted_at = NOW() WHERE user_id = ?") // DELECT 수행 시, 삭제 대신 deletedAt에 시간 표시(soft delete)
 @SQLRestriction("deleted_at = '1970-01-01 00:00:00'") // 삭제 처리가 안된 데이터만 기본적으로 조회

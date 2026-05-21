@@ -48,4 +48,12 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             @Param("cutoffDate") java.time.LocalDateTime cutoffDate
     );
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            DELETE FROM FriendRequest f
+            WHERE f.requester.userId = :userId
+               OR f.receiver.userId = :userId
+            """)
+    void deleteAllByUserId(@Param("userId") Long userId);
+
 }

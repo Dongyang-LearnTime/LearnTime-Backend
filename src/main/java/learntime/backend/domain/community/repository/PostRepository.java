@@ -32,6 +32,23 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.postId = :postId")
     int incrementViewCount(@Param("postId") Long postId);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE Post p
+            SET p.likeCount = p.likeCount - 1
+            WHERE p.likeCount > 0
+              AND p.postId IN (
+                  SELECT pl.post.postId
+                  FROM PostLike pl
+                  WHERE pl.user.userId = :userId
+              )
+            """)
+    void decrementLikeCountForUserLikes(@Param("userId") Long userId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Post p SET p.user = null WHERE p.user.userId = :userId")
+    void detachAuthorByUserId(@Param("userId") Long userId);
+
     @Query(value = "SELECT file_url FROM post_image " +
             "WHERE post_id IN " +
             "(SELECT post_id FROM post WHERE deleted_at <= :threshold)", nativeQuery = true)

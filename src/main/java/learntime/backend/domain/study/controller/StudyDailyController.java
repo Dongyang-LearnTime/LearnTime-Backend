@@ -6,7 +6,9 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyUserContentRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyMemberContentResponseDTO;
 import learntime.backend.domain.study.service.core.StudyDailyService;
+import java.util.List;
 import learntime.backend.domain.study.service.core.StudyUserContentService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +54,15 @@ public class StudyDailyController {
                                                   @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long studyUserContentId = studyUserContentService.upsertUserContent(request, userDetails.userId());
         return ResponseEntity.status(HttpStatus.CREATED).body(studyUserContentId);
+    }
+
+    @GetMapping("/{studyId}/content")
+    @Operation(summary = "일일 진도 내용 조회", description = "특정 스터디의 해당 사용자 공부 작성 내용 리스트를 조회합니다.")
+    public ResponseEntity<List<StudyMemberContentResponseDTO>> getUserContents(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<StudyMemberContentResponseDTO> response = studyUserContentService.getUserContents(studyId, userDetails.userId());
+        return ResponseEntity.ok(response);
     }
 
 }

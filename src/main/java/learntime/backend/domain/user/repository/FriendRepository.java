@@ -2,6 +2,7 @@ package learntime.backend.domain.user.repository;
 
 import learntime.backend.domain.user.model.Friend;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -53,5 +54,13 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             Long userId1,
             Long userId2
     );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            DELETE FROM Friend f
+            WHERE f.user.userId = :userId
+               OR f.friendUser.userId = :userId
+            """)
+    void deleteAllByUserId(@Param("userId") Long userId);
 
 }

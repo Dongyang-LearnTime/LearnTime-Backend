@@ -6,24 +6,23 @@ import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.converter.StudyConverter;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
-import learntime.backend.domain.studymember.enums.StudyPlanStatus;
-import learntime.backend.domain.studymember.enums.StudyMemberRole;
+import learntime.backend.domain.study_member.enums.StudyPlanStatus;
+import learntime.backend.domain.study_member.enums.StudyMemberRole;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
-import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
-import learntime.backend.domain.studymember.repository.StudyMemberRepository;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.service.ai.GeminiStudyService;
 import learntime.backend.domain.study.service.util.StudyDateCalculator;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
-import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.AuthException;
-import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
@@ -143,7 +142,10 @@ public class StudyManagementService {
             studyRepository.save(study);
 
             // 6. 모든 멤버에게 포인트 지급
-            List<StudyMember> members = studyMemberRepository.findAllByStudy_StudyId(study.getStudyId());
+            List<StudyMember> members = studyMemberRepository.findAllByStudy_StudyIdAndStatus(
+                    study.getStudyId(),
+                    StudyMemberStatus.ACTIVE
+            );
             for (StudyMember member : members) {
                 PointPolicy policy = (member.getStudyMemberRole() == StudyMemberRole.OWNER)
                         ? PointPolicy.STUDY_PLAN_CREATED 
@@ -199,7 +201,11 @@ public class StudyManagementService {
             throw new StudyException(StudyErrorCode.STUDY_NOT_FOUND);
         }
 
-        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserId(studyId, userId)
+        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                        studyId,
+                        userId,
+                        StudyMemberStatus.ACTIVE
+                )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         // 방장 권한 검증

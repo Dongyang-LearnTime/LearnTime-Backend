@@ -23,6 +23,15 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     """)
     Optional<Study> findByIdWithPessimisticLock(Long studyId);
 
+    @Query("""
+        SELECT s
+        FROM Study s
+        LEFT JOIN FETCH s.studyMembers sm
+        LEFT JOIN FETCH sm.user
+        WHERE s.studyId = :studyId
+    """)
+    Optional<Study> findByIdWithStudyMembersAndUser(@Param("studyId") Long studyId);
+
     // --- 벌크 삭제 쿼리 모음 (하위부터 삭제) ---
 
     // 1계층 삭제
