@@ -1,17 +1,19 @@
 package learntime.backend.global.infra.gemini;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import learntime.backend.global.common.GeminiModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.retry.annotation.Backoff;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -24,55 +26,118 @@ public class GeminiClient {
     private String apiKey;
 
     private final RestClient restClient;
-    private final ObjectMapper objectMapper;
 
-    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000))
-    public String sendRequest(Map<String, Object> requestBody, GeminiModel model) {
-        long startTime = System.nanoTime(); // 시간 측정 시작
+    private static final JsonFactory JSON_FACTORY = new JsonFactory();
+
+    @Retryable(
+            maxAttempts = 3,
+            backoff = @Backoff(
+                    delay = 300,
+                    multiplier = 2
+            )
+    )
+    public String sendRequest(
+            Map<String, Object> requestBody,
+            GeminiModel model
+    ) {
+        long startTime = System.nanoTime();
 
         return restClient.post()
                 .uri(model.getEndpoint() + "?key=" + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestBody)
                 .exchange((request, response) -> {
-                    // 응답 바디를 무조건 바이트 배열
-                    byte[] bodyBytes = response.getBody().readAllBytes();
-                    String bodyString = new String(bodyBytes, StandardCharsets.UTF_8);
+                    // InputStream 기반 응답 처리
+                    InputStream bodyStream = response.getBody();
 
-                    long durationMs = (System.nanoTime() - startTime) / 1_000_000; // 측정 종료
+                    // 응답 전체를 byte[]로 읽은 이후 UTF-8 String 변환
+                    byte[] responseBytes = bodyStream.readAllBytes();
 
-                    // 에러 발생 시 처리 (4xx, 5xx)
+                    // API 전체 latency 계산
+                    long durationMs =
+                            (System.nanoTime() - startTime) / 1_000_000;
+
+                    // 4xx / 5xx 응답 처리
                     if (response.getStatusCode().isError()) {
-                        throw new RuntimeException("Gemini API Error [" + response.getStatusCode() + "] | Body: " + bodyString);
+                        // 에러 상황에서만 String 생성
+                        String errorBody = new String(
+                                responseBytes,
+                                StandardCharsets.UTF_8
+                        );
+
+                        throw new RuntimeException(
+                                "Gemini API Error [%s] | Body: %s"
+                                        .formatted(
+                                                response.getStatusCode(),
+                                                errorBody
+                                        )
+                        );
                     }
 
-                    logTokenUsage(bodyString, durationMs); // 토큰량, 시간 로그로 찍음
+                    // 로그 찍음
+                    logTokenUsage(responseBytes, durationMs);
 
-                    // 정상 응답 반환
-                    return bodyString;
+                    return new String(
+                            responseBytes,
+                            StandardCharsets.UTF_8
+                    );
                 });
     }
 
-    private void logTokenUsage(String responseBody, long durationMs) {
-        try {
-            JsonNode root = objectMapper.readTree(responseBody);
-            JsonNode usage = root.path("usageMetadata");
 
-            if (!usage.isMissingNode()) {
-                int promptTokens = usage.path("promptTokenCount").asInt(0);
-                int candidateTokens = usage.path("candidatesTokenCount").asInt(0);
+    private void logTokenUsage(byte[] responseBytes, long durationMs) {
+        int promptTokens = 0;
+        int candidateTokens = 0;
+        int cachedTokens = 0;
+        int thoughtsTokens = 0;
+        int totalTokens = 0;
 
-                int cachedTokens = usage.path("cachedContentTokenCount").asInt(0);
-                int thoughtsTokens = usage.path("thoughtsTokenCount").asInt(0);
+        try (
+                JsonParser parser =
+                        JSON_FACTORY.createParser(responseBytes)
 
-                int totalTokens = usage.path("totalTokenCount").asInt(0);
+        ) {
+            while (!parser.isClosed()) {
+                JsonToken token = parser.nextToken();
+                if (token != JsonToken.FIELD_NAME) {
+                    continue;
+                }
 
-                log.info("[Gemini API] Latency: {}ms | Tokens - Prompt: {} (Cached: {}), Candidate: {} (Thoughts: {}), Total: {}",
-                        durationMs, promptTokens, cachedTokens, candidateTokens, thoughtsTokens, totalTokens);
+                // 현재 필드명
+                String fieldName = parser.currentName();
+
+                parser.nextToken();
+
+                // 필요한 usage field만 추출
+                switch (fieldName) {
+                    case "promptTokenCount" ->
+                            promptTokens = parser.getIntValue();
+                    case "candidatesTokenCount" ->
+                            candidateTokens = parser.getIntValue();
+                    case "cachedContentTokenCount" ->
+                            cachedTokens = parser.getIntValue();
+                    case "thoughtsTokenCount" ->
+                            thoughtsTokens = parser.getIntValue();
+                    case "totalTokenCount" ->
+                            totalTokens = parser.getIntValue();
+                }
             }
+
+            log.info(
+                    "[Gemini API] {}ms | Prompt={} (Cached={}) | Candidate={} (Thoughts={}) | Total={}",
+                    durationMs,
+                    promptTokens,
+                    cachedTokens,
+                    candidateTokens,
+                    thoughtsTokens,
+                    totalTokens
+            );
+
         } catch (Exception e) {
-            log.warn("Failed to parse token usage metadata", e);
+            log.warn(
+                    "Failed to parse Gemini usage metadata",
+                    e
+            );
         }
     }
-
 }

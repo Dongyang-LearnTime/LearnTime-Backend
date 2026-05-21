@@ -36,7 +36,7 @@ public record GeminiStudyRequestDTO(
 
         List <Long> studyMemberList, // 스터디 맴버 리스트
 
-        List<DayOfWeek> restDays, // 쉬는 요일
+        List<Object> restDays, // 쉬는 요일
         List<LocalDate> restDates // 쉬는 날짜
 ) {
     public Integer getValidatedStudyDays() {
@@ -46,7 +46,10 @@ public record GeminiStudyRequestDTO(
 
         Set<DayOfWeek> restDaySet = (restDays == null || restDays.isEmpty())
                 ? Collections.emptySet()
-                : EnumSet.copyOf(restDays);
+                : restDays.stream()
+                        .map(this::parseDayOfWeek)
+                        .filter(Objects::nonNull)
+                        .collect(java.util.stream.Collectors.toCollection(() -> EnumSet.noneOf(DayOfWeek.class)));
 
         Set<LocalDate> restDateSet = (restDates == null || restDates.isEmpty())
                 ? Collections.emptySet()
@@ -64,5 +67,38 @@ public record GeminiStudyRequestDTO(
         }
 
         return actualStudyDays;
+    }
+
+    public List<DayOfWeek> getRestDaysAsDayOfWeek() {
+        if (restDays == null) return Collections.emptyList();
+        return restDays.stream()
+                .map(this::parseDayOfWeek)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private DayOfWeek parseDayOfWeek(Object val) {
+        if (val == null) return null;
+        if (val instanceof Number num) {
+            int v = num.intValue();
+            if (v >= 0 && v <= 6) {
+                return DayOfWeek.of(v + 1);
+            }
+        } else if (val instanceof String str) {
+            String trimmed = str.trim();
+            try {
+                int v = Integer.parseInt(trimmed);
+                if (v >= 0 && v <= 6) {
+                    return DayOfWeek.of(v + 1);
+                }
+            } catch (NumberFormatException e) {
+                try {
+                    return DayOfWeek.valueOf(trimmed.toUpperCase());
+                } catch (IllegalArgumentException ex) {
+                    return null;
+                }
+            }
+        }
+        return null;
     }
 }

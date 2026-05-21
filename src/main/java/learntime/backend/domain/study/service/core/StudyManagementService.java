@@ -91,7 +91,7 @@ public class StudyManagementService {
 
             // 쉬는 날짜 정보 저장
             studyRestManager.saveRestDates(study, request.restDates());
-            studyRestManager.saveRestDays(study, request.restDays());
+            studyRestManager.saveRestDays(study, request.getRestDaysAsDayOfWeek());
 
             return study.getStudyId();
 
@@ -112,36 +112,36 @@ public class StudyManagementService {
             study = studyRepository.findById(studyId)
                     .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
-            // 1. AI 호출 (단순 목차 분배)
+            // AI 호출 (단순 목차 분배)
             StudyPlanResponseDTO geminiResult = geminiStudyService.generateSmartStudyPlan(request, userId);
 
-            // 2. 실제 학습 날짜 계산 (서버 로직)
+            // 실제 학습 날짜 계산 (서버 로직)
             List<LocalDate> planDates = buildPlanDatesFromRequest(
                     request.startDate(),
                     geminiResult.dailyPlans().size(),
-                    request.restDays(),
+                    request.getRestDaysAsDayOfWeek(),
                     request.restDates()
             );
 
-            // 3. 일차별 상세 계획 생성 (대량 저장 준비)
+            // 일차별 상세 계획 생성 (대량 저장 준비)
             List<StudyDailyPlan> dailyPlans = new ArrayList<>();
             for (int i = 0; i < geminiResult.dailyPlans().size(); i++) {
                 var planDto = geminiResult.dailyPlans().get(i);
                 dailyPlans.add(StudyConverter.toStudyDailyPlanEntity(study, planDto, planDates.get(i)));
             }
 
-            // 4. JPA saveAll 활용한 대량 저장 (Batch Insert 최적화)
+            // JPA saveAll 활용한 대량 저장 (Batch Insert 최적화)
             long startTime = System.currentTimeMillis();
             studyDailyPlanRepository.saveAll(dailyPlans);
             long endTime = System.currentTimeMillis();
             log.info("[StudyPlan Save] {}일 분량의 계획(복습 포함) 저장 완료. 스터디ID: {}, 소요 시간: {}ms", 
                     dailyPlans.size(), study.getStudyId(), (endTime - startTime));
 
-            // 5. 상태 업데이트: PLANNING -> READY
+            // 상태 업데이트: PLANNING -> READY
             study.updateStatus(StudyPlanStatus.READY);
             studyRepository.save(study);
 
-            // 6. 모든 멤버에게 포인트 지급
+            // 모든 멤버에게 포인트 지급
             List<StudyMember> members = studyMemberRepository.findAllByStudy_StudyIdAndStatus(
                     study.getStudyId(),
                     StudyMemberStatus.ACTIVE
