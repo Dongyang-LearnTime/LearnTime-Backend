@@ -81,6 +81,7 @@ public class GeminiStudyService {
         // AI가 분배할 목표 일수 보정: 전체 기간 - 복습 여유 7일
         int targetDays = Math.max(1, periodDays - 7);
 
+        // 목차에 인덱스 번호 붙임 (AI가 인덱스 번호로 반환함)
         String bookToc = IntStream.range(0, request.tocList().size())
                 .mapToObj(i -> {
                     String tocString = getTocString(request, i);

@@ -29,6 +29,20 @@ public class FriendController {
         return ResponseEntity.ok(friendService.getFriends(userDetails.userId()));
     }
 
+    @GetMapping("/requests/received")
+    @Operation(summary = "받은 친구 요청 목록 조회", description = "사용자가 받은 대기 중인 친구 요청을 조회합니다.")
+    public ResponseEntity<List<FriendRequestResponseDTO>> getReceivedPendingRequests(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(friendService.getReceivedPendingRequests(userDetails.userId()));
+    }
+
+    @GetMapping("/requests/sent")
+    @Operation(summary = "보낸 친구 요청 목록 조회", description = "사용자가 보낸 대기 중인 친구 요청을 조회합니다.")
+    public ResponseEntity<List<FriendRequestResponseDTO>> getSentPendingRequests(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(friendService.getSentPendingRequests(userDetails.userId()));
+    }
+
     @DeleteMapping("/{friendUserId}")
     @Operation(summary = "친구 삭제", description = "사용자와 특정 사용자 사이의 친구 관계를 삭제합니다.")
     public ResponseEntity<Void> deleteFriend(
@@ -65,19 +79,13 @@ public class FriendController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/requests/received")
-    @Operation(summary = "받은 친구 요청 목록 조회", description = "사용자가 받은 대기 중인 친구 요청을 조회합니다.")
-    public ResponseEntity<List<FriendRequestResponseDTO>> getReceivedPendingRequests(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(friendService.getReceivedPendingRequests(userDetails.userId()));
+    @PatchMapping("/requests/{friendRequestId}")
+    @Operation(summary = "친구 요청 취소", description = "본인이 보낸 대기 중인 친구 요청을 취소합니다.")
+    public ResponseEntity<Void> cancelFriendRequest(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long friendRequestId) {
+        friendService.cancelFriendRequest(userDetails.userId(), friendRequestId);
+        return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/requests/sent")
-    @Operation(summary = "보낸 친구 요청 목록 조회", description = "사용자가 보낸 대기 중인 친구 요청을 조회합니다.")
-    public ResponseEntity<List<FriendRequestResponseDTO>> getSentPendingRequests(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(friendService.getSentPendingRequests(userDetails.userId()));
-    }
-
 
 }

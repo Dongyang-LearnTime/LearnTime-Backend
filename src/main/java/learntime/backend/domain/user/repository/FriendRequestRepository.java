@@ -29,7 +29,14 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             FriendRequestStatus status
     );
 
-    /** 특정 수신자가 받은 특정 상태의 친구 요청 목록을 최신순으로 조회*/
+    /** 특정 요청자가 보낸 친구 요청 단건 조회 (특정 상태 조건) */
+    Optional<FriendRequest> findByFriendRequestIdAndRequester_UserIdAndStatus(
+            Long friendRequestId,
+            Long requesterId,
+            FriendRequestStatus status
+    );
+
+    /** 특정 수신자가 받은 특정 상태의 친구 요청 목록을 최신순으로 조회 */
     List<FriendRequest> findAllByReceiver_UserIdAndStatusOrderByCreatedAtDesc(
             Long receiverId,
             FriendRequestStatus status

@@ -19,7 +19,10 @@ public enum FriendErrorCode implements BaseErrorCode {
     FRIEND_ALREADY_EXISTS(HttpStatus.CONFLICT, "FRIEND-004", "이미 친구 관계입니다."),
 
     /** 양방향 중 하나라도 대기 중인 친구 요청이 있을 때 사용 */
-    FRIEND_REQUEST_ALREADY_EXISTS(HttpStatus.CONFLICT, "FRIEND-005", "이미 대기 중인 친구 요청이 있습니다.");
+    FRIEND_REQUEST_ALREADY_EXISTS(HttpStatus.CONFLICT, "FRIEND-005", "이미 대기 중인 친구 요청이 있습니다."),
+
+    /** 친구 요청을 보낸 본인이 아닌 경우 취소 시도 시 사용 */
+    FRIEND_REQUEST_CANCEL_FORBIDDEN(HttpStatus.FORBIDDEN, "FRIEND-006", "본인이 보낸 친구 요청만 취소할 수 있습니다.");
 
     /** HTTP 응답 상태 */
     private final HttpStatus status;

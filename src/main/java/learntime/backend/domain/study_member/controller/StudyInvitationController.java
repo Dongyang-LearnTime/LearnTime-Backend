@@ -63,7 +63,7 @@ public class StudyInvitationController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{invitationId}")
+    @PatchMapping("/{invitationId}")
     @Operation(summary = "공부 스터디 초대 취소", description = "초대를 보낸 사용자가 초대를 취소합니다.")
     public ResponseEntity<Void> cancelRequest(@PathVariable Long invitationId,
                                               @AuthenticationPrincipal CustomUserDetails userDetails) {

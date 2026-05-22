@@ -181,6 +181,23 @@ public class FriendService {
     }
 
     /**
+     * 친구 요청 취소 (요청자 본인만 가능)
+     */
+    @Transactional
+    public void cancelFriendRequest(Long requesterId, Long friendRequestId) {
+        FriendRequest friendRequest = friendRequestRepository
+                .findByFriendRequestIdAndRequester_UserIdAndStatus(
+                        friendRequestId,
+                        requesterId,
+                        FriendRequestStatus.PENDING
+                )
+                .orElseThrow(() -> new FriendException(FriendErrorCode.FRIEND_REQUEST_NOT_FOUND));
+
+        friendRequest.cancel();
+        log.info("[친구 요청 취소 성공] requestId={}, requester={}", friendRequestId, requesterId);
+    }
+
+    /**
      * 친구 삭제 (관계 끊기)
      */
     @Transactional

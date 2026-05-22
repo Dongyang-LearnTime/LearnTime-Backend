@@ -64,4 +64,9 @@ public class FriendRequest extends BaseTimeEntity {
         this.status = FriendRequestStatus.REJECTED;
     }
 
+    // 친구 요청 취소 상태로 변경 (요청자가 직접 취소)
+    public void cancel() {
+        this.status = FriendRequestStatus.CANCELLED;
+    }
+
 }
