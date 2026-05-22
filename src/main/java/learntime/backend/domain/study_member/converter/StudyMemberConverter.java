@@ -42,6 +42,7 @@ public class StudyMemberConverter {
                 .studyMemberId(studyMember.getStudyMemberId())
                 .studyMemberRole(studyMember.getStudyMemberRole())
                 .joinedAt(studyMember.getJoinedAt())
+                .status(studyMember.getStatus())
                 .userId(studyMember.getUser().getUserId())
                 .userName(studyMember.getUser().getName())
                 .build();

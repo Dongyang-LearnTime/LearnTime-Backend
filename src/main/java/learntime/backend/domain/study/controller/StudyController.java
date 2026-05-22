@@ -48,7 +48,7 @@ public class StudyController {
             description = "오늘을 제외한 최근 7일의 날짜별 집중 시간, 진행 상태, 완료 상태, 이해도 점수를 조회합니다.")
     public ResponseEntity<List<StudyMemberRecentWeekInfoResponseDTO>> recentWeekStudyIndicator(@PathVariable Long studyId,
                                                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<StudyMemberRecentWeekInfoResponseDTO> result = studyQueryService.getRecentWeekStudyInfos(studyId, userDetails.userId());
+        List<StudyMemberRecentWeekInfoResponseDTO> result = studyQueryService.getRecentWeekStudyInfos(studyId);
         return ResponseEntity.ok(result);
     }
 

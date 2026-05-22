@@ -1,6 +1,7 @@
 package learntime.backend.domain.study_member.dto.response;
 
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ public record StudyMemberResponseDTO(
         StudyMemberRole studyMemberRole,
         LocalDateTime joinedAt,
         Long userId,
-        String userName
+        String userName,
+        StudyMemberStatus status
 ) {
 }

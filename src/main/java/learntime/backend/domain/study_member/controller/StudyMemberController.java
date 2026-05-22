@@ -25,12 +25,11 @@ public class StudyMemberController {
     // 공부 맴버 조회
     @GetMapping("/{studyId}")
     @Operation(summary = "공부 스터디 맴버 목록 조회", description = "스터디 맴버 전체를 조회합니다.")
-    public ResponseEntity<List<StudyMemberResponseDTO>> getAllStudyMember(@PathVariable Long studyId,
+    public ResponseEntity<List<StudyMemberResponseDTO>> getStudyMemberList(@PathVariable Long studyId,
                                                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
         List<StudyMemberResponseDTO> result = studyMemberService.getAllStudyMember(studyId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
-
 
     // 스터디 오너 넘거주기
     @PatchMapping("/owner")
@@ -40,7 +39,5 @@ public class StudyMemberController {
         studyMemberService.changeStudyOwner(request, userDetails.userId());
         return ResponseEntity.ok().build();
     }
-
-
 
 }

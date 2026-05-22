@@ -122,8 +122,8 @@ public class StudyQueryService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "recentWeekStudyIndicator", key = "#studyId + ':' + #userId")
-    public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId, Long userId) {
+    @Cacheable(value = "recentWeekStudyIndicator", key = "#studyId")
+    public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId) {
         Study study = studyRepository.findByIdWithStudyMembersAndUser(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
