@@ -14,6 +14,9 @@ import java.util.Optional;
 @Repository
 public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, Long> {
 
+    @Query("SELECT p FROM StudyDailyPlan p WHERE p.study = :study")
+    List<StudyDailyPlan> findAllByStudy(@Param("study") Study study);
+
     // 가장 큰 일차(마지막 일차)를 조회함
     @Query("""
            SELECT COALESCE(MAX(p.dayNumber), 0)

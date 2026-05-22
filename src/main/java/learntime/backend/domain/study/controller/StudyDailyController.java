@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyUserContentRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyDailyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyMemberContentResponseDTO;
 import learntime.backend.domain.study.service.core.StudyDailyService;
 import java.util.List;
@@ -35,9 +36,19 @@ public class StudyDailyController {
             @PathVariable Long studyId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate planDate,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        StudyDailyPlanInfoResponseDTO response = studyDailyService.getStudyPlanInfoByDate(studyId, planDate, userDetails.userId());
-        return ResponseEntity.ok(response);
+        StudyDailyPlanInfoResponseDTO result = studyDailyService.getStudyPlanInfoByDate(studyId, planDate, userDetails.userId());
+        return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/{studyId}/plan")
+    @Operation(summary = "모든 일일 공부 진도 내용 조회", description = "특정 study의 모든 study_daily_plan 내용을 가져옵니다.")
+    public ResponseEntity<List<StudyDailyPlanResponseDTO>> getStudyDailyPlansByStudyId(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<StudyDailyPlanResponseDTO> result = studyDailyService.findAllByStudyId(studyId, userDetails.userId());
+        return ResponseEntity.ok(result);
+    }
+
 
     @PatchMapping("/{studyDailyPlanId}/start")
     @Operation(summary = "일일 진도 시작", description = "공부 일일진도를 시작 상태로 변경합니다.")

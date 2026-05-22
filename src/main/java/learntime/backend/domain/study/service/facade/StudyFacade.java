@@ -1,17 +1,11 @@
 package learntime.backend.domain.study.service.facade;
 
-import learntime.backend.domain.study.dto.request.GeminiReplanRequestDTO;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
-import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.dto.request.UpdateStudyTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
-import learntime.backend.domain.study.model.Study;
-import learntime.backend.domain.study.repository.StudyRepository;
-import learntime.backend.domain.study.service.ai.GeminiStudyService;
 import learntime.backend.domain.study.service.ai.TocExtractionService;
 import learntime.backend.domain.study.service.core.StudyManagementService;
-import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.global.utils.FileValidatorUtil;
-import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +20,6 @@ public class StudyFacade {
 
     private final FileValidatorUtil fileValidatorUtil;
     private final TocExtractionService tocExtractionService;
-    private final GeminiStudyService geminiStudyService;
     private final StudyManagementService studyManagementService;
 
     // 업로드된 이미지에서 AI를 활용하여 목차 정보를 추출합니다.
@@ -44,6 +37,12 @@ public class StudyFacade {
         studyManagementService.generateAndSavePlanAsync(studyId, request, userId);
 
         return studyId;
+    }
+
+    // 공부 제목 변경
+    @Transactional
+    public void updateTitle(UpdateStudyTitleRequestDTO request, Long userId, boolean isStudyTitle) {
+        studyManagementService.updateTitle(request, userId, isStudyTitle);
     }
 
     // 특정 스터디와 관련된 모든 데이터를 삭제합니다.

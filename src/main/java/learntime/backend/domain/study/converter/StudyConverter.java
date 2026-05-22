@@ -23,25 +23,29 @@ public class StudyConverter {
         throw new BusinessException(ErrorCode.UTILITY_CLASS_INSTANTIATION);
     }
 
-    public static StudyDailyPlanInfoResponseDTO toStudyDailyPlanInfoResponseDTO(LocalDate planDate, Study study, List<DayOfWeek> restDays, List<LocalDate> restDates, StudyDailyPlan plan, StudyStatus status, Long studyMemberId, List<Long> allStudyMemberIds) {
-        if (plan == null) {
-            return new StudyDailyPlanInfoResponseDTO(
-                    planDate, study.getStartDate(), study.getEndDate(), restDays, restDates,
-                    null, null, null, null, null, null, null, studyMemberId, allStudyMemberIds
-            );
-        }
-        return new StudyDailyPlanInfoResponseDTO(
-                planDate, study.getStartDate(), study.getEndDate(), restDays, restDates,
-                plan.getStudyDailyPlanId(),
-                plan.getDayNumber(),
-                plan.getPlanContent(),
-                status != null ? status.getFocusTime() : null,
-                status != null && status.getProgressStatus() != null ? status.getProgressStatus() : ProgressStatus.NOT_STARTED,
-                status != null ? status.getCompletionStatus() : null,
-                status != null ? status.getUnderstandingScore() : null,
-                studyMemberId,
-                allStudyMemberIds
-        );
+
+    public static Study toStudyEntity(GeminiStudyRequestDTO request, User user) {
+        return Study.builder()
+                .studyTitle(request.studyTitle())
+                .bookTitle(request.bookTitle())
+                .startDate(request.startDate())
+                .endDate(request.endDate())
+                .status(StudyPlanStatus.PLANNING)
+                .build();
+    }
+
+    public static StudyRestDate toStudyRestDateEntity(Study study, LocalDate date) {
+        return StudyRestDate.builder()
+                .study(study)
+                .restDate(date)
+                .build();
+    }
+
+    public static StudyRestDay toStudyRestDayEntity(Study study, DayOfWeek dayOfWeek) {
+        return StudyRestDay.builder()
+                .study(study)
+                .dayOfWeek(dayOfWeek)
+                .build();
     }
 
     public static StudyFeedbackResponseDTO toStudyFeedbackResponseDTO(StudyFeedback feedback) {
@@ -118,40 +122,6 @@ public class StudyConverter {
                 status != null ? status.getUnderstandingScore() : null,
                 isRestDay
         );
-    }
-
-
-    public static Study toStudyEntity(GeminiStudyRequestDTO request, User user) {
-        return Study.builder()
-                .studyTitle(request.studyTitle())
-                .bookTitle(request.bookTitle())
-                .startDate(request.startDate())
-                .endDate(request.endDate())
-                .status(StudyPlanStatus.PLANNING)
-                .build();
-    }
-
-    public static StudyDailyPlan toStudyDailyPlanEntity(Study study, StudyPlanResponseDTO.DailyPlan planDto, LocalDate planDate) {
-        return StudyDailyPlan.builder()
-                .study(study)
-                .dayNumber(planDto.day())
-                .planDate(planDate)
-                .planContent(planDto.tasks())
-                .build();
-    }
-
-    public static StudyRestDate toStudyRestDateEntity(Study study, LocalDate date) {
-        return StudyRestDate.builder()
-                .study(study)
-                .restDate(date)
-                .build();
-    }
-
-    public static StudyRestDay toStudyRestDayEntity(Study study, DayOfWeek dayOfWeek) {
-        return StudyRestDay.builder()
-                .study(study)
-                .dayOfWeek(dayOfWeek)
-                .build();
     }
 
     public static StudyMemberContentResponseDTO toStudyMemberContentResponseDTO(StudyMemberContent content) {

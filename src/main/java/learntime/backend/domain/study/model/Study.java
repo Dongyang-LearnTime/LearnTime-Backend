@@ -82,6 +82,14 @@ public class Study {
         this.status = status;
     }
 
+    public void updateStudyTitle(String studyTitle) {
+        this.studyTitle = studyTitle;
+    }
+
+    public void updateBookTitle(String bookTitle) {
+        this.bookTitle = bookTitle;
+    }
+
     public void updateStudyInfo(String studyTitle, LocalDate startDate, LocalDate endDate) {
         this.studyTitle = studyTitle;
         this.startDate = startDate;

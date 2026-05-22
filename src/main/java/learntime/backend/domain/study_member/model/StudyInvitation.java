@@ -66,6 +66,7 @@ public class StudyInvitation {
 
     // 초대 상태 수정 시간 (거절/취소 등 상태 변경 시간)
     @LastModifiedDate
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @Builder

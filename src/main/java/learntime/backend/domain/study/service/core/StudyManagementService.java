@@ -4,7 +4,9 @@ import learntime.backend.domain.point.dto.PointEventDTO;
 import learntime.backend.domain.point.enums.PointPolicy;
 import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.converter.StudyConverter;
+import learntime.backend.domain.study.converter.StudyDailyPlanConverter;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study.dto.request.UpdateStudyTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
 import learntime.backend.domain.study_member.enums.StudyPlanStatus;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
@@ -127,7 +129,7 @@ public class StudyManagementService {
             List<StudyDailyPlan> dailyPlans = new ArrayList<>();
             for (int i = 0; i < geminiResult.dailyPlans().size(); i++) {
                 var planDto = geminiResult.dailyPlans().get(i);
-                dailyPlans.add(StudyConverter.toStudyDailyPlanEntity(study, planDto, planDates.get(i)));
+                dailyPlans.add(StudyDailyPlanConverter.toStudyDailyPlanEntity(study, planDto, planDates.get(i)));
             }
 
             // JPA saveAll 활용한 대량 저장 (Batch Insert 최적화)
@@ -188,6 +190,29 @@ public class StudyManagementService {
                 restDaysSet,
                 restDatesSet
         );
+    }
+
+    @Transactional
+    public void updateTitle(UpdateStudyTitleRequestDTO request, Long userId, boolean isStudyTitle) {
+        Study study = studyRepository.findById(request.studyId())
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+
+        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                        request.studyId(),
+                        userId,
+                        StudyMemberStatus.ACTIVE
+                )
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        // 방장 권한 검증
+        StudyAuthUtil.checkOwnerRole(studyMember);
+
+        // 공부 진도 제목인지, 책 제목인지 확인
+        if (isStudyTitle) {
+            study.updateStudyTitle(request.title());
+        } else {
+            study.updateBookTitle(request.title());
+        }
     }
 
     /**

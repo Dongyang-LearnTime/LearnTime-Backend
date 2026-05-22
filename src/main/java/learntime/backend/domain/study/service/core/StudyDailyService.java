@@ -3,8 +3,10 @@ package learntime.backend.domain.study.service.core;
 import learntime.backend.domain.point.dto.PointEventDTO;
 import learntime.backend.domain.point.enums.PointPolicy;
 import learntime.backend.domain.point.enums.PointType;
+import learntime.backend.domain.study.converter.StudyDailyPlanConverter;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyDailyPlanResponseDTO;
 import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
@@ -15,8 +17,10 @@ import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.domain.study.repository.StudyRestDayRepository;
+import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +32,6 @@ import java.util.List;
 
 import learntime.backend.domain.study.model.StudyRestDay;
 import learntime.backend.domain.study.model.StudyRestDate;
-import learntime.backend.domain.study.converter.StudyConverter;
 
 import learntime.backend.domain.study.model.StudyStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
@@ -83,8 +86,24 @@ public class StudyDailyService {
                     .orElse(null);
         }
 
-        return StudyConverter.toStudyDailyPlanInfoResponseDTO
+        return StudyDailyPlanConverter.toStudyDailyPlanInfoResponseDTO
                 (planDate, study, restDays, restDates, studyDailyPlan, studyStatus, studyMemberId, allStudyMemberIds);
+    }
+
+    // study id를 기준으로 모든 StudyDailyPlan의 정보를 가져옵니다.
+    @Cacheable(value = "studyDailyPlans", key = "#studyId + '_' + #userId")
+    public List<StudyDailyPlanResponseDTO> findAllByStudyId(Long studyId, Long userId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
+
+        StudyAuthUtil.verifyStudyMember(study, userId);
+
+        List<StudyDailyPlan> studyDailyPlanList =
+                studyDailyPlanRepository.findAllByStudy(study);
+
+        return studyDailyPlanList.stream()
+                .map(StudyDailyPlanConverter::toStudyDailyPlanResponseDTO)
+                .toList();
     }
 
 

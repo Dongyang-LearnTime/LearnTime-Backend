@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study.dto.request.UpdateStudyTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyMemberRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyStatusResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
@@ -82,6 +83,24 @@ public class StudyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(studyId);
     }
 
+    @PatchMapping("/study-title")
+    @Operation(summary = "공부 진도 제목 변경", description = "공부 진도의 제목을 변경합니다.")
+    public ResponseEntity<Void> changeStudyTitle(@Valid @RequestBody UpdateStudyTitleRequestDTO request,
+                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
+        boolean isStudyTitle = true; // 공부 진도 제목 여부
+        studyFacade.updateTitle(request, userDetails.userId(), isStudyTitle);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/book-title")
+    @Operation(summary = "책 제목 변경", description = "공부 진도의 책 제목을 변경합니다.")
+    public ResponseEntity<Void> changeStudyBookTitle(@Valid @RequestBody UpdateStudyTitleRequestDTO request,
+                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
+        boolean isStudyTitle = false; // 공부 진도 제목 여부
+        studyFacade.updateTitle(request, userDetails.userId(), isStudyTitle);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{studyId}")
     @Operation(summary = "공부 진도 삭제", description = "특정 공부 진도 계획을 삭제합니다.")
     public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId,
@@ -89,7 +108,6 @@ public class StudyController {
         studyFacade.deleteStudy(studyId, userDetails.userId());
         return ResponseEntity.noContent().build();
     }
-
 
 
 //    @PutMapping("/{studyId}/replan")

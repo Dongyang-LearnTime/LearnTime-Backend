@@ -1,5 +1,6 @@
 package learntime.backend.domain.study.service.core;
 
+import learntime.backend.domain.study.converter.StudyConverter;
 import learntime.backend.domain.study.dto.request.UpdateFeedbackTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.AiFeedbackResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyAnalysisDataDTO;
@@ -57,24 +58,14 @@ public class StudyFeedbackService {
 
         studyFeedbackRepository.save(feedback);
 
-        return StudyFeedbackResponseDTO.builder()
-                .feedbackId(feedback.getStudyFeedbackId())
-                .feedbackTitle(feedback.getFeedbackTitle())
-                .feedbackContent(feedback.getFeedbackContent())
-                .createdAt(feedback.getCreatedAt())
-                .build();
+        return StudyConverter.toStudyFeedbackResponseDTO(feedback);
     }
 
     /** 특정 스터디 멤버의 모든 피드백 기록을 조회합니다. */
     @Transactional(readOnly = true)
     public List<StudyFeedbackResponseDTO> getMemberFeedbacks(Long studyMemberId, Long userId) {
         return studyFeedbackRepository.findAllByStudyMember_StudyMemberIdOrderByCreatedAtDesc(studyMemberId).stream()
-                .map(f -> StudyFeedbackResponseDTO.builder()
-                        .feedbackId(f.getStudyFeedbackId())
-                        .feedbackTitle(f.getFeedbackTitle())
-                        .feedbackContent(f.getFeedbackContent())
-                        .createdAt(f.getCreatedAt())
-                        .build())
+                .map(StudyConverter::toStudyFeedbackResponseDTO)
                 .toList();
     }
 
