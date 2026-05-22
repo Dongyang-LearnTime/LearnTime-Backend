@@ -6,6 +6,7 @@ import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
 import learntime.backend.domain.study.enums.CompletionStatus;
+import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
@@ -86,31 +87,49 @@ public class StudyDailyService {
                 (planDate, study, restDays, restDates, studyDailyPlan, studyStatus, studyMemberId, allStudyMemberIds);
     }
 
-    // 일일 학습 계획을 완료 처리하고 포인트를 지급합니다.
+
+    // 일일 학습 계획을 시작(진행 중) 상태로 변경합니다.
     @Transactional
-    public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
-        StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
-
-        // 계획 날짜가 오늘 이후라면 완료 처리 불가
-        LocalDate today = LocalDate.now(java.util.TimeZone.getTimeZone("Asia/Seoul").toZoneId());
-        if (studyDailyPlan.getPlanDate().isAfter(today)) {
-            throw new StudyException(StudyErrorCode.STUDY_DAILY_NOT_YET_STARTED);
-        }
-
-        Study study = studyDailyPlan.getStudy();
-        
-        StudyMember studyMember = study.getStudyMembers().stream()
-                .filter(m -> m.getUser().getUserId().equals(userId))
-                .filter(StudyMember::isActive)
-                .findFirst()
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+    public void startStudyDailyPlan(Long studyDailyPlanId, Long userId) {
+        StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(studyDailyPlanId);
+        StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
 
         StudyStatus studyStatus = studyStatusRepository.findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMember.getStudyMemberId(), studyDailyPlan.getStudyDailyPlanId())
                 .orElseGet(() -> StudyStatus.builder()
                         .studyMember(studyMember)
                         .studyDailyPlan(studyDailyPlan)
                         .build());
+
+        if (studyStatus.getProgressStatus() != ProgressStatus.NOT_STARTED) {
+            throw new StudyException(StudyErrorCode.STUDY_DAILY_ALREADY_STARTED);
+        }
+
+        studyStatus.startPlan();
+        studyStatusRepository.save(studyStatus);
+    }
+
+    // 일일 학습 계획을 완료 처리하고 포인트를 지급합니다.
+    @Transactional
+    public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
+        StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(request.studyDailyPlanId());
+        StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
+
+        StudyStatus studyStatus = studyStatusRepository.findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMember.getStudyMemberId(), studyDailyPlan.getStudyDailyPlanId())
+                .orElseGet(() -> StudyStatus.builder()
+                        .studyMember(studyMember)
+                        .studyDailyPlan(studyDailyPlan)
+                        .build());
+
+        // 상태가 완료됨 이거나 실패, 성공 상태가 아니고, 진행 중인 것만 완료되게 수정
+        if (studyStatus.getProgressStatus() == ProgressStatus.COMPLETED
+                || studyStatus.getCompletionStatus() == CompletionStatus.SUCCESS
+                || studyStatus.getCompletionStatus() == CompletionStatus.FAILURE) {
+            throw new StudyException(StudyErrorCode.STUDY_DAILY_ALREADY_COMPLETED);
+        }
+
+        if (studyStatus.getProgressStatus() != ProgressStatus.IN_PROGRESS) {
+            throw new StudyException(StudyErrorCode.STUDY_DAILY_NOT_YET_STARTED);
+        }
 
         studyStatus.completePlan(request.completionStatus(), request.understandingScore());
         studyStatus.setCompletionDate(LocalDateTime.now());
@@ -170,5 +189,28 @@ public class StudyDailyService {
                 (endTime - startTime)
         );
     }
+
+    // 특정 일일 학습 계획을 검증하고 조회합니다.
+    private StudyDailyPlan validateAndGetDailyPlan(Long studyDailyPlanId) {
+        StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(studyDailyPlanId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
+
+        LocalDate today = LocalDate.now(java.util.TimeZone.getTimeZone("Asia/Seoul").toZoneId());
+        if (studyDailyPlan.getPlanDate().isAfter(today)) {
+            throw new StudyException(StudyErrorCode.STUDY_DAILY_NOT_YET_STARTED);
+        }
+        return studyDailyPlan;
+    }
+
+    // 스터디 멤버 권한을 검증하고 스터디 멤버를 조회합니다.
+    private StudyMember validateAndGetStudyMember(Study study, Long userId) {
+        return study.getStudyMembers().stream()
+                .filter(m -> m.getUser().getUserId().equals(userId))
+                .filter(StudyMember::isActive)
+                .findFirst()
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+    }
+
+
 
 }

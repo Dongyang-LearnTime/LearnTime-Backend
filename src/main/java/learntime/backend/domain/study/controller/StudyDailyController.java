@@ -39,6 +39,14 @@ public class StudyDailyController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/{studyDailyPlanId}/start")
+    @Operation(summary = "일일 진도 시작", description = "공부 일일진도를 시작 상태로 변경합니다.")
+    public ResponseEntity<Void> startPlan(@PathVariable Long studyDailyPlanId,
+                                          @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyDailyService.startStudyDailyPlan(studyDailyPlanId, userDetails.userId());
+        return ResponseEntity.ok().build();
+    }
+
     @PatchMapping("/completion")
     @Operation(summary = "일일 진도 완료", description = "공부 일일진도를 완료로 변경하고 포인트를 지급합니다.")
     public ResponseEntity<String> completePlan(@Valid @RequestBody PlanCompleteRequestDTO request,
