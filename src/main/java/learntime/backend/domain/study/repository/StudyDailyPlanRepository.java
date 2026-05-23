@@ -42,5 +42,12 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
                                                                            @Param("startDate") LocalDate startDate,
                                                                            @Param("endDate") LocalDate endDate);
 
+    @Query("""
+           SELECT p.study.studyId
+           FROM StudyDailyPlan p
+           WHERE p.study.studyId IN :studyIds
+             AND p.planDate = :planDate
+           """)
+    List<Long> findStudyIdsWithPlanDate(@Param("studyIds") List<Long> studyIds, @Param("planDate") LocalDate planDate);
 }
 

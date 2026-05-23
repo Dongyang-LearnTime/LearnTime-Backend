@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.request.UpdateStudyTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyMemberRecentWeekInfoResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyProgressIndicatorResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyStatusResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
@@ -32,6 +33,17 @@ public class StudyController {
 
     private final StudyFacade studyFacade;
     private final StudyQueryService studyQueryService;
+
+    @GetMapping("/progress")
+    @Operation(
+            summary = "나의 전체 공부 진도 및 오늘 계획 여부 조회",
+            description = "내가 진행 중인 모든 공부 진도(Study)의 ID 목록과 각 진도별 오늘 계획 존재 여부를 조회합니다."
+    )
+    public ResponseEntity<List<StudyProgressIndicatorResponseDTO>> getMyStudyProgresses(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<StudyProgressIndicatorResponseDTO> result = studyQueryService.getMyStudyProgresses(userDetails.userId());
+        return ResponseEntity.ok(result);
+    }
 
     @GetMapping("/{studyId}/total")
     @Operation(

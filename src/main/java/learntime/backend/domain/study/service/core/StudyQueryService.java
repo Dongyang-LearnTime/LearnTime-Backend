@@ -11,6 +11,7 @@ import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
 import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +19,7 @@ import org.springframework.cache.annotation.Cacheable;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +32,7 @@ public class StudyQueryService {
     private final StudyRestDayRepository studyRestDayRepository;
     private final StudyStatusRepository studyStatusRepository;
     private final QuizHistoryRepository quizHistoryRepository;
+    private final StudyMemberRepository studyMemberRepository;
 
     public StudyStatusResponseDTO getStudyStatus(Long studyId) {
         Study study = studyRepository.findById(studyId)
@@ -209,5 +209,29 @@ public class StudyQueryService {
         return totalAnswers > 0
                 ? Math.round(((double) correctAnswers / totalAnswers) * 10000) / 100.0
                 : null;
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudyProgressIndicatorResponseDTO> getMyStudyProgresses(Long userId) {
+        List<StudyMember> activeMembers = studyMemberRepository.findAllActiveByUserIdFetchStudy(userId);
+        if (activeMembers.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> activeStudyIds = activeMembers.stream()
+                .map(sm -> sm.getStudy().getStudyId())
+                .toList();
+
+        LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
+        List<Long> studyIdsWithTodayPlan = studyDailyPlanRepository.findStudyIdsWithPlanDate(activeStudyIds, today);
+        Set<Long> studyIdsWithTodayPlanSet = new HashSet<>(studyIdsWithTodayPlan);
+
+        return activeMembers.stream()
+                .map(sm -> StudyConverter.toStudyProgressIndicatorResponseDTO(
+                        sm.getStudy().getStudyId(),
+                        sm.getStudy().getStudyTitle(),
+                        studyIdsWithTodayPlanSet.contains(sm.getStudy().getStudyId())
+                ))
+                .toList();
     }
 }

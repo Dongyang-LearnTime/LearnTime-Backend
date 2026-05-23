@@ -133,4 +133,12 @@ public class StudyConverter {
         );
     }
 
+    public static StudyProgressIndicatorResponseDTO toStudyProgressIndicatorResponseDTO(Long studyId, String studyTitle, boolean hasTodayPlan) {
+        return StudyProgressIndicatorResponseDTO.builder()
+                .studyId(studyId)
+                .studyTitle(studyTitle)
+                .hasTodayPlan(hasTodayPlan)
+                .build();
+    }
+
 }

@@ -8,6 +8,7 @@ import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.global.common.BaseTimeEntity;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -23,7 +24,7 @@ import java.time.LocalTime;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class StudyStatus extends BaseTimeEntity {
+public class StudyStatus {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,6 +52,10 @@ public class StudyStatus extends BaseTimeEntity {
     // 집중 시간
     @Column
     private LocalTime focusTime;
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_member_id", nullable = false)

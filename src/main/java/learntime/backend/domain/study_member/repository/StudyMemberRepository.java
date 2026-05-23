@@ -68,4 +68,13 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
             WHERE sm.user.userId = :userId
             """)
     void withdrawAllByUserId(@Param("userId") Long userId);
+
+    @Query("""
+        SELECT sm
+        FROM StudyMember sm
+        JOIN FETCH sm.study s
+        WHERE sm.user.userId = :userId
+          AND sm.status = learntime.backend.domain.study_member.enums.StudyMemberStatus.ACTIVE
+    """)
+    List<StudyMember> findAllActiveByUserIdFetchStudy(@Param("userId") Long userId);
 }
