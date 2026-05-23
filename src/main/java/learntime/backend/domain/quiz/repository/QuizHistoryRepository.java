@@ -10,12 +10,12 @@ import java.util.Optional;
 
 public interface QuizHistoryRepository extends JpaRepository<QuizHistory, Long> {
 
-    @Query("SELECT qh " +
+    @Query(value = "SELECT qh " +
             "FROM QuizHistory qh " +
             "LEFT JOIN FETCH qh.answers " +
-            "WHERE qh.studyQuiz.studyQuizId = :studyQuizId " +
-            "ORDER BY qh.attemptNumber DESC")
-    List<QuizHistory> findAllWithAnswersByStudyQuizId(@Param("studyQuizId") Long studyQuizId);
+            "WHERE qh.studyQuiz.studyQuizId = :studyQuizId",
+            countQuery = "SELECT count(qh) FROM QuizHistory qh WHERE qh.studyQuiz.studyQuizId = :studyQuizId")
+    org.springframework.data.domain.Page<QuizHistory> findAllWithAnswersByStudyQuizId(@Param("studyQuizId") Long studyQuizId, org.springframework.data.domain.Pageable pageable);
 
 
     @Query("SELECT COUNT(qa.quizAnswerId), SUM(CASE WHEN qa.isCorrect = true THEN 1 ELSE 0 END) " +

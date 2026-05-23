@@ -29,7 +29,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import learntime.backend.domain.study_member.dto.response.StudyMemberFriendResponseDTO;
+import learntime.backend.domain.user.model.Friend;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -232,6 +236,39 @@ public class StudyInvitationService {
         ));
 
         return savedStudyInvitation.getStudyInvitationId();
+    }
+
+    // 친구 목록과 스터디 초대 여부 조회
+    @Transactional(readOnly = true)
+    public List<StudyMemberFriendResponseDTO> getFriendsForStudyInvite(Long studyId, Long userId) {
+        // 스터디 멤버 및 OWNER 권한 확인
+        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                        studyId,
+                        userId,
+                        StudyMemberStatus.ACTIVE
+                )
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        StudyAuthUtil.checkOwnerRole(studyMember);
+
+        // 사용자의 친구 목록 조회
+        List<Friend> friends = friendRepository.findAllByUserId(userId);
+
+        // 해당 스터디의 PENDING 초대 목록 조회
+        List<StudyInvitation> pendingInvitations = studyInvitationRepository
+                .findAllByStudy_StudyIdAndStatusFetchInvitedUser(studyId, StudyInvitationStatus.PENDING);
+        Set<Long> pendingInvitedUserIds = pendingInvitations.stream()
+                .map(i -> i.getInvitedUser().getUserId())
+                .collect(Collectors.toSet());
+
+        // DTO 변환 및 결과 반환
+        return friends.stream()
+                .map(friend -> StudyMemberConverter.toStudyMemberFriendResponseDTO(
+                        friend,
+                        userId,
+                        pendingInvitedUserIds
+                ))
+                .toList();
     }
 
 }

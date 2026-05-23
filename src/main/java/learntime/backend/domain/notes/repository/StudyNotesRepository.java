@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface StudyNotesRepository extends JpaRepository <StudyNotes, Long> {
     List<StudyNotes> findByStudyMember(StudyMember studyMember);
+
+    org.springframework.data.domain.Page<StudyNotes> findByStudyMember(StudyMember studyMember, org.springframework.data.domain.Pageable pageable);
 }

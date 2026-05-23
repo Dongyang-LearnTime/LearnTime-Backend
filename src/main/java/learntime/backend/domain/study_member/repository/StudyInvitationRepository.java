@@ -70,5 +70,16 @@ public interface StudyInvitationRepository extends JpaRepository<StudyInvitation
             @Param("userId") Long userId,
             @Param("updatedAt") LocalDateTime updatedAt
     );
+    @Query("""
+        SELECT si
+        FROM StudyInvitation si
+        JOIN FETCH si.invitedUser iu
+        WHERE si.study.studyId = :studyId
+        AND si.status = :status
+    """)
+    List<StudyInvitation> findAllByStudy_StudyIdAndStatusFetchInvitedUser(
+            @Param("studyId") Long studyId,
+            @Param("status") StudyInvitationStatus status
+    );
 
 }

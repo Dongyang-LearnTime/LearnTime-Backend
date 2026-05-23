@@ -7,6 +7,7 @@ import learntime.backend.domain.study.dto.request.UpdateFeedbackTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyFeedbackResponseDTO;
 import learntime.backend.domain.study.service.core.StudyFeedbackService;
 import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,10 +31,12 @@ public class StudyFeedbackController {
     }
 
     @GetMapping("/list/{studyMemberId}")
-    @Operation(summary = "피드백 목록 조회", description = "특정 스터디 멤버의 모든 피드백 기록을 조회합니다.")
-    public ResponseEntity<List<StudyFeedbackResponseDTO>> getFeedbackList(@PathVariable Long studyMemberId,
-                                                                          @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<StudyFeedbackResponseDTO> response = studyFeedbackService.getMemberFeedbacks(studyMemberId, userDetails.userId());
+    @Operation(summary = "피드백 목록 조회", description = "특정 스터디 멤버의 모든 피드백 기록을 조회합니다. (오프셋 페이징)")
+    public ResponseEntity<PageResponse<StudyFeedbackResponseDTO>> getFeedbackList(
+            @PathVariable Long studyMemberId,
+            @org.springframework.data.web.PageableDefault(size = 10, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PageResponse<StudyFeedbackResponseDTO> response = studyFeedbackService.getMemberFeedbacks(studyMemberId, pageable, userDetails.userId());
         return ResponseEntity.ok(response);
     }
 

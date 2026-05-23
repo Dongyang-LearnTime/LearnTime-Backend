@@ -7,8 +7,10 @@ import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study_member.dto.request.StudyMemberRequestDTO;
 import learntime.backend.domain.study_member.enums.StudyInvitationStatus;
+import learntime.backend.domain.study_member.dto.response.StudyMemberFriendResponseDTO;
 import learntime.backend.domain.study_member.model.StudyInvitation;
 import learntime.backend.domain.study_member.model.StudyMember;
+import java.util.List;
 import learntime.backend.domain.study_member.repository.StudyInvitationRepository;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.user.enums.AuthProvider;
@@ -491,5 +493,73 @@ class StudyMemberServiceTest {
         // then
         StudyInvitation updatedInvitation = studyInvitationRepository.findById(invitation.getStudyInvitationId()).orElseThrow();
         assertThat(updatedInvitation.getStatus()).isEqualTo(StudyInvitationStatus.CANCELED);
+    }
+
+    @Test
+    @DisplayName("스터디 초대용 친구 목록 조회 성공")
+    void getFriendsForStudyInvite_success() {
+        // given
+        User owner = createUser("방장", "owner@test.com");
+        User friendMember = createUser("친구멤버", "member_friend@test.com");
+        User friendInvited = createUser("친구초대됨", "invited_friend@test.com");
+        User friendNone = createUser("친구아무것도아님", "none_friend@test.com");
+
+        // 친구 맺기
+        friendRepository.save(Friend.builder().user(owner).friendUser(friendMember).build());
+        friendRepository.save(Friend.builder().user(owner).friendUser(friendInvited).build());
+        friendRepository.save(Friend.builder().user(owner).friendUser(friendNone).build());
+
+        Study study = createStudy("친구 초대 테스트 스터디");
+
+        // 방장 등록
+        studyMemberRepository.save(
+                StudyMember.builder()
+                        .study(study)
+                        .user(owner)
+                        .studyMemberRole(StudyMemberRole.OWNER)
+                        .build()
+        );
+
+        // 친구멤버를 스터디 멤버로 등록
+        studyMemberRepository.save(
+                StudyMember.builder()
+                        .study(study)
+                        .user(friendMember)
+                        .studyMemberRole(StudyMemberRole.MEMBER)
+                        .build()
+        );
+
+        // 친구초대됨에게 초대장 발송 (PENDING)
+        studyInvitationRepository.save(
+                StudyInvitation.builder()
+                        .study(study)
+                        .invitedUser(friendInvited)
+                        .inviterUser(owner)
+                        .build()
+        );
+
+        // when
+        List<StudyMemberFriendResponseDTO> result = studyInvitationService.getFriendsForStudyInvite(
+                study.getStudyId(),
+                owner.getUserId()
+        );
+
+        // then
+        assertThat(result).hasSize(3);
+
+        StudyMemberFriendResponseDTO memberFriend = result.stream()
+                .filter(dto -> dto.userId().equals(friendMember.getUserId()))
+                .findFirst().orElseThrow();
+        assertThat(memberFriend.isInvited()).isFalse();
+
+        StudyMemberFriendResponseDTO invitedFriend = result.stream()
+                .filter(dto -> dto.userId().equals(friendInvited.getUserId()))
+                .findFirst().orElseThrow();
+        assertThat(invitedFriend.isInvited()).isTrue();
+
+        StudyMemberFriendResponseDTO noneFriend = result.stream()
+                .filter(dto -> dto.userId().equals(friendNone.getUserId()))
+                .findFirst().orElseThrow();
+        assertThat(noneFriend.isInvited()).isFalse();
     }
 }

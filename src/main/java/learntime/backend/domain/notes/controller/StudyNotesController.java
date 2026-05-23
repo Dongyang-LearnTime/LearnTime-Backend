@@ -8,6 +8,7 @@ import learntime.backend.domain.notes.dto.request.StudyNotesUpdateRequestDTO;
 import learntime.backend.domain.notes.dto.response.StudyNotesResponseDTO;
 import learntime.backend.domain.notes.service.StudyNotesService;
 import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,11 +35,12 @@ public class StudyNotesController {
     }
 
     @GetMapping("/list/{studyId}")
-    @Operation(summary = "공부 ID로 필기 목록 조회", description = "특정 스터디(Study)에 속한 본인의 모든 필기 목록을 조회합니다.")
-    public ResponseEntity<List<StudyNotesResponseDTO>> getStudyNotesList(
+    @Operation(summary = "공부 ID로 필기 목록 조회", description = "특정 스터디(Study)에 속한 본인의 모든 필기 목록을 조회합니다. (오프셋 페이징)")
+    public ResponseEntity<PageResponse<StudyNotesResponseDTO>> getStudyNotesList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long studyId) {
-        List<StudyNotesResponseDTO> responses = studyNotesService.getNotesList(studyId, userDetails.userId());
+            @PathVariable Long studyId,
+            @org.springframework.data.web.PageableDefault(size = 10, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable) {
+        PageResponse<StudyNotesResponseDTO> responses = studyNotesService.getNotesList(studyId, pageable, userDetails.userId());
         return ResponseEntity.ok(responses);
     }
 

@@ -15,4 +15,6 @@ public interface StudyQuizRepository extends JpaRepository<StudyQuiz, Long> {
     Optional<StudyQuiz> findByIdWithQuestions(@Param("studyQuizId") Long studyQuizId);
 
     List<StudyQuiz> findAllByStudyMember_StudyMemberIdOrderByCreatedAtDesc(Long studyId);
+
+    org.springframework.data.domain.Page<StudyQuiz> findAllByStudyMember_StudyMemberId(Long studyMemberId, org.springframework.data.domain.Pageable pageable);
 }

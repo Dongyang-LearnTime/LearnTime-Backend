@@ -4,7 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study_member.dto.request.ChangeOwnerRequestDTO;
+import learntime.backend.domain.study_member.dto.response.StudyMemberFriendResponseDTO;
 import learntime.backend.domain.study_member.dto.response.StudyMemberResponseDTO;
+import learntime.backend.domain.study_member.service.StudyInvitationService;
 import learntime.backend.domain.study_member.service.StudyMemberService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.List;
 public class StudyMemberController {
 
     private final StudyMemberService studyMemberService;
+    private final StudyInvitationService studyInvitationService;
 
     // 공부 맴버 조회
     @GetMapping("/{studyId}")
@@ -38,6 +41,17 @@ public class StudyMemberController {
                                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
         studyMemberService.changeStudyOwner(request, userDetails.userId());
         return ResponseEntity.ok().build();
+    }
+
+    // 스터디 초대용 친구 목록 조회
+    @GetMapping("/{studyId}/friends")
+    @Operation(summary = "스터디 초대용 친구 목록 조회", description = "친구 목록과 함께 스터디 가입/초대 상태를 함께 조회합니다.")
+    public ResponseEntity<List<StudyMemberFriendResponseDTO>> getFriendsForStudyInvite(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<StudyMemberFriendResponseDTO> result =
+                studyInvitationService.getFriendsForStudyInvite(studyId, userDetails.userId());
+        return ResponseEntity.ok(result);
     }
 
 }

@@ -20,4 +20,5 @@ public class CacheCleanupScheduler {
     public void evictAllCaches() {
         log.info("[캐시 초기화] 스케줄러(자정) 캐시 일괄 삭제 완료 (recentWeekStudyIndicator, studyDailyPlans)");
     }
+
 }

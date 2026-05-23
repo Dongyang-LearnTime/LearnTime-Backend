@@ -20,6 +20,7 @@ import learntime.backend.domain.user.repository.FriendRequestRepository;
 import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserTermsRepository;
+import learntime.backend.domain.message.repository.MessageRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
@@ -56,6 +57,7 @@ public class UserService {
     private final StudyMemberRepository studyMemberRepository;
     private final StudyInvitationRepository studyInvitationRepository;
     private final UserTermsRepository userTermsRepository;
+    private final MessageRepository messageRepository;
 
     // 이름 중복 체크
     @Transactional(readOnly = true)
@@ -97,6 +99,8 @@ public class UserService {
         friendRequestRepository.deleteAllByUserId(userId);
         friendRepository.deleteAllByUserId(userId);
         notificationRepository.deleteAllByReceiverId(userId);
+        messageRepository.deleteSentMessagesByUserId(userId);
+        messageRepository.deleteReceivedMessagesByUserId(userId);
         studyInvitationRepository.cancelPendingByUserId(userId, deletedAt);
         reassignOwnedStudies(userId);
         studyMemberRepository.withdrawAllByUserId(userId);

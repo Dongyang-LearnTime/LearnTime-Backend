@@ -8,6 +8,7 @@ import learntime.backend.domain.community.model.PostLike;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
+import learntime.backend.domain.message.model.Message;
 import learntime.backend.domain.notification.model.Notification;
 import learntime.backend.domain.point.model.PointHistory;
 import learntime.backend.domain.study_member.model.StudyMember;
@@ -151,6 +152,14 @@ public class User {
     // 받은 친구 요청
     @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<FriendRequest> receivedFriendRequests = new ArrayList<>();
+
+    // 보낸 쪽지
+    @OneToMany(mappedBy = "sender", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Message> sentMessageList = new ArrayList<>();
+
+    // 받은 쪽지
+    @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Message> receiverMessageList = new ArrayList<>();
 
     // 알림 목록
     @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})

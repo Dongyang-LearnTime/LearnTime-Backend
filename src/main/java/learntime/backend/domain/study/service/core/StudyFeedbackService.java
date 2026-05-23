@@ -13,7 +13,10 @@ import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study.service.ai.GeminiFeedbackService;
 import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,12 +64,11 @@ public class StudyFeedbackService {
         return StudyConverter.toStudyFeedbackResponseDTO(feedback);
     }
 
-    /** 특정 스터디 멤버의 모든 피드백 기록을 조회합니다. */
+    /** 특정 스터디 멤버의 모든 피드백 기록을 조회합니다. (오프셋 페이징) */
     @Transactional(readOnly = true)
-    public List<StudyFeedbackResponseDTO> getMemberFeedbacks(Long studyMemberId, Long userId) {
-        return studyFeedbackRepository.findAllByStudyMember_StudyMemberIdOrderByCreatedAtDesc(studyMemberId).stream()
-                .map(StudyConverter::toStudyFeedbackResponseDTO)
-                .toList();
+    public PageResponse<StudyFeedbackResponseDTO> getMemberFeedbacks(Long studyMemberId, Pageable pageable, Long userId) {
+        Page<StudyFeedback> feedbacks = studyFeedbackRepository.findAllByStudyMember_StudyMemberId(studyMemberId, pageable);
+        return PageResponse.of(feedbacks.map(StudyConverter::toStudyFeedbackResponseDTO));
     }
 
     /** 피드백 제목을 수정합니다. */

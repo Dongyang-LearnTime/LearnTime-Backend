@@ -10,4 +10,6 @@ import java.util.List;
 public interface StudyFeedbackRepository extends JpaRepository<StudyFeedback, Long> {
     // 멤버의 피드백을 최신순으로 조회함
     List<StudyFeedback> findAllByStudyMember_StudyMemberIdOrderByCreatedAtDesc(Long studyMemberId);
+
+    org.springframework.data.domain.Page<StudyFeedback> findAllByStudyMember_StudyMemberId(Long studyMemberId, org.springframework.data.domain.Pageable pageable);
 }

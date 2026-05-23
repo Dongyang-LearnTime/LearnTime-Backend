@@ -16,12 +16,14 @@ import learntime.backend.domain.quiz.repository.StudyQuizRepository;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
+import learntime.backend.global.dto.PageResponse;
 import learntime.backend.global.utils.StudyAuthUtil;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,22 +46,22 @@ public class StudyQuizFacade {
     private static final int MULTIPLE_COUNT = 2; // 4지선다 문제 개수
 
     @Transactional(readOnly = true)
-    public StudyQuizListResponseDTO getStudyQuizList(Long studyId, Long userId) {
+    public PageResponse<StudyQuizInfoResponseDTO> getStudyQuizList(Long studyId, Pageable pageable, Long userId) {
         StudyMember studyMember = findByStudyIdAndUserId(studyId, userId);
         // 스터디 멤버이면 조회 가능
         StudyAuthUtil.verifyStudyMember(studyMember.getStudy(), userId);
 
-        return studyQuizService.getStudyQuizList(studyMember.getStudyMemberId());
+        return studyQuizService.getStudyQuizList(studyMember.getStudyMemberId(), pageable);
     }
 
     @Transactional(readOnly = true)
-    public QuizHistoryListResponseDTO getQuizHistoryList(Long studyQuizId, Long userId) {
+    public PageResponse<QuizHistoryInfoResponseDTO> getQuizHistoryList(Long studyQuizId, Pageable pageable, Long userId) {
         StudyQuiz studyQuiz = studyQuizRepository.findById(studyQuizId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
         // 본인만 조회 가능
         StudyAuthUtil.verifyOwnership(studyQuiz.getStudyMember(), userId);
 
-        return studyQuizService.getQuizHistoryList(studyQuizId);
+        return studyQuizService.getQuizHistoryList(studyQuizId, pageable);
     }
 
     @Transactional(readOnly = true)

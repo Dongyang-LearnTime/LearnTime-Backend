@@ -12,7 +12,10 @@ import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.global.utils.StudyAuthUtil;
+import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,17 +39,15 @@ public class StudyNotesService {
     }
 
     @Transactional(readOnly = true)
-    public List<StudyNotesResponseDTO> getNotesList(Long studyId, Long userId) {
+    public PageResponse<StudyNotesResponseDTO> getNotesList(Long studyId, Pageable pageable, Long userId) {
         StudyMember studyMember = findByStudyIdAndUserId(studyId, userId);
         // 스터디 멤버이면 해당 스터디의 필기 목록을 조회할 수 있음
         StudyAuthUtil.verifyStudyMember(studyMember.getStudy(), userId);
 
         // StudyMember 기준으로 필기 목록 가져옴
-        List<StudyNotes> notes = studyNotesRepository.findByStudyMember(studyMember);
+        Page<StudyNotes> notes = studyNotesRepository.findByStudyMember(studyMember, pageable);
 
-        return notes.stream()
-                .map(StudyNotesConverter::toStudyNotesResponseDTO)
-                .collect(Collectors.toList());
+        return PageResponse.of(notes.map(StudyNotesConverter::toStudyNotesResponseDTO));
     }
 
     @Transactional
