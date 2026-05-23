@@ -11,6 +11,8 @@ import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.domain.user.enums.Role;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.domain.user.service.UserService;
+import learntime.backend.global.scheduler.RequestCleanupScheduler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +39,7 @@ class MessageServiceTest {
     private MessageService messageService;
 
     @Autowired
-    private learntime.backend.domain.user.service.UserService userService;
+    private UserService userService;
 
     @Autowired
     private UserRepository userRepository;
@@ -46,7 +48,7 @@ class MessageServiceTest {
     private MessageRepository messageRepository;
 
     @Autowired
-    private learntime.backend.domain.study.scheduler.CacheCleanupScheduler cacheCleanupScheduler;
+    private RequestCleanupScheduler requestCleanupScheduler;
 
     @Autowired
     private ApplicationEvents applicationEvents;
@@ -252,7 +254,7 @@ class MessageServiceTest {
         messageRepository.saveAndFlush(message);
 
         // 스케줄러 실행
-        cacheCleanupScheduler.deleteExpiredMessages();
+        requestCleanupScheduler.deleteExpiredMessages();
 
         // then 2: DB에서 정상적으로 물리 삭제됨
         Optional<Message> foundAfterCleanup = messageRepository.findById(message.getMessageId());

@@ -124,13 +124,26 @@ public class StudyConverter {
         );
     }
 
-    public static StudyMemberContentResponseDTO toStudyMemberContentResponseDTO(StudyMemberContent content) {
-        return new StudyMemberContentResponseDTO(
-                content.getStudyMemberContentId(),
-                content.getStudyDailyPlan().getStudyDailyPlanId(),
-                content.getStudyDailyPlan().getDayNumber(),
-                content.getMemberContent()
-        );
+    public static StudyMemberContentResponseDTO.memberContent toMemberContent(StudyMemberContent content) {
+        return StudyMemberContentResponseDTO.memberContent.builder()
+                .studyMemberContentId(content.getStudyMemberContentId())
+                .memberContent(content.getMemberContent())
+                .build();
+    }
+
+    public static StudyMemberContentResponseDTO toStudyMemberContentResponseDTO(
+            StudyDailyPlan dailyPlan,
+            List<StudyMemberContent> contents
+    ) {
+        return StudyMemberContentResponseDTO.builder()
+                .studyDailyPlanId(dailyPlan.getStudyDailyPlanId())
+                .planContent(dailyPlan.getPlanContent())
+                .memberContents(
+                        contents.stream()
+                                .map(StudyConverter::toMemberContent)
+                                .toList()
+                )
+                .build();
     }
 
     public static StudyProgressIndicatorResponseDTO toStudyProgressIndicatorResponseDTO(Long studyId, String studyTitle, boolean hasTodayPlan) {

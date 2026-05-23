@@ -2,8 +2,13 @@ package learntime.backend.domain.study.service.core;
 
 import learntime.backend.domain.study.converter.StudyConverter;
 import learntime.backend.domain.study.dto.request.StudyUserContentRequestDTO;
+import learntime.backend.domain.study.dto.request.StudyUserContentUpdateRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyMemberContentResponseDTO;
+
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.StudyDailyPlan;
@@ -15,6 +20,7 @@ import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study.repository.StudyStatusRepository;
 import learntime.backend.domain.study.repository.StudyUserContentRepository;
+import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,9 +35,9 @@ public class StudyUserContentService {
     private final StudyMemberRepository studyMemberRepository;
     private final StudyStatusRepository studyStatusRepository;
 
-    /** 사용자의 오늘 공부 내용을 저장하거나 수정합니다. */
+    /** 사용자의 오늘 공부 내용을 추가합니다. */
     @Transactional
-    public Long upsertUserContent(StudyUserContentRequestDTO request, Long userId) {
+    public Long addUserContent(StudyUserContentRequestDTO request, Long userId) {
         StudyDailyPlan dailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
 
@@ -42,13 +48,11 @@ public class StudyUserContentService {
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
-        StudyMemberContent content = studyUserContentRepository.findByStudyMemberAndStudyDailyPlan(member, dailyPlan)
-                .orElseGet(() -> StudyMemberContent.builder()
-                        .studyMember(member)
-                        .studyDailyPlan(dailyPlan)
-                        .build());
-
-        content.updateContent(request.userContent());
+        StudyMemberContent content = StudyMemberContent.builder()
+                .studyMember(member)
+                .studyDailyPlan(dailyPlan)
+                .memberContent(request.userContent())
+                .build();
         studyUserContentRepository.save(content);
 
         // 공부 내용 입력 시, 해당 계획을 진행 중으로 변경 (상태가 '시작 전'일 때만)
@@ -69,9 +73,21 @@ public class StudyUserContentService {
         return content.getStudyMemberContentId();
     }
 
-    /** 사용자의 모든 공부 내용을 조회합니다. */
+    /** 사용자의 일일 진도 내용을 수정합니다. */
+    @Transactional
+    public void updateUserContent(Long studyMemberContentId, StudyUserContentUpdateRequestDTO request, Long userId) {
+        StudyMemberContent content = studyUserContentRepository.findById(studyMemberContentId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_USER_CONTENT_NOT_FOUND));
+
+        // 작성자 본인인지 확인
+        StudyAuthUtil.verifyOwnership(content.getStudyMember(), userId);
+
+        content.updateContent(request.userContent());
+    }
+
+    /** 사용자의 특정 일자의 공부 내용을 조회합니다. */
     @Transactional(readOnly = true)
-    public List<StudyMemberContentResponseDTO> getUserContents(Long studyId, Long userId) {
+    public StudyMemberContentResponseDTO getUserContents(Long studyId, Long userId, LocalDate planDate) {
         StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
                         studyId,
                         userId,
@@ -79,10 +95,40 @@ public class StudyUserContentService {
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
-        List<StudyMemberContent> contents = studyUserContentRepository.findAllByStudyMember_StudyMemberIdWithDailyPlan(member.getStudyMemberId());
+        Optional<StudyDailyPlan> optionalDailyPlan =
+                studyDailyPlanRepository.findByStudyIdAndPlanDate(studyId, planDate);
 
-        return contents.stream()
-                .map(StudyConverter::toStudyMemberContentResponseDTO)
-                .toList();
+        // 해당 날짜의 일일 계획이 없으면 빈 DTO 반환
+        if (optionalDailyPlan.isEmpty()) {
+            return StudyMemberContentResponseDTO.builder()
+                    .studyDailyPlanId(null)
+                    .planContent(null)
+                    .memberContents(List.of())
+                    .build();
+        }
+        StudyDailyPlan dailyPlan = optionalDailyPlan.get();
+
+        List<StudyMemberContent> contents =
+                studyUserContentRepository.findAllByStudyDailyPlanAndStudyMember(
+                        dailyPlan,
+                        member
+                );
+
+        return StudyConverter.toStudyMemberContentResponseDTO(
+                dailyPlan,
+                contents
+        );
+    }
+
+    /** 사용자의 일일 진도 내용을 삭제합니다. */
+    @Transactional
+    public void deleteUserContent(Long studyMemberContentId, Long userId) {
+        StudyMemberContent content = studyUserContentRepository.findById(studyMemberContentId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_USER_CONTENT_NOT_FOUND));
+
+        // 작성자 본인인지 확인
+        StudyAuthUtil.verifyOwnership(content.getStudyMember(), userId);
+
+        studyUserContentRepository.delete(content);
     }
 }

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyUserContentRequestDTO;
+import learntime.backend.domain.study.dto.request.StudyUserContentUpdateRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyMemberContentResponseDTO;
@@ -67,21 +68,41 @@ public class StudyDailyController {
     }
 
     @PostMapping("/content")
-    @Operation(summary = "일일 진도 내용 추가/수정",
-            description = "특정 일차의 공부 내용을 추가하거나 수정합니다. 저장 시 해당 계획의 상태가 '진행 중'으로 변경됩니다.")
-    public ResponseEntity<Long> upsertUserContent(@Valid @RequestBody StudyUserContentRequestDTO request,
+    @Operation(summary = "일일 진도 내용 추가",
+            description = "특정 일차의 공부 내용을 추가합니다. 저장 시 해당 계획의 상태가 '진행 중'으로 변경됩니다.")
+    public ResponseEntity<Long> addUserContent(@Valid @RequestBody StudyUserContentRequestDTO request,
                                                   @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long studyUserContentId = studyUserContentService.upsertUserContent(request, userDetails.userId());
+        Long studyUserContentId = studyUserContentService.addUserContent(request, userDetails.userId());
         return ResponseEntity.status(HttpStatus.CREATED).body(studyUserContentId);
     }
 
+    @PatchMapping("/content/{studyMemberContentId}")
+    @Operation(summary = "일일 진도 내용 수정",
+            description = "특정 일차의 공부 내용을 수정합니다.")
+    public ResponseEntity<Void> updateUserContent(@PathVariable Long studyMemberContentId,
+                                                  @Valid @RequestBody StudyUserContentUpdateRequestDTO request,
+                                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyUserContentService.updateUserContent(studyMemberContentId, request, userDetails.userId());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/{studyId}/content")
-    @Operation(summary = "일일 진도 내용 조회", description = "특정 스터디의 해당 사용자 공부 작성 내용 리스트를 조회합니다.")
-    public ResponseEntity<List<StudyMemberContentResponseDTO>> getUserContents(
+    @Operation(summary = "일일 진도 내용 조회", description = "planDate를 기준으로 특정 스터디의 일일 진도 내용과 사용자 공부 작성 내용 리스트를 조회합니다.")
+    public ResponseEntity<StudyMemberContentResponseDTO> getUserContents(
             @PathVariable Long studyId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate planDate,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<StudyMemberContentResponseDTO> response = studyUserContentService.getUserContents(studyId, userDetails.userId());
+        StudyMemberContentResponseDTO response = studyUserContentService.getUserContents(studyId, userDetails.userId(), planDate);
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/content/{studyMemberContentId}")
+    @Operation(summary = "일일 진도 내용 삭제", description = "특정 일차의 공부 작성 내용을 삭제합니다.")
+    public ResponseEntity<Void> deleteUserContent(
+            @PathVariable Long studyMemberContentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyUserContentService.deleteUserContent(studyMemberContentId, userDetails.userId());
+        return ResponseEntity.noContent().build();
     }
 
 }
