@@ -29,12 +29,13 @@ public enum StudyErrorCode implements BaseErrorCode {
     NOT_FRIEND_RELATION(HttpStatus.BAD_REQUEST, "STUDY-019", "친구인 사용자만 스터디에 초대할 수 있습니다."),
     STUDY_INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-020", "스터디 초대를 찾을 수 없습니다."),
     NOT_INVITED_USER(HttpStatus.FORBIDDEN, "STUDY-021", "초대받은 사용자만 처리할 수 있습니다."),
-    STUDY_INVITATION_NOT_PENDING(HttpStatus.BAD_REQUEST, "STUDY-022", "대기 중인 초대가 아닙니다."),
-    NOT_INVITER_USER(HttpStatus.FORBIDDEN, "STUDY-023", "초대한 사용자만 처리할 수 있습니다."),
-    INVALID_OWNER_TRANSFER(HttpStatus.BAD_REQUEST, "STUDY-024", "자기 자신에게 방장 권한을 위임할 수 없습니다."),
-    PROMPT_INIT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-025", "AI 프롬프트 템플릿 초기화에 실패했습니다."),
-    STUDY_DAILY_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "STUDY-026", "이미 시작되었거나 종료된 계획입니다."),
-    STUDY_USER_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-027", "일일 공부 내용을 찾을 수 없습니다.");
+    INACTIVE_STUDY_MEMBER(HttpStatus.FORBIDDEN, "STUDY-022", "활동하지 않는 스터디 맴버입니다."),
+    STUDY_INVITATION_NOT_PENDING(HttpStatus.BAD_REQUEST, "STUDY-023", "대기 중인 초대가 아닙니다."),
+    NOT_INVITER_USER(HttpStatus.FORBIDDEN, "STUDY-024", "초대한 사용자만 처리할 수 있습니다."),
+    INVALID_OWNER_TRANSFER(HttpStatus.BAD_REQUEST, "STUDY-025", "자기 자신에게 방장 권한을 위임할 수 없습니다."),
+    PROMPT_INIT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-026", "AI 프롬프트 템플릿 초기화에 실패했습니다."),
+    STUDY_DAILY_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "STUDY-027", "이미 시작되었거나 종료된 계획입니다."),
+    STUDY_USER_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-028", "일일 공부 내용을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

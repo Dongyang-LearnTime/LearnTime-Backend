@@ -50,7 +50,7 @@ public class StudyFeedbackService {
         }
 
         // 2. AI 피드백 생성 요청
-        AiFeedbackResponseDTO aiResponse = geminiFeedbackService.generateStudyFeedback(analysisData, member.getUser().getName(), userId);
+        AiFeedbackResponseDTO aiResponse = geminiFeedbackService.generateStudyFeedback(analysisData, userId);
 
         // 3. 결과 저장
         StudyFeedback feedback = StudyFeedback.builder()
@@ -66,8 +66,15 @@ public class StudyFeedbackService {
 
     /** 특정 스터디 멤버의 모든 피드백 기록을 조회합니다. (오프셋 페이징) */
     @Transactional(readOnly = true)
-    public PageResponse<StudyFeedbackResponseDTO> getMemberFeedbacks(Long studyMemberId, Pageable pageable, Long userId) {
-        Page<StudyFeedback> feedbacks = studyFeedbackRepository.findAllByStudyMember_StudyMemberId(studyMemberId, pageable);
+    public PageResponse<StudyFeedbackResponseDTO> getMemberFeedbacks(Long studyId, Pageable pageable, Long userId) {
+        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                        studyId,
+                        userId,
+                        StudyMemberStatus.ACTIVE
+                )
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        Page<StudyFeedback> feedbacks = studyFeedbackRepository.findAllByStudyMember_StudyMemberId(member.getStudyMemberId(), pageable);
         return PageResponse.of(feedbacks.map(StudyConverter::toStudyFeedbackResponseDTO));
     }
 

@@ -48,10 +48,12 @@ public class StudyMemberService {
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         // 새 OWNER 멤버 조회
-        StudyMember newOwnerStudyMember = studyMemberRepository.findById(request.newOwnerMemberId())
+        StudyMember newOwnerStudyMember = studyMemberRepository
+                .findByStudy_StudyIdAndUser_UserId(request.studyId(), request.newOwnerMemberId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
         if (!newOwnerStudyMember.isActive()) {
-            throw new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND);
+            throw new StudyException(StudyErrorCode.INACTIVE_STUDY_MEMBER);
         }
 
         // 방장과 바뀔 맴버가 동일 인물인지 확인

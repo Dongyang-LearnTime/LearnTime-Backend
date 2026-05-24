@@ -10,6 +10,8 @@ import learntime.backend.domain.notes.service.StudyNotesService;
 import learntime.backend.global.dto.CustomUserDetails;
 import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,7 +41,7 @@ public class StudyNotesController {
     public ResponseEntity<PageResponse<StudyNotesResponseDTO>> getStudyNotesList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long studyId,
-            @org.springframework.data.web.PageableDefault(size = 10, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable) {
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable) {
         PageResponse<StudyNotesResponseDTO> responses = studyNotesService.getNotesList(studyId, pageable, userDetails.userId());
         return ResponseEntity.ok(responses);
     }

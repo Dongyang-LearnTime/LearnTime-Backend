@@ -3,6 +3,7 @@ package learntime.backend.domain.study.converter;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
@@ -12,6 +13,7 @@ import learntime.backend.global.error.exception.BusinessException;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public class StudyDailyPlanConverter {
@@ -29,25 +31,54 @@ public class StudyDailyPlanConverter {
                 .build();
     }
 
-    public static StudyDailyPlanInfoResponseDTO toStudyDailyPlanInfoResponseDTO(LocalDate planDate, Study study, List<DayOfWeek> restDays, List<LocalDate> restDates, StudyDailyPlan plan, StudyStatus status, Long studyMemberId, List<Long> allStudyMemberIds) {
-        if (plan == null) {
-            return new StudyDailyPlanInfoResponseDTO(
-                    planDate, study.getStartDate(), study.getEndDate(), restDays, restDates,
-                    null, null, null, null, null, null, null, studyMemberId, allStudyMemberIds
-            );
+    public static StudyDailyPlanInfoResponseDTO toStudyDailyPlanInfoResponseDTO(
+            LocalDate planDate,
+            Study study,
+            List<DayOfWeek> restDays,
+            List<LocalDate> restDates,
+            StudyDailyPlan plan,
+            StudyStatus status,
+            Long studyMemberId,
+            List<Long> allStudyMemberIds
+    ) {
+        Long studyDailyPlanId = plan != null ? plan.getStudyDailyPlanId() : null;
+        Integer dayNumber = plan != null ? plan.getDayNumber() : null;
+        String planContent = plan != null ? plan.getPlanContent() : null;
+
+        LocalTime focusTime = status != null ? status.getFocusTime() : null;
+        CompletionStatus completionStatus = status != null ? status.getCompletionStatus() : null;
+        Integer understandingScore = status != null ? status.getUnderstandingScore() : null;
+
+        ProgressStatus progressStatus = ProgressStatus.NOT_STARTED;
+        if (status != null && status.getProgressStatus() != null) {
+            progressStatus = status.getProgressStatus();
         }
-        return new StudyDailyPlanInfoResponseDTO(
-                planDate, study.getStartDate(), study.getEndDate(), restDays, restDates,
-                plan.getStudyDailyPlanId(),
-                plan.getDayNumber(),
-                plan.getPlanContent(),
-                status != null ? status.getFocusTime() : null,
-                status != null && status.getProgressStatus() != null ? status.getProgressStatus() : ProgressStatus.NOT_STARTED,
-                status != null ? status.getCompletionStatus() : null,
-                status != null ? status.getUnderstandingScore() : null,
-                studyMemberId,
-                allStudyMemberIds
-        );
+
+        return StudyDailyPlanInfoResponseDTO.builder()
+                .studyTitle(study.getStudyTitle())
+                .bookTitle(study.getBookTitle())
+                .planDate(planDate)
+                .startDate(study.getStartDate())
+                .endDate(study.getEndDate())
+                .restDays(restDays)
+                .restDates(restDates)
+
+                // 계획 정보
+                .studyDailyPlanId(studyDailyPlanId)
+                .dayNumber(dayNumber)
+                .planContent(planContent)
+
+                // 진행 상태 정보
+                .focusTime(focusTime)
+                .progressStatus(progressStatus)
+                .completionStatus(completionStatus)
+                .understandingScore(understandingScore)
+
+                // 멤버 정보
+                .studyMemberId(studyMemberId)
+                .allStudyMemberIds(allStudyMemberIds)
+
+                .build();
     }
 
 

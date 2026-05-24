@@ -54,7 +54,7 @@ public class GeminiFeedbackService {
     }
 
     /** 사용자의 학습 데이터를 바탕으로 AI 피드백을 생성합니다. */
-    public AiFeedbackResponseDTO generateStudyFeedback(StudyAnalysisDataDTO analysisData, String userName, Long userId) {
+    public AiFeedbackResponseDTO generateStudyFeedback(StudyAnalysisDataDTO analysisData, Long userId) {
         String totalFocusedTimeStr = analysisData.totalFocusedTime() != null 
                 ? formatSeconds(analysisData.totalFocusedTime()) 
                 : "0시간 0분";
@@ -71,7 +71,6 @@ public class GeminiFeedbackService {
         promptQuotaUtil.decreasePromptQuota(userId);
 
         String userPrompt = feedbackPromptTemplate.formatted(
-                userName,
                 analysisData.studyCompletionRate(),
                 analysisData.studySuccessRate(),
                 totalFocusedTimeStr,
