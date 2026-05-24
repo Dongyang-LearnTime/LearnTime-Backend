@@ -13,6 +13,8 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     /** 특정 사용자가 특정 게시글에 좋아요(추천)를 눌렀는지 여부를 확인함. */
     boolean existsByPost_PostIdAndUser_UserId(Long postId, Long userId);
 
+    void deleteByPost_PostIdAndUser_UserId(Long postId, Long userId);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM PostLike pl WHERE pl.user.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);

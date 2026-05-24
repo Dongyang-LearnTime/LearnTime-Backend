@@ -22,11 +22,30 @@ import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserTermsRepository;
 import learntime.backend.domain.message.repository.MessageRepository;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.domain.badge.repository.UserBadgeRepository;
+import learntime.backend.domain.badge.repository.UserActivityStatRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import learntime.backend.domain.badge.model.UserBadge;
+import learntime.backend.domain.notes.model.StudyNotes;
+import learntime.backend.domain.notes.repository.StudyNotesRepository;
+import learntime.backend.domain.quiz.model.QuizHistory;
+import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
+import learntime.backend.domain.study.model.StudyFeedback;
+import learntime.backend.domain.study.repository.StudyFeedbackRepository;
+import learntime.backend.domain.user.converter.UserConverter;
+import learntime.backend.domain.user.dto.response.RecentActivityResponseDTO;
+import learntime.backend.domain.user.dto.response.UserSummaryResponseDTO;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,9 +55,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
-    private static final DateTimeFormatter DELETED_USER_TIMESTAMP_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -58,6 +74,14 @@ public class UserService {
     private final StudyInvitationRepository studyInvitationRepository;
     private final UserTermsRepository userTermsRepository;
     private final MessageRepository messageRepository;
+    private final UserBadgeRepository userBadgeRepository;
+    private final UserActivityStatRepository userActivityStatRepository;
+    private final StudyNotesRepository studyNotesRepository;
+    private final StudyFeedbackRepository studyFeedbackRepository;
+    private final QuizHistoryRepository quizHistoryRepository;
+
+    private static final DateTimeFormatter DELETED_USER_TIMESTAMP_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     // 이름 중복 체크
     @Transactional(readOnly = true)
@@ -69,6 +93,40 @@ public class UserService {
     @Transactional(readOnly = true)
     public boolean isEmailDuplicated(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+
+    // 사용자 뱃지, 티어
+    @Transactional(readOnly = true)
+    public UserSummaryResponseDTO getUserSummary(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+
+        List<UserBadge> badges = userBadgeRepository.findAllByUserId(user.getUserId());
+
+        return UserConverter.toUserSummaryResponseDTO(user, badges);
+    }
+
+    // 사용자의 최근 필기, 퀴즈, AI 답변 중 최신순 3개 가져옴
+    @Transactional(readOnly = true)
+    public List<RecentActivityResponseDTO> getRecentActivities(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+
+        Pageable limitThree = PageRequest.of(0, 3);
+        List<StudyNotes> notes = studyNotesRepository.findTop3ByUserId(user.getUserId(), limitThree);
+        List<StudyFeedback> feedbacks = studyFeedbackRepository.findTop3ByUserId(user.getUserId(), limitThree);
+        List<QuizHistory> quizzes = quizHistoryRepository.findTop3ByUserId(user.getUserId(), limitThree);
+
+        List<RecentActivityResponseDTO> mergedActivities = new ArrayList<>();
+        notes.forEach(note -> mergedActivities.add(UserConverter.toRecentActivityResponseDTOForNote(note)));
+        feedbacks.forEach(feedback -> mergedActivities.add(UserConverter.toRecentActivityResponseDTOForFeedback(feedback)));
+        quizzes.forEach(quiz -> mergedActivities.add(UserConverter.toRecentActivityResponseDTOForQuiz(quiz)));
+
+        return mergedActivities.stream()
+                .sorted(Comparator.comparing(RecentActivityResponseDTO::createdAt).reversed())
+                .limit(3)
+                .toList();
     }
 
     // 회원 탈퇴 로직
@@ -105,6 +163,8 @@ public class UserService {
         reassignOwnedStudies(userId);
         studyMemberRepository.withdrawAllByUserId(userId);
         userTermsRepository.deleteAllByUserId(userId);
+        userBadgeRepository.deleteAllByUserId(userId);
+        userActivityStatRepository.deleteAllByUserId(userId);
 
         userRepository.anonymizeAndSoftDelete(
                 userId,
@@ -153,5 +213,6 @@ public class UserService {
             ownedMembership.changeRole(StudyMemberRole.MEMBER);
         }
     }
+
 
 }

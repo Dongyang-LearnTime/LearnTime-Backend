@@ -81,4 +81,12 @@ public interface StudyStatusRepository extends JpaRepository<StudyStatus, Long> 
            "WHERE s.progressStatus <> 'COMPLETED' " +
            "AND s.studyDailyPlan.studyDailyPlanId IN (SELECT p.studyDailyPlanId FROM StudyDailyPlan p WHERE p.planDate < :targetDate)")
     int bulkFailIncompleteStatuses(@Param("targetDate") LocalDate targetDate);
+
+    @Query("SELECT s FROM StudyStatus s " +
+           "JOIN FETCH s.studyDailyPlan p " +
+           "JOIN FETCH s.studyMember sm " +
+           "WHERE sm.studyMemberId IN :studyMemberIds " +
+           "AND p.planDate = :planDate")
+    List<StudyStatus> findByStudyMemberIdInAndPlanDate(@Param("studyMemberIds") List<Long> studyMemberIds, @Param("planDate") LocalDate planDate);
 }
+

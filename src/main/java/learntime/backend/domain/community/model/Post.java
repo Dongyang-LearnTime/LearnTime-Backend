@@ -50,6 +50,10 @@ public class Post extends CommunityBaseEntity {
     @Column(nullable = false)
     private Integer viewCount = 0; // 조회수
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean isNotice = false; // 공지사항 여부
+
     // 댓글
     @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -76,6 +80,11 @@ public class Post extends CommunityBaseEntity {
     public void addImage(PostImage image) {
         images.add(image);
         image.setPost(this);
+    }
+
+    // 좋아요 증가
+    public void incrementLikeCount() {
+        this.likeCount++;
     }
 
     // 좋아요 감소

@@ -12,6 +12,7 @@ import learntime.backend.domain.study.dto.response.StudyMemberContentResponseDTO
 import learntime.backend.domain.study.service.core.StudyDailyService;
 import java.util.List;
 import learntime.backend.domain.study.service.core.StudyUserContentService;
+import learntime.backend.domain.study.dto.response.TodayStudyPlanResponseDTO;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -48,6 +49,14 @@ public class StudyDailyController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         List<StudyDailyPlanResponseDTO> result = studyDailyService.findAllByStudyId(studyId, userDetails.userId());
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/today-plans")
+    @Operation(summary = "오늘의 진도 목록 조회", description = "사용자가 가입한 모든 스터디 중 오늘 학습 계획이 있는 스터디의 계획 및 상태를 조회합니다.")
+    public ResponseEntity<List<TodayStudyPlanResponseDTO>> getTodayPlans(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<TodayStudyPlanResponseDTO> response = studyDailyService.getTodayPlans(userDetails.getUsername());
+        return ResponseEntity.ok(response);
     }
 
 

@@ -36,6 +36,17 @@ import learntime.backend.domain.study.model.StudyRestDate;
 import learntime.backend.domain.study.model.StudyStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study.repository.StudyStatusRepository;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
+import learntime.backend.domain.study.dto.response.TodayStudyPlanResponseDTO;
+import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.domain.user.model.User;
+import learntime.backend.domain.user.converter.UserConverter;
+import learntime.backend.global.error.code.AuthErrorCode;
+import learntime.backend.global.error.exception.AuthException;
+
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 // 일일 진도 및 포인트 지급 관련 비즈니스 로직 담당 서비스
 @Slf4j
@@ -49,6 +60,8 @@ public class StudyDailyService {
     private final StudyStatusRepository studyStatusRepository;
     private final StudyRepository studyRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserRepository userRepository;
+    private final StudyMemberRepository studyMemberRepository;
 
     private static final int UNDERSTANDING_SCORE_WEIGHT = 2; // 이해도에 따른 가중치 (이해도 2면 10*2)
 
@@ -164,6 +177,8 @@ public class StudyDailyService {
                 PointType.EARN,
                 description
         ));
+        
+        eventPublisher.publishEvent(new learntime.backend.domain.badge.event.StudyCompletedEvent(userId, LocalDateTime.now()));
 
         return calculatedPoint;
     }
@@ -230,6 +245,46 @@ public class StudyDailyService {
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
     }
 
+    @Transactional(readOnly = true)
+    public List<TodayStudyPlanResponseDTO> getTodayPlans(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
+        List<StudyMember> activeMembers = studyMemberRepository.findAllActiveByUserIdFetchStudy(user.getUserId());
+        if (activeMembers.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> studyIds = activeMembers.stream()
+                .map(sm -> sm.getStudy().getStudyId())
+                .toList();
+
+        List<Long> memberIds = activeMembers.stream()
+                .map(StudyMember::getStudyMemberId)
+                .toList();
+
+        LocalDate today = LocalDate.now();
+
+        List<StudyDailyPlan> dailyPlans = studyDailyPlanRepository.findAllByStudyIdInAndPlanDate(studyIds, today);
+        Map<Long, StudyDailyPlan> studyIdToPlanMap = dailyPlans.stream()
+                .collect(Collectors.toMap(p -> p.getStudy().getStudyId(), p -> p));
+
+        List<StudyStatus> studyStatuses = studyStatusRepository.findByStudyMemberIdInAndPlanDate(memberIds, today);
+        Map<String, StudyStatus> statusMap = studyStatuses.stream()
+                .collect(Collectors.toMap(
+                        s -> s.getStudyMember().getStudyMemberId() + "_" + s.getStudyDailyPlan().getStudyDailyPlanId(),
+                        s -> s
+                ));
+
+        List<TodayStudyPlanResponseDTO> response = new ArrayList<>();
+        for (StudyMember member : activeMembers) {
+            StudyDailyPlan plan = studyIdToPlanMap.get(member.getStudy().getStudyId());
+            if (plan != null) {
+                StudyStatus status = statusMap.get(member.getStudyMemberId() + "_" + plan.getStudyDailyPlanId());
+                response.add(UserConverter.toTodayStudyPlanResponseDTO(member, plan, status));
+            }
+        }
+        return response;
+    }
 
 }

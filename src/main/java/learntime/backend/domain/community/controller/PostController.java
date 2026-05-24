@@ -7,6 +7,7 @@ import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
 import learntime.backend.domain.community.service.core.PostService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,29 @@ public class PostController {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<PostListResponseDTO> response = postService.getPostList(pageable);
         return ResponseEntity.ok(PageResponse.of(response));
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "게시글 검색", description = "제목 또는 내용에 키워드가 포함된 게시글을 페이징하여 조회합니다.")
+    public ResponseEntity<PageResponse<PostListResponseDTO>> searchPosts(
+            @RequestParam String keyword,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<PostListResponseDTO> response = postService.searchPosts(keyword, pageable);
+        return ResponseEntity.ok(PageResponse.of(response));
+    }
+
+    @GetMapping("/popular/weekly")
+    @Operation(summary = "주간 인기글 조회", description = "최근 일주일 내 작성된 게시글 중 좋아요가 많은 상위 3개를 반환합니다.")
+    public ResponseEntity<List<PostListResponseDTO>> getWeeklyPopularPosts() {
+        List<PostListResponseDTO> response = postService.getWeeklyPopularPosts(PageRequest.of(0, 3));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/notices")
+    @Operation(summary = "공지사항 목록 조회", description = "최신순으로 공지사항 게시글 목록을 조회합니다.")
+    public ResponseEntity<List<PostListResponseDTO>> getNoticePosts() {
+        List<PostListResponseDTO> response = postService.getNoticePosts();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{postId}")
@@ -95,6 +119,20 @@ public class PostController {
         postService.updatePost(postId, request, newImages, userDetails.userId());
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{postId}/like")
+    @Operation(
+            summary = "게시글 좋아요 토글",
+            description = "사용자가 이미 좋아요를 눌렀으면 취소하고, 누르지 않았으면 좋아요를 추가한다."
+    )
+    public ResponseEntity<Integer> togglePostLike(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Integer likeCount = postService.togglePostLike(postId, userDetails.userId());
+        return ResponseEntity.ok(likeCount);
+    }
+
 
     @DeleteMapping("/{postId}")
     @Operation(summary = "게시글 단건 삭제", description = "게시글과 하위 테이블을 soft delete합니다.")

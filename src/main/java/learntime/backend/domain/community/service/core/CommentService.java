@@ -84,10 +84,11 @@ public class CommentService {
     public void deleteComment(Long commentId, Long userId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommunityException(CommunityErrorCode.COMMENT_NOT_FOUND));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        // 본인 확인
-        AuthorizationUtil.verifyOwnership(userId, comment.getUser().getUserId());
-
+        // 삭제 권한 확인
+        AuthorizationUtil.validateOwnerOrAdmin(currentUser, comment.getUser().getUserId());
         commentRepository.delete(comment);
     }
 

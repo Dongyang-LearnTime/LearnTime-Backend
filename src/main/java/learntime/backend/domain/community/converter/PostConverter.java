@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.community.dto.response.CommentResponseDTO;
 import learntime.backend.domain.community.dto.response.PostResponseDTO;
 import learntime.backend.domain.community.model.Post;
+import learntime.backend.domain.community.model.PostLike;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
+import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
 
@@ -51,7 +53,16 @@ public class PostConverter {
                 .images(imageUrls)
                 .comments(comments)
                 .studyTotalIndicator(studyIndicator)
+                .isNotice(post.isNotice())
                 .build();
     }
+
+    public static PostLike toPostLike(Post post, User user) {
+        return PostLike.builder()
+                .post(post)
+                .user(user)
+                .build();
+    }
+
 
 }

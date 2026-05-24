@@ -154,6 +154,9 @@ public class StudyQuizService {
                     eventDescription // 포인트 이벤트 설명
             ));
         }
+        
+        boolean isPerfect = (correctCount == questions.size() && questions.size() > 0);
+        eventPublisher.publishEvent(new learntime.backend.domain.badge.event.QuizCompletedEvent(userId, isPerfect, java.time.LocalDateTime.now()));
 
         return quizHistory.getQuizHistoryId();
     }

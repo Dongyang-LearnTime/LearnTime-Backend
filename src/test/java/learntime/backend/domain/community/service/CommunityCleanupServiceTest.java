@@ -54,8 +54,8 @@ class CommunityCleanupServiceTest {
     void hardDeleteOldPostsAndComments() throws Exception {
         // given
         User user = User.builder()
-                .email("test@test.com")
-                .name("testUser")
+                .email("test_" + java.util.UUID.randomUUID().toString().substring(0, 8) + "@test.com")
+                .name("testUser_" + java.util.UUID.randomUUID().toString().substring(0, 8))
                 .build();
         userRepository.save(user);
 

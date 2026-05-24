@@ -22,11 +22,45 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query(value = "SELECT PostListResponseDTO(" +
             "p.postId, u.userId, u.name, p.title, p.viewCount, p.likeCount, " +
             "(SELECT COUNT(c) FROM Comment c WHERE c.post.postId = p.postId), " +
-            "p.createdAt) " +
+            "p.createdAt, p.isNotice) " +
             "FROM Post p " +
-            "LEFT JOIN p.user u",
-           countQuery = "SELECT COUNT(p) FROM Post p")
+            "LEFT JOIN p.user u " +
+            "WHERE p.isNotice = false",
+           countQuery = "SELECT COUNT(p) FROM Post p WHERE p.isNotice = false")
     Page<PostListResponseDTO> findAllPostsWithCommentCount(Pageable pageable);
+
+    @Query(value = "SELECT PostListResponseDTO(" +
+            "p.postId, u.userId, u.name, p.title, p.viewCount, p.likeCount, " +
+            "(SELECT COUNT(c) FROM Comment c WHERE c.post.postId = p.postId), " +
+            "p.createdAt, p.isNotice) " +
+            "FROM Post p " +
+            "LEFT JOIN p.user u " +
+            "WHERE (p.title LIKE %:keyword% OR p.content LIKE %:keyword%) " +
+            "AND p.isNotice = false",
+           countQuery = "SELECT COUNT(p) FROM Post p WHERE (p.title LIKE %:keyword% OR p.content LIKE %:keyword%) AND p.isNotice = false")
+    Page<PostListResponseDTO> searchPosts(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT PostListResponseDTO(" +
+            "p.postId, u.userId, u.name, p.title, p.viewCount, p.likeCount, " +
+            "(SELECT COUNT(c) FROM Comment c WHERE c.post.postId = p.postId), " +
+            "p.createdAt, p.isNotice) " +
+            "FROM Post p " +
+            "LEFT JOIN p.user u " +
+            "WHERE p.createdAt >= :startDate " +
+            "AND p.isNotice = false " +
+            "ORDER BY p.likeCount DESC")
+    List<PostListResponseDTO> findWeeklyPopularPosts(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    /** 공지사항 목록을 최신순으로 조회합니다. */
+    @Query("SELECT PostListResponseDTO(" +
+            "p.postId, u.userId, u.name, p.title, p.viewCount, p.likeCount, " +
+            "(SELECT COUNT(c) FROM Comment c WHERE c.post.postId = p.postId), " +
+            "p.createdAt, p.isNotice) " +
+            "FROM Post p " +
+            "LEFT JOIN p.user u " +
+            "WHERE p.isNotice = true " +
+            "ORDER BY p.createdAt DESC")
+    List<PostListResponseDTO> findNoticePosts();
 
     @Modifying(clearAutomatically = true) // 쿼리 실행 후 영속성 컨텍스트 초기화
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.postId = :postId")
@@ -62,7 +96,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Optional<Post> findByIdWithDetails(@Param("postId") Long postId);
 
 
-    // hard delete 벌크 삭제 용
+    /** hard delete 벌크 삭제 용 */
     @Modifying(clearAutomatically = true)
     @Query(value = "DELETE FROM post_view_history WHERE post_id IN (SELECT post_id FROM post WHERE deleted_at <= :threshold)", nativeQuery = true)
     void hardDeletePostViewHistoryByDeletedPostThreshold(@Param("threshold") LocalDateTime threshold);

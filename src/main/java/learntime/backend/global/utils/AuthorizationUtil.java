@@ -1,5 +1,7 @@
 package learntime.backend.global.utils;
 
+import learntime.backend.domain.user.enums.Role;
+import learntime.backend.domain.user.model.User;
 import learntime.backend.global.dto.CustomUserDetails;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.code.ErrorCode;
@@ -21,4 +23,17 @@ public class AuthorizationUtil {
             throw new AuthException(AuthErrorCode.UNAUTHORIZED_ACCESS);
         }
     }
+
+    // 소유자이거나 관리자인지 확인
+    public static void validateOwnerOrAdmin(User currentUser, Long ownerUserId) {
+        Long currentUserId = currentUser.getUserId();
+        boolean isOwner = currentUserId.equals(ownerUserId);
+        boolean isAdmin = currentUser.getRole() == Role.ROLE_ADMIN;
+
+        // 소유자도 아니고 관리자도 아닌 경우
+        if (!isOwner && !isAdmin) {
+            throw new AuthException(AuthErrorCode.UNAUTHORIZED_ACCESS);
+        }
+    }
+
 }

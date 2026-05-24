@@ -50,6 +50,9 @@ public record PostResponseDTO(
         List<CommentResponseDTO> comments,
         
         @Schema(description = "연관된 스터디의 핵심 지표(달성률, 정답률 등). 스냅샷 정보가 없으면 null")
-        StudyTotalInfoResponseDTO studyTotalIndicator
+        StudyTotalInfoResponseDTO studyTotalIndicator,
+
+        @Schema(description = "공지사항 여부", example = "false")
+        Boolean isNotice
 ) {
 }

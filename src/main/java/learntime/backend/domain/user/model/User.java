@@ -1,6 +1,8 @@
 package learntime.backend.domain.user.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.badge.model.UserActivityStat;
+import learntime.backend.domain.badge.model.UserBadge;
 import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.community.model.Comment;
 import learntime.backend.domain.community.model.Post;
@@ -164,6 +166,15 @@ public class User {
     // 알림 목록
     @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Notification> notifications = new ArrayList<>();
+
+    // 획득한 배지
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserBadge> userBadges = new ArrayList<>();
+
+    // 사용자 활동 통계
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserActivityStat> userActivityStats = new ArrayList<>();
+
 
     @Builder
     public User(String email, String password, String name, String socialId, AuthProvider socialProvider, Role role) {

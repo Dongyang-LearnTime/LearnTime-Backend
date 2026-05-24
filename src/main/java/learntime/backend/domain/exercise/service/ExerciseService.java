@@ -33,6 +33,7 @@ public class ExerciseService {
     private final GeminiClient geminiClient;
     private final ObjectMapper objectMapper;
     private final YoutubeClient youtubeClient;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     public List<YoutubeVideoResponseDTO> getRecommendedVideos(List<String> bodyParts) {
         if (bodyParts == null || bodyParts.isEmpty()) {
@@ -62,7 +63,9 @@ public class ExerciseService {
                     .calories(response.getCalories())
                     .build();
 
-            return exerciseRecordRepository.save(record);
+            ExerciseRecord savedRecord = exerciseRecordRepository.save(record);
+            eventPublisher.publishEvent(new learntime.backend.domain.badge.event.ExerciseCompletedEvent(userId, java.time.LocalDateTime.now()));
+            return savedRecord;
 
         } catch (Exception e) {
             log.error("칼로리 계산 실패: {}", e.getMessage());

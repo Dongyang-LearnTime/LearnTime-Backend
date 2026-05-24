@@ -34,6 +34,7 @@ public class StudyUserContentService {
     private final StudyDailyPlanRepository studyDailyPlanRepository;
     private final StudyMemberRepository studyMemberRepository;
     private final StudyStatusRepository studyStatusRepository;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     /** 사용자의 오늘 공부 내용을 추가합니다. */
     @Transactional
@@ -70,6 +71,7 @@ public class StudyUserContentService {
             // 이미 진행 중이거나 완료된 경우 무시
         }
         
+        eventPublisher.publishEvent(new learntime.backend.domain.badge.event.NoteUploadedEvent(userId, java.time.LocalDateTime.now()));
         return content.getStudyMemberContentId();
     }
 

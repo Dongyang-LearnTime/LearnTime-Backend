@@ -30,7 +30,10 @@ public record PostListResponseDTO(
         Long commentCount,
         
         @Schema(description = "게시글 생성 일시")
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+
+        @Schema(description = "공지사항 여부", example = "false")
+        Boolean isNotice
 ) {
     public PostListResponseDTO {
         if (userName == null) {

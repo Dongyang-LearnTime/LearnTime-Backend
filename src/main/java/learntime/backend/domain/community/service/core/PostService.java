@@ -1,6 +1,7 @@
 package learntime.backend.domain.community.service.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import learntime.backend.domain.community.converter.PostConverter;
 import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
 import learntime.backend.domain.community.dto.request.PostUpdateRequestDTO;
 import learntime.backend.domain.community.dto.response.PostListResponseDTO;
@@ -9,6 +10,7 @@ import learntime.backend.domain.community.error.code.CommunityErrorCode;
 import learntime.backend.domain.community.error.exception.CommunityException;
 import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.model.PostImage;
+import learntime.backend.domain.community.model.PostLike;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostLikeRepository;
 import learntime.backend.domain.community.repository.PostRepository;
@@ -51,6 +53,25 @@ public class PostService {
     @Transactional(readOnly = true)
     public Page<PostListResponseDTO> getPostList(Pageable pageable) {
         return postRepository.findAllPostsWithCommentCount(pageable);
+    }
+
+    /** 제목 또는 내용으로 게시글 목록 페이징 검색 */
+    @Transactional(readOnly = true)
+    public Page<PostListResponseDTO> searchPosts(String keyword, Pageable pageable) {
+        return postRepository.searchPosts(keyword, pageable);
+    }
+
+    /** 주간 인기글 3개 조회 */
+    @Transactional(readOnly = true)
+    public List<PostListResponseDTO> getWeeklyPopularPosts(Pageable pageable) {
+        java.time.LocalDateTime oneWeekAgo = java.time.LocalDateTime.now().minusWeeks(1);
+        return postRepository.findWeeklyPopularPosts(oneWeekAgo, pageable);
+    }
+
+    /** 공지사항 목록 조회 */
+    @Transactional(readOnly = true)
+    public List<PostListResponseDTO> getNoticePosts() {
+        return postRepository.findNoticePosts();
     }
 
     /** 게시글 수정용 상세 정보 조회 */
@@ -106,6 +127,10 @@ public class PostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
+        if (request.isNotice() && user.getRole() != learntime.backend.domain.user.enums.Role.ROLE_ADMIN) {
+            throw new AuthException(AuthErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
         // 공부 정보 스냅샷 생성
         String studySnapshot = null;
         if (request.studyId() != null) {
@@ -122,6 +147,7 @@ public class PostService {
                 .content(request.content())
                 .user(user)
                 .studySnapshot(studySnapshot)
+                .isNotice(request.isNotice())
                 .build();
 
         handleImageUploads(images, post);
@@ -182,14 +208,41 @@ public class PostService {
         }
     }
 
+    // 좋아요 수정 로직
+    @Transactional
+    public Integer togglePostLike(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new CommunityException(CommunityErrorCode.POST_NOT_FOUND));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+
+        boolean isLiked = postLikeRepository.existsByPost_PostIdAndUser_UserId(postId, userId);
+
+        // 이미 추천을 누른 경우 -> 추천 취소
+        if (isLiked) {
+            postLikeRepository.deleteByPost_PostIdAndUser_UserId(postId, userId);
+            post.decrementLikeCount();
+            return post.getLikeCount();
+        }
+
+        // 추천을 누르지 않은 경우 -> 추천 추가
+        postLikeRepository.save(PostConverter.toPostLike(post, user));
+        post.incrementLikeCount();
+
+        return post.getLikeCount();
+    }
+
     /** 특정 게시글을 삭제합니다 (Soft Delete). */
     @Transactional
     public void deletePost(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CommunityException(CommunityErrorCode.POST_NOT_FOUND));
 
-        AuthorizationUtil.verifyOwnership(userId, post.getUser().getUserId());
+        User currentUser = userRepository.findById(userId)
+                        .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
+        // 삭제 권한 확인
+        AuthorizationUtil.validateOwnerOrAdmin(currentUser, post.getUser().getUserId());
         postRepository.delete(post);
     }
 
