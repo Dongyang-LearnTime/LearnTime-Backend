@@ -11,9 +11,12 @@ import learntime.backend.domain.community.error.exception.CommunityException;
 import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.model.PostImage;
 import learntime.backend.domain.community.model.PostLike;
+import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostLikeRepository;
 import learntime.backend.domain.community.repository.PostRepository;
+import java.util.Map;
+import java.util.stream.Collectors;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.domain.user.model.User;
@@ -39,6 +42,7 @@ import java.util.List;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final StudyQueryService studyQueryService;
     private final S3Service s3Service;
@@ -52,26 +56,66 @@ public class PostService {
     /** 오프셋 기반 게시글 목록 페이징 조회 */
     @Transactional(readOnly = true)
     public Page<PostListResponseDTO> getPostList(Pageable pageable) {
-        return postRepository.findAllPostsWithCommentCount(pageable);
+        Page<Post> posts = postRepository.findAllPosts(pageable);
+        Map<Long, Long> commentCountMap = getCommentCountMap(posts.getContent());
+        return posts.map(post -> PostConverter.toPostListResponseDTO(
+                post,
+                commentCountMap.getOrDefault(post.getPostId(), 0L)
+        ));
     }
 
     /** 제목 또는 내용으로 게시글 목록 페이징 검색 */
     @Transactional(readOnly = true)
     public Page<PostListResponseDTO> searchPosts(String keyword, Pageable pageable) {
-        return postRepository.searchPosts(keyword, pageable);
+        Page<Post> posts = postRepository.searchPosts(keyword, pageable);
+        Map<Long, Long> commentCountMap = getCommentCountMap(posts.getContent());
+        return posts.map(post -> PostConverter.toPostListResponseDTO(
+                post,
+                commentCountMap.getOrDefault(post.getPostId(), 0L)
+        ));
     }
 
     /** 주간 인기글 3개 조회 */
     @Transactional(readOnly = true)
     public List<PostListResponseDTO> getWeeklyPopularPosts(Pageable pageable) {
         java.time.LocalDateTime oneWeekAgo = java.time.LocalDateTime.now().minusWeeks(1);
-        return postRepository.findWeeklyPopularPosts(oneWeekAgo, pageable);
+        List<Post> posts = postRepository.findWeeklyPopularPosts(oneWeekAgo, pageable);
+        Map<Long, Long> commentCountMap = getCommentCountMap(posts);
+        return posts.stream()
+                .map(post -> PostConverter.toPostListResponseDTO(
+                        post,
+                        commentCountMap.getOrDefault(post.getPostId(), 0L)
+                ))
+                .toList();
     }
 
     /** 공지사항 목록 조회 */
     @Transactional(readOnly = true)
     public List<PostListResponseDTO> getNoticePosts() {
-        return postRepository.findNoticePosts();
+        List<Post> posts = postRepository.findNoticePosts();
+        Map<Long, Long> commentCountMap = getCommentCountMap(posts);
+        return posts.stream()
+                .map(post -> PostConverter.toPostListResponseDTO(
+                        post,
+                        commentCountMap.getOrDefault(post.getPostId(), 0L)
+                ))
+                .toList();
+    }
+
+    private Map<Long, Long> getCommentCountMap(List<Post> posts) {
+        if (posts.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> postIds = posts.stream()
+                .map(Post::getPostId)
+                .toList();
+        List<Object[]> results = commentRepository.countCommentsByPostIds(postIds);
+        return results.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1],
+                        (a, b) -> a
+                ));
     }
 
     /** 게시글 수정용 상세 정보 조회 */
@@ -113,6 +157,7 @@ public class PostService {
                     .toList();
             
             for (PostImage imageToRemove : imagesToRemove) {
+                s3Service.deleteFile(imageToRemove.getFileUrl());
                 post.getImages().remove(imageToRemove);
             }
         }
@@ -142,46 +187,12 @@ public class PostService {
             }
         }
 
-        Post post = Post.builder()
-                .title(request.title())
-                .content(request.content())
-                .user(user)
-                .studySnapshot(studySnapshot)
-                .isNotice(request.isNotice())
-                .build();
+        Post post = PostConverter.toPost(request, studySnapshot, user);
 
         handleImageUploads(images, post);
 
         Post savedPost = postRepository.save(post);
         return savedPost.getPostId();
-    }
-
-    /** 게시글에 이미지 추가 */
-    private void handleImageUploads(List<MultipartFile> images, Post post) {
-        if (images != null && !images.isEmpty()) {
-            if (post.getImages().size() + images.size() > IMAGE_LIMIT_COUNT) {
-                throw new CommunityException(CommunityErrorCode.IMAGE_LIMIT_EXCEEDED);
-            }
-
-            for (MultipartFile image : images) {
-                if (!image.isEmpty()) {
-                    fileValidatorUtil.validateImage(image);
-                    String fileUrl = s3Service.uploadFile(image, "posts");
-
-                    String originalFileName = image.getOriginalFilename();
-                    if (originalFileName == null || "blob".equalsIgnoreCase(originalFileName)) {
-                        originalFileName = "image_" + System.currentTimeMillis() + FileValidatorUtil.getExtension(image.getContentType());
-                    }
-
-                    PostImage postImage = PostImage.builder()
-                            .fileUrl(fileUrl)
-                            .originalFileName(originalFileName)
-                            .build();
-
-                    post.addImage(postImage);
-                }
-            }
-        }
     }
 
     /** 게시글과 연관된 세부 정보를 한 번에 조회함 */
@@ -245,5 +256,35 @@ public class PostService {
         AuthorizationUtil.validateOwnerOrAdmin(currentUser, post.getUser().getUserId());
         postRepository.delete(post);
     }
+
+
+    /** 게시글에 이미지 추가 */
+    private void handleImageUploads(List<MultipartFile> images, Post post) {
+        if (images != null && !images.isEmpty()) {
+            if (post.getImages().size() + images.size() > IMAGE_LIMIT_COUNT) {
+                throw new CommunityException(CommunityErrorCode.IMAGE_LIMIT_EXCEEDED);
+            }
+
+            for (MultipartFile image : images) {
+                if (!image.isEmpty()) {
+                    fileValidatorUtil.validateImage(image);
+                    String fileUrl = s3Service.uploadFile(image, "posts");
+
+                    String originalFileName = image.getOriginalFilename();
+                    if (originalFileName == null || "blob".equalsIgnoreCase(originalFileName)) {
+                        originalFileName = "image_" + System.currentTimeMillis() + FileValidatorUtil.getExtension(image.getContentType());
+                    }
+
+                    PostImage postImage = PostImage.builder()
+                            .fileUrl(fileUrl)
+                            .originalFileName(originalFileName)
+                            .build();
+
+                    post.addImage(postImage);
+                }
+            }
+        }
+    }
+
 
 }

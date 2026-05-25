@@ -19,6 +19,7 @@ public class MessageConverter {
                 .readAt(message.getReadAt())
                 .senderId(message.getSender().getUserId())
                 .senderName(message.getSender().getName())
+                .senderRole(message.getSender().getRole())
                 .receiverId(message.getReceiver().getUserId())
                 .receiverName(message.getReceiver().getName())
                 .build();

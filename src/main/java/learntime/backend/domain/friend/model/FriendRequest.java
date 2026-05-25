@@ -1,7 +1,8 @@
-package learntime.backend.domain.user.model;
+package learntime.backend.domain.friend.model;
 
 import jakarta.persistence.*;
 import learntime.backend.domain.user.enums.FriendRequestStatus;
+import learntime.backend.domain.user.model.User;
 import learntime.backend.global.common.BaseTimeEntity;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;

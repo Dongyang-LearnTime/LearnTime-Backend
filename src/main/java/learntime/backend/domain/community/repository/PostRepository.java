@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import learntime.backend.domain.community.dto.response.PostListResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,49 +17,42 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    /** 게시글 목록을 DTO로 바로 조회하며, 페이징 처리를 최적화합니다. */
-    @Query(value = "SELECT PostListResponseDTO(" +
-            "p.postId, u.userId, u.name, p.title, p.viewCount, p.likeCount, " +
-            "(SELECT COUNT(c) FROM Comment c WHERE c.post.postId = p.postId), " +
-            "p.createdAt, p.isNotice) " +
-            "FROM Post p " +
-            "LEFT JOIN p.user u " +
+    /** 게시글 목록을 페이징 조회합니다. (작성자 fetch join) */
+    @Query(value = "SELECT p FROM Post p " +
+            "LEFT JOIN FETCH p.user u " +
             "WHERE p.isNotice = false",
            countQuery = "SELECT COUNT(p) FROM Post p WHERE p.isNotice = false")
-    Page<PostListResponseDTO> findAllPostsWithCommentCount(Pageable pageable);
+    Page<Post> findAllPosts(Pageable pageable);
 
-    @Query(value = "SELECT PostListResponseDTO(" +
-            "p.postId, u.userId, u.name, p.title, p.viewCount, p.likeCount, " +
-            "(SELECT COUNT(c) FROM Comment c WHERE c.post.postId = p.postId), " +
-            "p.createdAt, p.isNotice) " +
-            "FROM Post p " +
-            "LEFT JOIN p.user u " +
+    /** 제목 또는 내용으로 게시글을 페이징 조회합니다. (작성자 fetch join) */
+    @Query(value = "SELECT p FROM Post p " +
+            "LEFT JOIN FETCH p.user u " +
             "WHERE (p.title LIKE %:keyword% OR p.content LIKE %:keyword%) " +
             "AND p.isNotice = false",
            countQuery = "SELECT COUNT(p) FROM Post p WHERE (p.title LIKE %:keyword% OR p.content LIKE %:keyword%) AND p.isNotice = false")
-    Page<PostListResponseDTO> searchPosts(@Param("keyword") String keyword, Pageable pageable);
+    Page<Post> searchPosts(@Param("keyword") String keyword, Pageable pageable);
 
-    @Query("SELECT PostListResponseDTO(" +
-            "p.postId, u.userId, u.name, p.title, p.viewCount, p.likeCount, " +
-            "(SELECT COUNT(c) FROM Comment c WHERE c.post.postId = p.postId), " +
-            "p.createdAt, p.isNotice) " +
-            "FROM Post p " +
-            "LEFT JOIN p.user u " +
+    /** 주간 인기글 목록을 조회합니다. (작성자 fetch join) */
+    @Query("SELECT p FROM Post p " +
+            "LEFT JOIN FETCH p.user u " +
             "WHERE p.createdAt >= :startDate " +
             "AND p.isNotice = false " +
             "ORDER BY p.likeCount DESC")
-    List<PostListResponseDTO> findWeeklyPopularPosts(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+    List<Post> findWeeklyPopularPosts(@Param("startDate") LocalDateTime startDate, Pageable pageable);
 
-    /** 공지사항 목록을 최신순으로 조회합니다. */
-    @Query("SELECT PostListResponseDTO(" +
-            "p.postId, u.userId, u.name, p.title, p.viewCount, p.likeCount, " +
-            "(SELECT COUNT(c) FROM Comment c WHERE c.post.postId = p.postId), " +
-            "p.createdAt, p.isNotice) " +
-            "FROM Post p " +
-            "LEFT JOIN p.user u " +
+    /** 공지사항 목록을 최신순으로 조회합니다. (작성자 fetch join) */
+    @Query("SELECT p FROM Post p " +
+            "LEFT JOIN FETCH p.user u " +
             "WHERE p.isNotice = true " +
             "ORDER BY p.createdAt DESC")
-    List<PostListResponseDTO> findNoticePosts();
+    List<Post> findNoticePosts();
+
+    /** 특정 사용자의 최근 게시글 목록을 조회합니다. (작성자 fetch join) */
+    @Query("SELECT p FROM Post p " +
+            "LEFT JOIN FETCH p.user u " +
+            "WHERE u.userId = :userId AND p.isNotice = false " +
+            "ORDER BY p.createdAt DESC")
+    List<Post> findRecentPostsByUserId(@Param("userId") Long userId, Pageable pageable);
 
     @Modifying(clearAutomatically = true) // 쿼리 실행 후 영속성 컨텍스트 초기화
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.postId = :postId")

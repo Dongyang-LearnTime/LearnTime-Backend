@@ -15,12 +15,13 @@ import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.domain.user.repository.FriendRepository;
-import learntime.backend.domain.user.repository.FriendRequestRepository;
+import learntime.backend.domain.friend.repository.FriendRepository;
+import learntime.backend.domain.friend.repository.FriendRequestRepository;
 import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserTermsRepository;
 import learntime.backend.domain.message.repository.MessageRepository;
+import learntime.backend.domain.profile.repository.ProfileRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.domain.badge.repository.UserBadgeRepository;
 import learntime.backend.domain.badge.repository.UserActivityStatRepository;
@@ -79,6 +80,7 @@ public class UserService {
     private final StudyNotesRepository studyNotesRepository;
     private final StudyFeedbackRepository studyFeedbackRepository;
     private final QuizHistoryRepository quizHistoryRepository;
+    private final ProfileRepository profileRepository;
 
     private static final DateTimeFormatter DELETED_USER_TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -165,6 +167,7 @@ public class UserService {
         userTermsRepository.deleteAllByUserId(userId);
         userBadgeRepository.deleteAllByUserId(userId);
         userActivityStatRepository.deleteAllByUserId(userId);
+        profileRepository.deleteByUser_UserId(userId);
 
         userRepository.anonymizeAndSoftDelete(
                 userId,

@@ -9,6 +9,9 @@ import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.model.UserTerms;
 import learntime.backend.domain.user.converter.UserConverter;
+import learntime.backend.domain.profile.enums.ProfileVisibility;
+import learntime.backend.domain.profile.model.Profile;
+import learntime.backend.domain.profile.repository.ProfileRepository;
 import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserRepository;
@@ -36,6 +39,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PromptQuotaRepository promptQuotaRepository;
     private final UserTermsRepository userTermsRepository;
+    private final ProfileRepository profileRepository;
 
     private final JwtProvider jwtProvider;
     private final CustomPasswordEncoder customPasswordEncoder;
@@ -136,6 +140,13 @@ public class AuthService {
         // 프롬프트 할당량 생성
         PromptQuotas quota = new PromptQuotas(savedUser, maxQuota);
         promptQuotaRepository.save(quota);
+
+        // 기본 프로필 생성
+        Profile profile = Profile.builder()
+                .user(savedUser)
+                .profileVisibility(ProfileVisibility.PUBLIC)
+                .build();
+        profileRepository.save(profile);
     }
 
     // 토큰 DB에 저장 및 return

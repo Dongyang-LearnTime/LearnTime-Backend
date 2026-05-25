@@ -1,7 +1,9 @@
 package learntime.backend.domain.community.converter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
 import learntime.backend.domain.community.dto.response.CommentResponseDTO;
+import learntime.backend.domain.community.dto.response.PostListResponseDTO;
 import learntime.backend.domain.community.dto.response.PostResponseDTO;
 import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.model.PostLike;
@@ -9,6 +11,7 @@ import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -57,10 +60,37 @@ public class PostConverter {
                 .build();
     }
 
+    public static Post toPost (PostCreateRequestDTO request, String studySnapshot, User user) {
+        return Post.builder()
+                .title(request.title())
+                .content(request.content())
+                .user(user)
+                .studySnapshot(studySnapshot)
+                .isNotice(request.isNotice())
+                .build();
+    }
+
     public static PostLike toPostLike(Post post, User user) {
         return PostLike.builder()
                 .post(post)
                 .user(user)
+                .build();
+    }
+
+    public static PostListResponseDTO toPostListResponseDTO(Post post, Long commentCount) {
+        Long userId = post.getUser() != null ? post.getUser().getUserId() : null;
+        String userName = post.getUser() != null ? post.getUser().getName() : "탈퇴한 사용자";
+
+        return PostListResponseDTO.builder()
+                .postId(post.getPostId())
+                .userId(userId)
+                .userName(userName)
+                .title(post.getTitle())
+                .viewCount(post.getViewCount())
+                .likeCount(post.getLikeCount())
+                .commentCount(commentCount)
+                .createdAt(post.getCreatedAt())
+                .isNotice(post.isNotice())
                 .build();
     }
 

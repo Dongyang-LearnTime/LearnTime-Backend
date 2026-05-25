@@ -1,11 +1,12 @@
 package learntime.backend.domain.study_member.converter;
 
+import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study_member.dto.response.StudyInvitationResponseDTO;
 import learntime.backend.domain.study_member.dto.response.StudyMemberFriendResponseDTO;
 import learntime.backend.domain.study_member.dto.response.StudyMemberResponseDTO;
 import learntime.backend.domain.study_member.model.StudyInvitation;
 import learntime.backend.domain.study_member.model.StudyMember;
-import learntime.backend.domain.user.model.Friend;
+import learntime.backend.domain.friend.model.Friend;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
@@ -15,6 +16,14 @@ public class StudyMemberConverter {
 
     public StudyMemberConverter() {
         throw new BusinessException(ErrorCode.UTILITY_CLASS_INSTANTIATION);
+    }
+
+    public static StudyInvitation toStudyInvitation(Study study, User invitedUser, User inviterUser) {
+        return StudyInvitation.builder()
+                .study(study)
+                .invitedUser(invitedUser)
+                .inviterUser(inviterUser)
+                .build();
     }
 
     // 초대 받은 목록

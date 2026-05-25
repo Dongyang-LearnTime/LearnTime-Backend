@@ -1,7 +1,7 @@
-package learntime.backend.domain.user.repository;
+package learntime.backend.domain.friend.repository;
 
 import learntime.backend.domain.user.enums.FriendRequestStatus;
-import learntime.backend.domain.user.model.FriendRequest;
+import learntime.backend.domain.friend.model.FriendRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

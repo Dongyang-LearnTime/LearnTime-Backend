@@ -18,7 +18,7 @@ import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study_member.repository.StudyInvitationRepository;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.domain.user.repository.FriendRepository;
+import learntime.backend.domain.friend.repository.FriendRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import learntime.backend.domain.study_member.dto.response.StudyMemberFriendResponseDTO;
-import learntime.backend.domain.user.model.Friend;
+import learntime.backend.domain.friend.model.Friend;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;

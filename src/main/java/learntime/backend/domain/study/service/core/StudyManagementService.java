@@ -8,6 +8,7 @@ import learntime.backend.domain.study.converter.StudyDailyPlanConverter;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.dto.request.UpdateStudyTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyPlanResponseDTO;
+import learntime.backend.domain.study_member.converter.StudyMemberConverter;
 import learntime.backend.domain.study_member.enums.StudyPlanStatus;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
@@ -20,6 +21,9 @@ import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.service.ai.GeminiStudyService;
+import learntime.backend.domain.study_member.model.StudyInvitation;
+import learntime.backend.domain.study_member.event.StudyInvitationSentEvent;
+
 import learntime.backend.domain.study.service.util.StudyDateCalculator;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
@@ -49,6 +53,7 @@ public class StudyManagementService {
     private final StudyRepository studyRepository;
     private final StudyDailyPlanRepository studyDailyPlanRepository;
     private final StudyMemberRepository studyMemberRepository;
+    private final learntime.backend.domain.study_member.repository.StudyInvitationRepository studyInvitationRepository;
     private final UserRepository userRepository;
     private final StudyRestManager studyRestManager;
     private final PromptQuotaUtil promptQuotaUtil;
@@ -77,18 +82,28 @@ public class StudyManagementService {
 
             studyMemberRepository.save(owner);
 
-            // 추가 멤버 저장
+            // 추가 멤버 초대 저장
             if (request.studyMemberList() != null && !request.studyMemberList().isEmpty()) {
                 List<User> additionalUsers = userRepository.findAllById(request.studyMemberList());
-                List<StudyMember> studyMembers = additionalUsers.stream()
-                        .filter(m -> !m.getUserId().equals(userId))
-                        .map(m -> StudyMember.builder()
-                                .user(m)
-                                .study(study)
-                                .studyMemberRole(StudyMemberRole.MEMBER)
-                                .build())
-                        .toList();
-                studyMemberRepository.saveAll(studyMembers);
+                List<StudyInvitation> invitations = new ArrayList<>();
+                for (User invitedUser : additionalUsers) {
+                    if (invitedUser.getUserId().equals(userId)) continue;
+
+                    StudyInvitation invitation = StudyMemberConverter.toStudyInvitation(study, invitedUser, user);
+                    invitations.add(invitation);
+                }
+
+                List<StudyInvitation> savedInvitations = studyInvitationRepository.saveAll(invitations);
+
+                for (StudyInvitation savedInv : savedInvitations) {
+                    eventPublisher.publishEvent(new StudyInvitationSentEvent(
+                            savedInv.getStudyInvitationId(),
+                            study.getStudyId(),
+                            study.getStudyTitle(),
+                            user.getName(),
+                            savedInv.getInvitedUser().getUserId()
+                    ));
+                }
             }
 
             // 쉬는 날짜 정보 저장

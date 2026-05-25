@@ -1,4 +1,4 @@
-package learntime.backend.domain.user.dto.response;
+package learntime.backend.domain.friend.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import learntime.backend.domain.user.enums.FriendRequestStatus;

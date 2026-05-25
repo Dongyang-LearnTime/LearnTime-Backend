@@ -32,5 +32,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Modifying(clearAutomatically = true)
     @Query(value = "DELETE FROM comment WHERE deleted_at <= :threshold", nativeQuery = true)
     int hardDeleteCommentByThreshold(@Param("threshold") LocalDateTime threshold);
-}
 
+    /** 게시글 ID 목록에 따른 댓글 개수 일괄 조회 */
+    @Query("SELECT c.post.postId, COUNT(c) FROM Comment c WHERE c.post.postId IN :postIds GROUP BY c.post.postId")
+    List<Object[]> countCommentsByPostIds(@Param("postIds") List<Long> postIds);
+}

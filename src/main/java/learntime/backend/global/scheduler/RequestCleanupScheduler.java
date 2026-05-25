@@ -4,7 +4,7 @@ import learntime.backend.domain.message.repository.MessageRepository;
 import learntime.backend.domain.study_member.enums.StudyInvitationStatus;
 import learntime.backend.domain.study_member.repository.StudyInvitationRepository;
 import learntime.backend.domain.user.enums.FriendRequestStatus;
-import learntime.backend.domain.user.repository.FriendRequestRepository;
+import learntime.backend.domain.friend.repository.FriendRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

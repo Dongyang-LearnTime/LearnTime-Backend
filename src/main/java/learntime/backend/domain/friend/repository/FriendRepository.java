@@ -1,6 +1,6 @@
-package learntime.backend.domain.user.repository;
+package learntime.backend.domain.friend.repository;
 
-import learntime.backend.domain.user.model.Friend;
+import learntime.backend.domain.friend.model.Friend;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -30,6 +30,14 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             ORDER BY f.createdAt DESC
             """)
     List<Friend> findAllByUserId(@Param("userId") Long userId);
+
+    /** 내 친구 수 가져오기 */
+    @Query("""
+            SELECT COUNT(f)
+            FROM Friend f
+            WHERE f.user.userId = :userId OR f.friendUser.userId = :userId
+            """)
+    long countFriendsByUserId(@Param("userId") Long userId);
 
     /** 특정 사람과의 친구 관계 데이터 찾기 */
     @Query("""

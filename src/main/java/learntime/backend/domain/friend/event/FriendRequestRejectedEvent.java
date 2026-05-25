@@ -1,4 +1,4 @@
-package learntime.backend.domain.user.event;
+package learntime.backend.domain.friend.event;
 
 public record FriendRequestRejectedEvent(
         Long friendRequestId,

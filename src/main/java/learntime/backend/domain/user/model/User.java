@@ -10,9 +10,12 @@ import learntime.backend.domain.community.model.PostLike;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
+import learntime.backend.domain.friend.model.Friend;
+import learntime.backend.domain.friend.model.FriendRequest;
 import learntime.backend.domain.message.model.Message;
 import learntime.backend.domain.notification.model.Notification;
 import learntime.backend.domain.point.model.PointHistory;
+import learntime.backend.domain.profile.model.Profile;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.model.StudyInvitation;
 import learntime.backend.domain.user.enums.AuthProvider;
@@ -168,12 +171,16 @@ public class User {
     private List<Notification> notifications = new ArrayList<>();
 
     // 획득한 배지
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<UserBadge> userBadges = new ArrayList<>();
 
     // 사용자 활동 통계
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<UserActivityStat> userActivityStats = new ArrayList<>();
+
+    // 사용자 프로필
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Profile profile;
 
 
     @Builder

@@ -1,13 +1,12 @@
-package learntime.backend.domain.user.converter;
+package learntime.backend.domain.friend.converter;
 
-import learntime.backend.domain.user.dto.response.FriendRequestResponseDTO;
-import learntime.backend.domain.user.dto.response.FriendResponseDTO;
-import learntime.backend.domain.user.model.Friend;
-import learntime.backend.domain.user.model.FriendRequest;
+import learntime.backend.domain.friend.dto.response.FriendRequestResponseDTO;
+import learntime.backend.domain.friend.dto.response.FriendResponseDTO;
+import learntime.backend.domain.friend.model.Friend;
+import learntime.backend.domain.friend.model.FriendRequest;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
-import org.springframework.stereotype.Component;
 
 public class FriendConverter {
 

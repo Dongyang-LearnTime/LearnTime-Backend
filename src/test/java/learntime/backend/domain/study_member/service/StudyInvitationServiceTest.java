@@ -15,9 +15,9 @@ import learntime.backend.domain.study_member.repository.StudyInvitationRepositor
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.domain.user.enums.Role;
-import learntime.backend.domain.user.model.Friend;
+import learntime.backend.domain.friend.model.Friend;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.domain.user.repository.FriendRepository;
+import learntime.backend.domain.friend.repository.FriendRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

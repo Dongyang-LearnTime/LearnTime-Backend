@@ -76,6 +76,7 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()       // 인증 예외 처리
                         .requestMatchers(HttpMethod.GET, "/api/community/**").permitAll() // 커뮤니티 조회 제외
+                        .requestMatchers(HttpMethod.GET, "/api/profile/**").permitAll() // 커뮤니티 조회 제외
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한 검증
                         .anyRequest().authenticated()                      // 나머지 모든 요청은 인증(JWT) 필수
                 )

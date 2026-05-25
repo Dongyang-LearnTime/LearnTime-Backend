@@ -1,14 +1,13 @@
 package learntime.backend.domain.user.repository;
 
-import learntime.backend.domain.user.model.Friend;
+import learntime.backend.domain.friend.model.Friend;
+import learntime.backend.domain.friend.repository.FriendRepository;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.global.config.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

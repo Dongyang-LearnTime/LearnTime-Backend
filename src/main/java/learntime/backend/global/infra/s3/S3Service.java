@@ -39,8 +39,11 @@ public class S3Service {
                     .bucket(bucketName)
                     .key(uniqueFileName)
                     .contentType(file.getContentType())
-                    .metadata(Map.of("original-filename", Objects.requireNonNull(originalFileName)))
                     .build();
+
+            log.info("originalFileName={}", file.getOriginalFilename());
+            log.info("contentType={}", file.getContentType());
+            log.info("size={}", file.getSize());
 
             s3Client.putObject(putObjectRequest, 
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize()));

@@ -1,10 +1,10 @@
-package learntime.backend.domain.user.controller;
+package learntime.backend.domain.friend.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import learntime.backend.domain.user.dto.response.FriendRequestResponseDTO;
-import learntime.backend.domain.user.dto.response.FriendResponseDTO;
-import learntime.backend.domain.user.service.FriendService;
+import learntime.backend.domain.friend.dto.response.FriendRequestResponseDTO;
+import learntime.backend.domain.friend.dto.response.FriendResponseDTO;
+import learntime.backend.domain.friend.service.FriendService;
 import learntime.backend.global.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
