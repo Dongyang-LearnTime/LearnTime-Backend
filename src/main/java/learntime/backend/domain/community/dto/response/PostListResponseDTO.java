@@ -17,6 +17,9 @@ public record PostListResponseDTO(
         @Schema(description = "작성자 이름 또는 닉네임. 탈퇴한 경우 '탈퇴한 사용자'", example = "홍길동")
         String userName,
         
+        @Schema(description = "작성자 프로필 이미지 URL", example = "https://s3.ap-northeast-2.amazonaws.com/...")
+        String userProfileImageUrl,
+        
         @Schema(description = "게시글 제목", example = "오늘 공부 인증합니다!")
         String title,
         

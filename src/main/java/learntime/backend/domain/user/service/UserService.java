@@ -109,6 +109,17 @@ public class UserService {
         return UserConverter.toUserSummaryResponseDTO(user, badges);
     }
 
+    // 전체 티어, 뱃지 정보 및 사용자의 취득 상태
+    @Transactional(readOnly = true)
+    public learntime.backend.domain.user.dto.response.BadgeTierInfoResponseDTO getBadgeTierInfo(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+
+        List<UserBadge> badges = userBadgeRepository.findAllByUserId(user.getUserId());
+
+        return UserConverter.toBadgeTierInfoResponseDTO(user, badges);
+    }
+
     // 사용자의 최근 필기, 퀴즈, AI 답변 중 최신순 3개 가져옴
     @Transactional(readOnly = true)
     public List<RecentActivityResponseDTO> getRecentActivities(String email) {

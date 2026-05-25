@@ -14,7 +14,7 @@ public record ProfileUpdateRequestDTO(
         @Schema(description = "프로필 공개 여부 (PUBLIC, PRIVATE)", example = "PUBLIC")
         ProfileVisibility profileVisibility,
 
-        @Schema(description = "프로필 이미지 URL (S3 경로, null 가능)", example = "https://s3.ap-northeast-2.amazonaws.com/learntime/profiles/user-1.jpg")
-        String profileImageUrl
+        @Schema(description = "프로필 이미지를 삭제할지 여부", example = "false")
+        Boolean isImageDeleted
 ) {}
 

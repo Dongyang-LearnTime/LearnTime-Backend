@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -25,18 +28,20 @@ public class ProfileController {
             @PathVariable Long userId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long currentUserId = userDetails.getUserId();
+        Long currentUserId = (userDetails != null) ? userDetails.getUserId() : null;
         ProfileResponseDTO response = profileService.getProfile(userId, currentUserId);
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "내 프로필 수정", description = "내 프로필 정보(이미지, 설명, 공개여부)를 선택적으로 수정합니다.")
-    @PatchMapping
+    @Operation(summary = "내 프로필 수정", description = "내 프로필 정보(이미지, 설명, 공개여부)를 선택적으로 수정합니다. 이미지 파일 업로드 가능.")
+    @PatchMapping(consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateProfile(
-            @RequestBody ProfileUpdateRequestDTO request,
+            @RequestPart(value = "request") ProfileUpdateRequestDTO request,
+            @RequestPart(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        profileService.updateProfile(userDetails.getUserId(), request);
+        profileService.updateProfile(userDetails.getUserId(), request, image);
         return ResponseEntity.ok().build();
     }
+
 }

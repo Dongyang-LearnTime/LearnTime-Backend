@@ -30,6 +30,9 @@ public class PostConverter {
                                                     Boolean isLiked) {
         Long userId = post.getUser() != null ? post.getUser().getUserId() : null;
         String userName = post.getUser() != null ? post.getUser().getName() : "탈퇴한 사용자";
+        String userProfileImageUrl = (post.getUser() != null && post.getUser().getProfile() != null)
+                ? post.getUser().getProfile().getProfileImageUrl()
+                : null;
 
         // JSON 스냅샷에서 공부 정보 추출
         StudyTotalInfoResponseDTO studyIndicator = null;
@@ -45,6 +48,7 @@ public class PostConverter {
                 .postId(post.getPostId())
                 .userId(userId)
                 .userName(userName)
+                .userProfileImageUrl(userProfileImageUrl)
                 .title(post.getTitle())
                 .content(post.getContent())
                 .createdAt(post.getCreatedAt())
@@ -80,11 +84,15 @@ public class PostConverter {
     public static PostListResponseDTO toPostListResponseDTO(Post post, Long commentCount) {
         Long userId = post.getUser() != null ? post.getUser().getUserId() : null;
         String userName = post.getUser() != null ? post.getUser().getName() : "탈퇴한 사용자";
+        String userProfileImageUrl = (post.getUser() != null && post.getUser().getProfile() != null)
+                ? post.getUser().getProfile().getProfileImageUrl()
+                : null;
 
         return PostListResponseDTO.builder()
                 .postId(post.getPostId())
                 .userId(userId)
                 .userName(userName)
+                .userProfileImageUrl(userProfileImageUrl)
                 .title(post.getTitle())
                 .viewCount(post.getViewCount())
                 .likeCount(post.getLikeCount())
@@ -93,6 +101,8 @@ public class PostConverter {
                 .isNotice(post.isNotice())
                 .build();
     }
+
+
 
 
 }

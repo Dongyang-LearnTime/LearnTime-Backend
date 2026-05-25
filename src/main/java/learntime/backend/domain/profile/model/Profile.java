@@ -43,4 +43,8 @@ public class Profile {
             this.profileImageUrl = profileImageUrl;
         }
     }
+
+    public void clearProfileImage() {
+        this.profileImageUrl = null;
+    }
 }

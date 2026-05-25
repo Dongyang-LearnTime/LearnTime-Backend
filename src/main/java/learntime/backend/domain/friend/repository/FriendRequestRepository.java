@@ -48,6 +48,19 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             FriendRequestStatus status
     );
 
+    /** 두 사용자 간의 대기 중인 친구 요청 단건 조회 */
+    @Query("""
+            SELECT fr
+            FROM FriendRequest fr
+            WHERE ((fr.requester.userId = :userId1 AND fr.receiver.userId = :userId2)
+               OR (fr.requester.userId = :userId2 AND fr.receiver.userId = :userId1))
+              AND fr.status = 'PENDING'
+            """)
+    Optional<FriendRequest> findPendingRequest(
+            @Param("userId1") Long userId1,
+            @Param("userId2") Long userId2
+    );
+
     @Modifying
     @Query("DELETE FROM FriendRequest f WHERE f.status = :status AND f.updatedAt <= :cutoffDate")
     void deleteOldRequestsByStatus(

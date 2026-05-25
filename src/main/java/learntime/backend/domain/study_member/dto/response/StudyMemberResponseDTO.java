@@ -13,6 +13,7 @@ public record StudyMemberResponseDTO(
         LocalDateTime joinedAt,
         Long userId,
         String userName,
+        String profileImageUrl,
         StudyMemberStatus status
 ) {
 }

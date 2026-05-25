@@ -6,7 +6,9 @@ import learntime.backend.domain.community.dto.response.PostListResponseDTO;
 import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostRepository;
+import learntime.backend.domain.friend.model.FriendRequest;
 import learntime.backend.domain.friend.repository.FriendRepository;
+import learntime.backend.domain.friend.repository.FriendRequestRepository;
 import learntime.backend.domain.point.enums.PointMilestone;
 import learntime.backend.domain.profile.converter.ProfileConverter;
 import learntime.backend.domain.profile.dto.request.ProfileUpdateRequestDTO;
@@ -30,6 +32,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import learntime.backend.global.infra.s3.S3Service;
+import learntime.backend.global.utils.FileValidatorUtil;
+import org.springframework.web.multipart.MultipartFile;
+
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
@@ -37,9 +43,12 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final FriendRepository friendRepository;
+    private final FriendRequestRepository friendRequestRepository;
     private final UserBadgeRepository userBadgeRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final S3Service s3Service;
+    private final FileValidatorUtil fileValidatorUtil;
 
     @Transactional(readOnly = true)
     public ProfileResponseDTO getProfile(Long targetUserId, Long currentUserId) {
@@ -79,21 +88,60 @@ public class ProfileService {
 
         PointMilestone tier = PointMilestone.getTier(targetUser.getPoint());
 
+        Boolean isFriend = (currentUserId != null) && friendRepository.existsFriendRelation(targetUserId, currentUserId);
+
+        boolean hasPendingSentRequest = false;
+        boolean hasPendingReceivedRequest = false;
+        Long pendingFriendRequestId = null;
+
+        if (currentUserId != null) {
+            java.util.Optional<FriendRequest> pendingRequest = friendRequestRepository.findPendingRequest(currentUserId, targetUserId);
+            if (pendingRequest.isPresent()) {
+                FriendRequest request = pendingRequest.get();
+                pendingFriendRequestId = request.getFriendRequestId();
+                if (request.getRequester().getUserId().equals(currentUserId)) {
+                    hasPendingSentRequest = true;
+                } else {
+                    hasPendingReceivedRequest = true;
+                }
+            }
+        }
+
         return ProfileConverter.toProfileResponseDTO(
                 targetUser,
                 profile,
                 tier.getTierName(),
                 friendCount,
+                isFriend,
+                hasPendingSentRequest,
+                hasPendingReceivedRequest,
+                pendingFriendRequestId,
                 badges,
                 recentPostDTOs
         );
     }
 
     @Transactional
-    public void updateProfile(Long currentUserId, ProfileUpdateRequestDTO request) {
+    public void updateProfile(Long currentUserId, ProfileUpdateRequestDTO request, MultipartFile image) {
         Profile profile = profileRepository.findByUser_UserId(currentUserId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        profile.updateProfile(request.description(), request.profileVisibility(), request.profileImageUrl());
+        String newImageUrl = profile.getProfileImageUrl();
+
+        if (Boolean.TRUE.equals(request.isImageDeleted())) {
+            if (newImageUrl != null) {
+                s3Service.deleteFile(newImageUrl);
+                newImageUrl = null;
+            }
+            profile.clearProfileImage();
+        } else if (image != null && !image.isEmpty()) {
+            fileValidatorUtil.validateImage(image);
+            if (newImageUrl != null) {
+                s3Service.deleteFile(newImageUrl);
+            }
+            newImageUrl = s3Service.uploadFile(image, "profiles");
+        }
+
+        profile.updateProfile(request.description(), request.profileVisibility(), newImageUrl);
     }
 }

@@ -51,6 +51,11 @@ public class StudyMemberConverter {
     }
 
     public static StudyMemberResponseDTO toStudyMemberResponse(StudyMember studyMember) {
+        String profileImageUrl = null;
+        if (studyMember.getUser() != null && studyMember.getUser().getProfile() != null) {
+            profileImageUrl = studyMember.getUser().getProfile().getProfileImageUrl();
+        }
+        
         return StudyMemberResponseDTO.builder()
                 .studyMemberId(studyMember.getStudyMemberId())
                 .studyMemberRole(studyMember.getStudyMemberRole())
@@ -58,6 +63,7 @@ public class StudyMemberConverter {
                 .status(studyMember.getStatus())
                 .userId(studyMember.getUser().getUserId())
                 .userName(studyMember.getUser().getName())
+                .profileImageUrl(profileImageUrl)
                 .build();
     }
 

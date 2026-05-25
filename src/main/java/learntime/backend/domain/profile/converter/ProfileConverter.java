@@ -21,6 +21,10 @@ public class ProfileConverter {
             Profile profile,
             String tierName,
             Long friendCount,
+            Boolean isFriend,
+            Boolean hasPendingSentRequest,
+            Boolean hasPendingReceivedRequest,
+            Long pendingFriendRequestId,
             List<UserBadgeResponseDTO> badges,
             List<PostListResponseDTO> recentPosts
     ) {
@@ -33,6 +37,10 @@ public class ProfileConverter {
                 .description(profile.getDescription())
                 .profileVisibility(profile.getProfileVisibility())
                 .friendCount(friendCount)
+                .isFriend(isFriend)
+                .hasPendingSentRequest(hasPendingSentRequest)
+                .hasPendingReceivedRequest(hasPendingReceivedRequest)
+                .pendingFriendRequestId(pendingFriendRequestId)
                 .badges(badges)
                 .recentPosts(recentPosts)
                 .build();

@@ -24,7 +24,10 @@ import learntime.backend.domain.user.dto.response.RecentActivityResponseDTO;
 import learntime.backend.domain.user.enums.RecentActivityType;
 
 import java.util.List;
+import java.util.Arrays;
 import java.util.stream.Collectors;
+import learntime.backend.domain.user.dto.response.BadgeTierInfoResponseDTO;
+import learntime.backend.domain.badge.enums.BadgeType;
 
 public class UserConverter {
 
@@ -75,6 +78,36 @@ public class UserConverter {
                 .build();
     }
 
+
+    public static BadgeTierInfoResponseDTO toBadgeTierInfoResponseDTO(User user, List<UserBadge> userBadges) {
+        PointMilestone currentTier = PointMilestone.getTier(user.getPoint());
+
+        List<BadgeTierInfoResponseDTO.TierInfoDTO> allTiers = Arrays.stream(PointMilestone.values())
+                .map(tier -> BadgeTierInfoResponseDTO.TierInfoDTO.builder()
+                        .tierName(tier.getTierName())
+                        .minPoint(tier.getMinPoint())
+                        .build())
+                .toList();
+
+        List<BadgeTierInfoResponseDTO.BadgeInfoDTO> allBadges = Arrays.stream(BadgeType.values())
+                .map(badge -> BadgeTierInfoResponseDTO.BadgeInfoDTO.builder()
+                        .badgeType(badge.name())
+                        .displayName(badge.getDisplayName())
+                        .description(badge.getDescription())
+                        .build())
+                .toList();
+
+        List<UserBadgeResponseDTO> acquiredBadges = userBadges.stream()
+                .map(UserConverter::toUserBadgeResponseDTO)
+                .toList();
+
+        return BadgeTierInfoResponseDTO.builder()
+                .allTiers(allTiers)
+                .allBadges(allBadges)
+                .currentTierName(currentTier.getTierName())
+                .acquiredBadges(acquiredBadges)
+                .build();
+    }
 
     public static UserBadgeResponseDTO toUserBadgeResponseDTO(UserBadge userBadge) {
         return UserBadgeResponseDTO.builder()
