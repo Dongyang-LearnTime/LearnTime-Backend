@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
 import java.time.DayOfWeek;
@@ -15,6 +16,7 @@ import java.util.Set;
 @Schema(description = "루틴 생성/수정 요청 DTO")
 public record RoutineRequestDTO(
     @Schema(description = "루틴 상세 내용", example = "매주 알고리즘 문제 풀이 및 깃허브 업로드")
+    @Size(max = 200, message = "내용은 200자를 넘을 수 없습니다.")
     String content,
 
     @NotNull(message = "시작 시각은 필수입니다.")

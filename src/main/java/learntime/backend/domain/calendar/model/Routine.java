@@ -33,7 +33,7 @@ public class Routine extends BaseTimeEntity {
     private User user;
 
     /** 루틴 상세 내용 */
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, length = 200)
     private String content;
 
     /** 루틴 일정이 발송/진행될 시작 시각 */

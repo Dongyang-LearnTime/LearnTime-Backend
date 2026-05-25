@@ -30,7 +30,7 @@ public class CalendarRecord extends BaseTimeEntity {
     private User user;
 
     /** 일정 상세 내용 */
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, length = 200)
     private String content;
 
     /** 일정 날짜 및 시간 */
