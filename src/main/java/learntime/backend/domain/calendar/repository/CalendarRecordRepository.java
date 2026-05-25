@@ -1,6 +1,7 @@
 package learntime.backend.domain.calendar.repository;
 
 import learntime.backend.domain.calendar.model.CalendarRecord;
+import learntime.backend.domain.calendar.model.Routine;
 import learntime.backend.domain.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -10,9 +11,16 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CalendarRecordRepository extends JpaRepository<CalendarRecord, Long> {
+
+    Optional<CalendarRecord> findFirstByRoutineOrderByTargetDateDesc(Routine routine);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM CalendarRecord c WHERE c.routine = :routine AND c.targetDate > :after")
+    void deleteByRoutineAndTargetDateAfter(@Param("routine") Routine routine, @Param("after") LocalDateTime after);
 
     // 특정 사용자의 특정 기간을 조회 (한달 혹은 일주일치 일정을 불러 올 때, 아래의 메서드 이용)
     List<CalendarRecord> findAllByUserAndTargetDateBetweenOrderByTargetDateAsc(

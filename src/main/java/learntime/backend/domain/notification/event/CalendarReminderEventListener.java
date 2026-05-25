@@ -1,7 +1,7 @@
 package learntime.backend.domain.notification.event;
 
-import learntime.backend.domain.calendar.dto.event.CalendarReminderDeleteEvent;
-import learntime.backend.domain.calendar.dto.event.CalendarReminderUpsertEvent;
+import learntime.backend.domain.calendar.event.CalendarReminderDeleteEvent;
+import learntime.backend.domain.calendar.event.CalendarReminderUpsertEvent;
 import learntime.backend.domain.notification.service.ReminderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

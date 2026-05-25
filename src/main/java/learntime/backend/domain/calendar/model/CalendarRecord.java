@@ -3,6 +3,7 @@ package learntime.backend.domain.calendar.model;
 import jakarta.persistence.*;
 import learntime.backend.domain.notification.model.Reminder;
 import learntime.backend.domain.user.model.User;
+import learntime.backend.global.common.BaseTimeEntity;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -16,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Table(name = "calendar")
-public class CalendarRecord {
+public class CalendarRecord extends BaseTimeEntity {
 
     /** 캘린더 일정 고유 ID */
     @Id
@@ -27,10 +28,6 @@ public class CalendarRecord {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    /** 일정 제목 */
-    @Column(nullable = false)
-    private String title;
 
     /** 일정 상세 내용 */
     @Column(columnDefinition = "TEXT")
@@ -44,10 +41,15 @@ public class CalendarRecord {
     @Builder.Default
     private Boolean isCompleted = false;
 
-    /** 일정 생성 시각 */
-    @CreationTimestamp
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
+    /** 중요 일정 여부 */
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean isImportant = false;
+
+    /** 일정에 연계된 루틴 */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "routine_id")
+    private Routine routine;
 
     // 리마인더 목록
     @Builder.Default
@@ -55,11 +57,11 @@ public class CalendarRecord {
     private List<Reminder> reminders = new ArrayList<>();
 
     // 일정 수정 기능을 위한 편의 메서드
-    public void update(String title, String content, LocalDateTime targetDate, Boolean isCompleted) {
-        this.title = title;
+    public void update(String content, LocalDateTime targetDate, Boolean isCompleted, Boolean isImportant) {
         this.content = content;
         this.targetDate = targetDate;
         this.isCompleted = isCompleted;
+        this.isImportant = isImportant;
     }
 
     // 리마인더 추가 편의 메서드

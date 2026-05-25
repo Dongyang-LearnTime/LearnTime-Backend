@@ -1,6 +1,8 @@
 package learntime.backend.domain.user.service;
 
+import learntime.backend.domain.calendar.model.Routine;
 import learntime.backend.domain.calendar.repository.CalendarRecordRepository;
+import learntime.backend.domain.calendar.repository.RoutineRepository;
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostLikeRepository;
 import learntime.backend.domain.community.repository.PostRepository;
@@ -81,6 +83,7 @@ public class UserService {
     private final StudyFeedbackRepository studyFeedbackRepository;
     private final QuizHistoryRepository quizHistoryRepository;
     private final ProfileRepository profileRepository;
+    private final RoutineRepository routineRepository;
 
     private static final DateTimeFormatter DELETED_USER_TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -161,6 +164,8 @@ public class UserService {
 
         reminderRepository.deleteAllByCalendarUserId(userId);
         calendarRecordRepository.deleteAllByUserId(userId);
+        routineRepository.deleteDaysByUserId(userId);
+        routineRepository.deleteAllByUserId(userId);
 
         postRepository.decrementLikeCountForUserLikes(userId);
         postLikeRepository.deleteAllByUserId(userId);

@@ -61,7 +61,7 @@ public class NotificationScheduler {
                         userId,
                         NotificationType.CALENDAR_REMINDER,
                         "일정 알림",
-                        record.getTitle() + " 일정 시간이 다가왔습니다.",
+                        record.getContent() != null ? record.getContent() : "일정 알림",
                         record.getCalendarRecordId(),
                         NotificationReferenceType.CALENDAR_RECORD
                 );
