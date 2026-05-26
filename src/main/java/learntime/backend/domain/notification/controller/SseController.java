@@ -6,7 +6,7 @@ import learntime.backend.domain.notification.dto.response.NotificationCountRespo
 import learntime.backend.domain.notification.dto.response.NotificationResponseDTO;
 import learntime.backend.domain.notification.service.NotificationService;
 import learntime.backend.global.dto.CursorResponse;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

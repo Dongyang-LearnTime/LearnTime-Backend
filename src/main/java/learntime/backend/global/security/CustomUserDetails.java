@@ -1,4 +1,4 @@
-package learntime.backend.global.dto;
+package learntime.backend.global.security;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -8,7 +8,7 @@ import org.jspecify.annotations.NonNull;
 import java.util.Collection;
 import java.util.Collections;
 
-public record CustomUserDetails(Long userId, String email, String name, String role, boolean isLocked) implements UserDetails {
+public record CustomUserDetails(Long userId, String email, String name, String password, String role, boolean isLocked) implements UserDetails {
 
     // 유저의 리마인더를 빠르게 조회하기 위해 추가
     public Long getUserId() { return userId; }
@@ -23,7 +23,7 @@ public record CustomUserDetails(Long userId, String email, String name, String r
 
     @Override
     public String getPassword() {
-        return ""; // JWT 인증 방식이므로 비밀번호는 비워둡니다.
+        return password;
     }
 
     @Override

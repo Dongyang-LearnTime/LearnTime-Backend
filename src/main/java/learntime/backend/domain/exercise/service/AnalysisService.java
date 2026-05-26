@@ -43,7 +43,7 @@ public class AnalysisService {
     private final ObjectMapper objectMapper;
     private final ExercisePromptProvider promptProvider;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AnalysisResponseDTO getWeeklyAnalysis(Long userId) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sevenDaysAgo = now.minusDays(7);

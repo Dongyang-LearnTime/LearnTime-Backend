@@ -7,7 +7,7 @@ import learntime.backend.domain.message.dto.request.MessageReadRequestDTO;
 import learntime.backend.domain.message.dto.request.MessageRequestDTO;
 import learntime.backend.domain.message.dto.response.MessageResponseDTO;
 import learntime.backend.domain.message.service.MessageService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

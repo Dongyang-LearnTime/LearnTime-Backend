@@ -1,11 +1,10 @@
-package learntime.backend.global.config.security.jwt;
+package learntime.backend.global.security;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import learntime.backend.global.dto.CustomUserDetails; // 패키지에 맞게 import
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -50,8 +49,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = claims.get("role", String.class);
                 Long userId = claims.get("userId", Long.class); // PK 추출
 
-                // 2. CustomUserDetails 객체 생성 (Record 사용)
-                CustomUserDetails principal = new CustomUserDetails(userId, email, name, role, true);
+                // CustomUserDetails 객체 생성
+                CustomUserDetails principal = new CustomUserDetails(userId, email, name, "", role, false);
 
                 // Spring Security 인증 객체 생성
                 UsernamePasswordAuthenticationToken authentication =
@@ -62,7 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         );
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // SecurityContext에 인증 정보 저장 (ThreadLocal 바인딩)
+                // SecurityContext에 인증 정보 저장
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
@@ -80,4 +79,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         return null;
     }
+
 }

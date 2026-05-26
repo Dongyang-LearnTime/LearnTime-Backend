@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.calendar.dto.request.CalendarRequestDTO;
 import learntime.backend.domain.calendar.dto.response.CalendarResponseDTO;
 import learntime.backend.domain.calendar.service.CalendarService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

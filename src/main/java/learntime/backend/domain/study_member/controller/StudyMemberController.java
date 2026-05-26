@@ -8,7 +8,7 @@ import learntime.backend.domain.study_member.dto.response.StudyMemberFriendRespo
 import learntime.backend.domain.study_member.dto.response.StudyMemberResponseDTO;
 import learntime.backend.domain.study_member.service.StudyInvitationService;
 import learntime.backend.domain.study_member.service.StudyMemberService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

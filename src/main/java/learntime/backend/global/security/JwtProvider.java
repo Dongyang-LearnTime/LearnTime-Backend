@@ -1,4 +1,4 @@
-package learntime.backend.global.config.security.jwt;
+package learntime.backend.global.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

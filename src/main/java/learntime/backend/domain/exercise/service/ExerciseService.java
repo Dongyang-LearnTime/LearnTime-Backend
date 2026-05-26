@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,8 +47,11 @@ public class ExerciseService {
             return youtubeClient.searchVideos("전신 홈 트레이닝");
         }
 
-        String mainPart = String.join(" ", bodyParts) + "운동";
-        return youtubeClient.searchVideos(mainPart);
+        List<YoutubeVideoResponseDTO> allVideos = new ArrayList<>();
+        for (String part : bodyParts) {
+            allVideos.addAll(youtubeClient.searchVideos(part));
+        }
+        return allVideos;
     }
 
     @Transactional

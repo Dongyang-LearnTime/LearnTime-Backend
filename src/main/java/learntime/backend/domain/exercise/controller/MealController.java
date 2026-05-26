@@ -6,15 +6,14 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.exercise.dto.request.MealRequestDTO;
 import learntime.backend.domain.exercise.dto.response.MealResponseDTO;
 import learntime.backend.domain.exercise.service.MealService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/exercise/meal")
@@ -33,4 +32,12 @@ public class MealController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @GetMapping("/today")
+    @Operation(summary = "오늘의 식단 조회", description = "오늘 하루 동안 저장된 식단 목록을 조회합니다.")
+    public ResponseEntity<List<MealResponseDTO>> getTodayMeals(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        List<MealResponseDTO> meals = mealService.getTodayMeals(userDetails.userId());
+        return ResponseEntity.ok(meals);
+    }
 }

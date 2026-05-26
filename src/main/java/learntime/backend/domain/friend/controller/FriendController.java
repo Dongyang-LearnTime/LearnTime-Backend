@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import learntime.backend.domain.friend.dto.response.FriendRequestResponseDTO;
 import learntime.backend.domain.friend.dto.response.FriendResponseDTO;
 import learntime.backend.domain.friend.service.FriendService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

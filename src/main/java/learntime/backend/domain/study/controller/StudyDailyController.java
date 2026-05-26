@@ -13,7 +13,7 @@ import learntime.backend.domain.study.service.core.StudyDailyService;
 import java.util.List;
 import learntime.backend.domain.study.service.core.StudyUserContentService;
 import learntime.backend.domain.study.dto.response.TodayStudyPlanResponseDTO;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;

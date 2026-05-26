@@ -11,7 +11,7 @@ import learntime.backend.domain.quiz.dto.response.StudyQuizInfoResponseDTO;
 import learntime.backend.domain.quiz.dto.response.StudyQuizResponseDTO;
 import learntime.backend.domain.quiz.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.quiz.service.StudyQuizFacade;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study_member.dto.request.StudyMemberRequestDTO;
 import learntime.backend.domain.study_member.dto.response.StudyInvitationResponseDTO;
 import learntime.backend.domain.study_member.service.StudyInvitationService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

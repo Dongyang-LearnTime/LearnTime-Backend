@@ -7,7 +7,7 @@ import learntime.backend.domain.notes.dto.request.StudyNoteRequestDTO;
 import learntime.backend.domain.notes.dto.request.StudyNotesUpdateRequestDTO;
 import learntime.backend.domain.notes.dto.response.StudyNotesResponseDTO;
 import learntime.backend.domain.notes.service.StudyNotesService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -16,8 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/study/notes")

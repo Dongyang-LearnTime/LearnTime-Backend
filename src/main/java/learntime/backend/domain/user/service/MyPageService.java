@@ -4,7 +4,7 @@ import learntime.backend.domain.user.converter.UserConverter;
 import learntime.backend.domain.user.dto.response.MyPageResponseDTO;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
-import learntime.backend.global.config.security.CustomPasswordEncoder;
+import learntime.backend.global.security.CustomPasswordEncoder;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;

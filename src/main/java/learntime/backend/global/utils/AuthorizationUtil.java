@@ -2,7 +2,6 @@ package learntime.backend.global.utils;
 
 import learntime.backend.domain.user.enums.Role;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.global.dto.CustomUserDetails;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.AuthException;

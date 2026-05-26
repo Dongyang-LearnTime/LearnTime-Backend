@@ -21,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -83,6 +85,22 @@ public class MealService {
             log.error("식단 분석 실패: {}", e.getMessage());
             throw new ExerciseException(ExerciseErrorCode.AI_GENERATION_FAILED_EX);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<MealResponseDTO> getTodayMeals(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+
+        LocalDate today = java.time.LocalDate.now();
+        LocalDateTime start = today.atStartOfDay();
+        LocalDateTime end = today.atTime(java.time.LocalTime.MAX);
+
+        List<MealRecord> mealRecords = mealRecordRepository.findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(user, start, end);
+
+        return mealRecords.stream()
+                .map(ExerciseConverter::toMealResponseDTO)
+                .toList();
     }
 
     private Map<String, Object> createGeminiMealPrompt(String userInput) {

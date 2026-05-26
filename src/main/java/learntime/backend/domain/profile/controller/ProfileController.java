@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import learntime.backend.domain.profile.dto.request.ProfileUpdateRequestDTO;
 import learntime.backend.domain.profile.dto.response.ProfileResponseDTO;
 import learntime.backend.domain.profile.service.ProfileService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

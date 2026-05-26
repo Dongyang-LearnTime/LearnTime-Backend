@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.UpdateFeedbackTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyFeedbackResponseDTO;
 import learntime.backend.domain.study.service.core.StudyFeedbackService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
