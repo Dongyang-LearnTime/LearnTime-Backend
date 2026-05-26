@@ -2,8 +2,11 @@ package learntime.backend.domain.exercise.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import learntime.backend.domain.badge.event.ExerciseCompletedEvent;
+import learntime.backend.domain.exercise.converter.ExerciseConverter;
 import learntime.backend.domain.exercise.dto.request.ExerciseRequestDTO;
 import learntime.backend.domain.exercise.dto.response.ExerciseCalorieResponseDTO;
+import learntime.backend.domain.exercise.dto.response.ExerciseResponseDTO;
 import learntime.backend.domain.exercise.error.code.ExerciseErrorCode;
 import learntime.backend.domain.exercise.error.exception.ExerciseException;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
@@ -21,8 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +39,7 @@ public class ExerciseService {
     private final ObjectMapper objectMapper;
     private final YoutubeClient youtubeClient;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final ExercisePromptProvider promptProvider;
 
     public List<YoutubeVideoResponseDTO> getRecommendedVideos(List<String> bodyParts) {
         if (bodyParts == null || bodyParts.isEmpty()) {
@@ -45,8 +51,7 @@ public class ExerciseService {
     }
 
     @Transactional
-    public ExerciseRecord saveExercise(Long userId, ExerciseRequestDTO request) {
-
+    public ExerciseResponseDTO saveExercise(Long userId, ExerciseRequestDTO request) {
         User user = userRepository.findById(userId).
                 orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
@@ -55,17 +60,14 @@ public class ExerciseService {
             String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
             ExerciseCalorieResponseDTO response = parseCaloriesResponse(rawJson);
 
-            ExerciseRecord record = ExerciseRecord.builder()
-                    .user(user) // 찾은 유저 세팅
-                    .bodyParts(request.getBodyParts())
-                    .duration(request.getDuration())
-                    .content(request.getContent())
-                    .calories(response.getCalories())
-                    .build();
-
+            ExerciseRecord record = ExerciseConverter.toExerciseRecord(user, request, response);
             ExerciseRecord savedRecord = exerciseRecordRepository.save(record);
-            eventPublisher.publishEvent(new learntime.backend.domain.badge.event.ExerciseCompletedEvent(userId, java.time.LocalDateTime.now()));
-            return savedRecord;
+
+            ExerciseResponseDTO result =
+                    ExerciseConverter.toExerciseResponseDTO(savedRecord);
+
+            eventPublisher.publishEvent(new ExerciseCompletedEvent(userId, LocalDateTime.now()));
+            return result;
 
         } catch (Exception e) {
             log.error("칼로리 계산 실패: {}", e.getMessage());
@@ -74,20 +76,7 @@ public class ExerciseService {
     }
 
     private Map<String, Object> createGeminiRequest(ExerciseRequestDTO request) {
-        String userPrompt = """
-                다음의 운동 내역을 바탕으로 소모 칼로리를 계산해줘.
-                
-                1. 운동 부위: %s
-                2. 소요 시간: %d분
-                3. 상세 운동 내용: %s
-                
-                응답은 반드시 아래의 JSON 구조를 지켜서 답해줘.
-                {
-                  "calories": 숫자
-                }
-                
-                예를 들어 예상 소모 칼로리가 약 400kcal 일 때, 숫자 400만 위의 JSON 구조에 맞춰서 답해주면 돼.
-                """.formatted(request.getBodyParts(), request.getDuration(), request.getContent());
+        String userPrompt = promptProvider.getExerciseCaloriePrompt().formatted(request.getBodyParts(), request.getDuration(), request.getContent());
 
         return Map.of(
                 "contents", List.of(Map.of("parts", List.of(Map.of("text", userPrompt)))),

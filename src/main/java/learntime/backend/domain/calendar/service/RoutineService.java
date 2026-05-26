@@ -43,6 +43,9 @@ public class RoutineService {
     // 루틴 등록
     @Transactional
     public RoutineResponseDTO saveRoutine(Long userId, RoutineRequestDTO request) {
+        if (request.endDate() != null && request.endDate().isBefore(request.startDate())) {
+            throw new CalenderException(CalenderErrorCode.INVALID_DATE_RANGE);
+        }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
@@ -76,15 +79,15 @@ public class RoutineService {
     // 루틴 수정
     @Transactional
     public RoutineResponseDTO updateRoutine(Long routineId, RoutineRequestDTO request, Long userId) {
+        if (request.endDate() != null && request.endDate().isBefore(request.startDate())) {
+            throw new CalenderException(CalenderErrorCode.INVALID_DATE_RANGE);
+        }
         Routine routine = getRoutineOrThrow(routineId);
 
         AuthorizationUtil.verifyOwnership(userId, routine.getUser().getUserId());
 
-        // 미래의 생성된 일정들 삭제 (수정 전 생성된 미래 일정 제거)
         LocalDateTime now = LocalDateTime.now();
-        List<CalendarRecord> futureRecords = calendarRecordRepository.findAll().stream() // or fetch directly
-                .filter(c -> routine.getRoutineId().equals(c.getRoutine() != null ? c.getRoutine().getRoutineId() : null) && c.getTargetDate().isAfter(now))
-                .toList();
+        List<CalendarRecord> futureRecords = calendarRecordRepository.findAllByRoutineAndTargetDateAfter(routine, now);
 
         for (CalendarRecord record : futureRecords) {
             eventPublisher.publishEvent(new CalendarReminderDeleteEvent(record));
@@ -118,9 +121,7 @@ public class RoutineService {
 
         // 미래의 생성된 일정들 삭제 및 알림 이벤트 취소
         LocalDateTime now = LocalDateTime.now();
-        List<CalendarRecord> futureRecords = calendarRecordRepository.findAll().stream()
-                .filter(c -> routine.getRoutineId().equals(c.getRoutine() != null ? c.getRoutine().getRoutineId() : null) && c.getTargetDate().isAfter(now))
-                .toList();
+        List<CalendarRecord> futureRecords = calendarRecordRepository.findAllByRoutineAndTargetDateAfter(routine, now);
 
         for (CalendarRecord record : futureRecords) {
             eventPublisher.publishEvent(new CalendarReminderDeleteEvent(record));
@@ -158,7 +159,6 @@ public class RoutineService {
                         .user(routine.getUser())
                         .content(routine.getContent())
                         .targetDate(targetDate)
-                        .isCompleted(false)
                         .isImportant(routine.getIsImportant())
                         .routine(routine)
                         .build();

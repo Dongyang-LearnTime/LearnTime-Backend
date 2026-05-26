@@ -14,6 +14,9 @@ public record StudyMemberContentResponseDTO(
         @Schema(description = "일일 진도 내용")
         String planContent,
 
+        @Schema(description = "오늘 휴무일 여부")
+        Boolean isHoliday,
+
         List<memberContent> memberContents
 ) {
         @Builder

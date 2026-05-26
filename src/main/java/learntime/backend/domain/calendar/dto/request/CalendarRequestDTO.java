@@ -18,9 +18,6 @@ public record CalendarRequestDTO (
     @Schema(description = "일정 날짜 및 시간")
     LocalDateTime targetDate,
 
-    @Schema(description = "완료 여부", defaultValue = "false")
-    Boolean isCompleted,
-
     @Schema(description = "중요 일정 여부", defaultValue = "false")
     Boolean isImportant
 ) {}

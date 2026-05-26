@@ -34,23 +34,10 @@ public class ExerciseController {
 
     @PostMapping("/save")
     @Operation(summary = "운동 기록 저장", description = "운동 부위, 시간(분), 내용을 저장합니다.")
-    public ResponseEntity<ExerciseResponseDTO> saveExercise(
-            @AuthenticationPrincipal CustomUserDetails user,
-            @Valid @RequestBody ExerciseRequestDTO request
-    ) {
+    public ResponseEntity<ExerciseResponseDTO> saveExercise(@Valid @RequestBody ExerciseRequestDTO request,
+                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        ExerciseRecord saved = exerciseService.saveExercise(user.userId(), request);
-
-        // 엔티티를 DTO로 변환
-        ExerciseResponseDTO response = ExerciseResponseDTO.builder()
-                .id(saved.getExerciseRecordId())
-                .bodyParts(saved.getBodyParts())
-                .duration(saved.getDuration())
-                .content(saved.getContent())
-                .calories(saved.getCalories())
-                .createdAt(saved.getCreatedAt())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        ExerciseResponseDTO result = exerciseService.saveExercise(userDetails.userId(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 }

@@ -6,12 +6,15 @@ import learntime.backend.domain.study.dto.request.StudyUserContentUpdateRequestD
 import learntime.backend.domain.study.dto.response.StudyMemberContentResponseDTO;
 
 import java.time.LocalDate;
+import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Optional;
 
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.StudyDailyPlan;
+import learntime.backend.domain.study.model.StudyRestDay;
+import learntime.backend.domain.study.model.StudyRestDate;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study.model.StudyMemberContent;
@@ -20,6 +23,8 @@ import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study.repository.StudyStatusRepository;
 import learntime.backend.domain.study.repository.StudyUserContentRepository;
+import learntime.backend.domain.study.repository.StudyRestDayRepository;
+import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,6 +39,8 @@ public class StudyUserContentService {
     private final StudyDailyPlanRepository studyDailyPlanRepository;
     private final StudyMemberRepository studyMemberRepository;
     private final StudyStatusRepository studyStatusRepository;
+    private final StudyRestDayRepository studyRestDayRepository;
+    private final StudyRestDateRepository studyRestDateRepository;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     /** 사용자의 오늘 공부 내용을 추가합니다. */
@@ -41,6 +48,8 @@ public class StudyUserContentService {
     public Long addUserContent(StudyUserContentRequestDTO request, Long userId) {
         StudyDailyPlan dailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
+
+        validateNotHoliday(dailyPlan.getStudy().getStudyId(), dailyPlan.getPlanDate());
 
         StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
                         dailyPlan.getStudy().getStudyId(),
@@ -84,7 +93,21 @@ public class StudyUserContentService {
         // 작성자 본인인지 확인
         StudyAuthUtil.verifyOwnership(content.getStudyMember(), userId);
 
+        validateNotHoliday(content.getStudyDailyPlan().getStudy().getStudyId(), content.getStudyDailyPlan().getPlanDate());
+
         content.updateContent(request.userContent());
+    }
+
+    private void validateNotHoliday(Long studyId, LocalDate planDate) {
+        List<DayOfWeek> restDays = studyRestDayRepository.findAllByStudy_StudyId(studyId)
+                .stream().map(StudyRestDay::getDayOfWeek).toList();
+
+        List<LocalDate> restDates = studyRestDateRepository.findAllByStudy_StudyId(studyId)
+                .stream().map(StudyRestDate::getRestDate).toList();
+
+        if (restDays.contains(planDate.getDayOfWeek()) || restDates.contains(planDate)) {
+            throw new StudyException(StudyErrorCode.HOLIDAY_REGISTRATION_NOT_ALLOWED);
+        }
     }
 
     /** 사용자의 특정 일자의 공부 내용을 조회합니다. */
@@ -97,6 +120,14 @@ public class StudyUserContentService {
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
+        List<DayOfWeek> restDays = studyRestDayRepository.findAllByStudy_StudyId(studyId)
+                .stream().map(StudyRestDay::getDayOfWeek).toList();
+
+        List<LocalDate> restDates = studyRestDateRepository.findAllByStudy_StudyId(studyId)
+                .stream().map(StudyRestDate::getRestDate).toList();
+
+        boolean isHoliday = restDays.contains(planDate.getDayOfWeek()) || restDates.contains(planDate);
+
         Optional<StudyDailyPlan> optionalDailyPlan =
                 studyDailyPlanRepository.findByStudyIdAndPlanDate(studyId, planDate);
 
@@ -105,6 +136,7 @@ public class StudyUserContentService {
             return StudyMemberContentResponseDTO.builder()
                     .studyDailyPlanId(null)
                     .planContent(null)
+                    .isHoliday(isHoliday)
                     .memberContents(List.of())
                     .build();
         }
@@ -118,7 +150,8 @@ public class StudyUserContentService {
 
         return StudyConverter.toStudyMemberContentResponseDTO(
                 dailyPlan,
-                contents
+                contents,
+                isHoliday
         );
     }
 

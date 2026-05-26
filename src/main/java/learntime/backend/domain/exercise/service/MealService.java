@@ -2,7 +2,9 @@ package learntime.backend.domain.exercise.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import learntime.backend.domain.exercise.converter.ExerciseConverter;
 import learntime.backend.domain.exercise.dto.request.MealRequestDTO;
+import learntime.backend.domain.exercise.dto.response.MealResponseDTO;
 import learntime.backend.domain.exercise.error.code.ExerciseErrorCode;
 import learntime.backend.domain.exercise.error.exception.ExerciseException;
 import learntime.backend.domain.exercise.model.MealRecord;
@@ -10,9 +12,7 @@ import learntime.backend.domain.exercise.repository.MealRecordRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.common.GeminiModel;
-import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.AuthException;
-import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.infra.foodapi.FoodApiClient;
 import learntime.backend.global.infra.gemini.GeminiClient;
@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,9 +35,10 @@ public class MealService {
     private final GeminiClient geminiClient;
     private final ObjectMapper objectMapper;
     private final FoodApiClient foodApiClient;
+    private final ExercisePromptProvider promptProvider;
 
     @Transactional
-    public MealRecord saveMeal(Long userId, MealRequestDTO request) {
+    public MealResponseDTO saveMeal(Long userId, MealRequestDTO request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
@@ -72,15 +74,10 @@ public class MealService {
             }
 
             // 4. DB 저장
-            MealRecord record = MealRecord.builder()
-                    .user(user)
-                    .foodName(searchKeyword)
-                    .calories(finalCalories)
-                    .protein(finalProtein)
-                    .isEstimated(isEstimated)
-                    .build();
+            MealRecord record = ExerciseConverter.toMealRecord(user, searchKeyword, finalCalories, finalProtein, isEstimated);
+            MealRecord saveRecord = mealRecordRepository.save(record);
 
-            return mealRecordRepository.save(record);
+            return ExerciseConverter.toMealResponseDTO(saveRecord);
 
         } catch (Exception e) {
             log.error("식단 분석 실패: {}", e.getMessage());
@@ -89,25 +86,7 @@ public class MealService {
     }
 
     private Map<String, Object> createGeminiMealPrompt(String userInput) {
-        String prompt = """
-                다음 사용자의 식단 입력을 분석해서 JSON으로 반환해줘.
-                입력: "%s"
-                
-                조건:
-                1. searchKeyword: 공공데이터 API 검색에 가장 적합한 핵심 음식명 (예: "스팸김치제육도시락" -> "제육도시락" 또는 "제육볶음")
-                2. portionInGrams: 사용자가 섭취한 예상 무게(g). 만약 수량이 명시되지 않았다면 무조건 '1인분'을 기준으로 통상적인 무게(g)를 추정할 것. (ml 단위의 음식도 밀도를 무시하고 g으로 취급할 것)
-                3. fallbackData: 만약 API 검색에 실패할 경우를 대비해, 이 음식(portionInGrams 기준)의 대략적인 총 칼로리와 단백질량을 제공할 것.
-                
-                반드시 아래 JSON 구조만 반환할 것:
-                {
-                  "searchKeyword": "문자열",
-                  "portionInGrams": 숫자,
-                  "fallbackData": {
-                    "calories": 숫자,
-                    "protein": 숫자
-                  }
-                }
-                """.formatted(userInput);
+        String prompt = promptProvider.getMealAnalysisPrompt().formatted(userInput);
 
         return Map.of(
                 "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),

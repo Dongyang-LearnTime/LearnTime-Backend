@@ -17,14 +17,12 @@ public class CalenderConverter {
     }
 
     public static CalendarRecord toCalendarRecord(CalendarRequestDTO request, User user) {
-        boolean isCompleted = Boolean.TRUE.equals(request.isCompleted());
         boolean isImportant = Boolean.TRUE.equals(request.isImportant());
 
         return CalendarRecord.builder()
                 .user(user)
                 .content(request.content())
                 .targetDate(request.targetDate())
-                .isCompleted(isCompleted)
                 .isImportant(isImportant)
                 .build();
     }
@@ -34,7 +32,6 @@ public class CalenderConverter {
                 .calendarRecordId(record.getCalendarRecordId())
                 .content(record.getContent())
                 .targetDate(record.getTargetDate())
-                .isCompleted(record.getIsCompleted())
                 .isImportant(record.getIsImportant())
                 .createdAt(record.getCreatedAt())
                 .build();

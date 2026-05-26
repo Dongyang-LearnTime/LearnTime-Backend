@@ -37,10 +37,6 @@ public class CalendarRecord extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime targetDate;
 
-    /** 일정 완료 여부 */
-    @Builder.Default
-    private Boolean isCompleted = false;
-
     /** 중요 일정 여부 */
     @Builder.Default
     @Column(nullable = false)
@@ -57,10 +53,9 @@ public class CalendarRecord extends BaseTimeEntity {
     private List<Reminder> reminders = new ArrayList<>();
 
     // 일정 수정 기능을 위한 편의 메서드
-    public void update(String content, LocalDateTime targetDate, Boolean isCompleted, Boolean isImportant) {
+    public void update(String content, LocalDateTime targetDate, Boolean isImportant) {
         this.content = content;
         this.targetDate = targetDate;
-        this.isCompleted = isCompleted;
         this.isImportant = isImportant;
     }
 

@@ -76,7 +76,6 @@ public class CalendarService {
 
         record.update(request.content(),
                 request.targetDate(),
-                request.isCompleted(),
                 request.isImportant() != null && request.isImportant());
 
         // 리마인더 재예약은 이벤트 리스너가 같은 트랜잭션 커밋 직전에 처리

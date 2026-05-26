@@ -133,11 +133,13 @@ public class StudyConverter {
 
     public static StudyMemberContentResponseDTO toStudyMemberContentResponseDTO(
             StudyDailyPlan dailyPlan,
-            List<StudyMemberContent> contents
+            List<StudyMemberContent> contents,
+            boolean isHoliday
     ) {
         return StudyMemberContentResponseDTO.builder()
                 .studyDailyPlanId(dailyPlan.getStudyDailyPlanId())
                 .planContent(dailyPlan.getPlanContent())
+                .isHoliday(isHoliday)
                 .memberContents(
                         contents.stream()
                                 .map(StudyConverter::toMemberContent)

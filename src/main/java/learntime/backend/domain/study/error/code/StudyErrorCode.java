@@ -35,7 +35,8 @@ public enum StudyErrorCode implements BaseErrorCode {
     INVALID_OWNER_TRANSFER(HttpStatus.BAD_REQUEST, "STUDY-025", "자기 자신에게 방장 권한을 위임할 수 없습니다."),
     PROMPT_INIT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-026", "AI 프롬프트 템플릿 초기화에 실패했습니다."),
     STUDY_DAILY_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "STUDY-027", "이미 시작되었거나 종료된 계획입니다."),
-    STUDY_USER_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-028", "일일 공부 내용을 찾을 수 없습니다.");
+    STUDY_USER_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-028", "일일 공부 내용을 찾을 수 없습니다."),
+    HOLIDAY_REGISTRATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-029", "휴무일에는 공부 내용을 등록하거나 수정할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

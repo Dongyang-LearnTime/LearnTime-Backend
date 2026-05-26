@@ -25,19 +25,9 @@ public class WeightController {
 
     @PostMapping("/save")
     @Operation(summary = "신체 데이터 저장", description = "체중과 체지방량을 입력하면, 해당 내용이 암호화되어 DB에 저장됩니다.")
-    public ResponseEntity<WeightResponseDTO> saveWeight(
-            @AuthenticationPrincipal CustomUserDetails user,
-            @RequestBody WeightRequestDTO request) {
-
-        WeightRecord saved = weightService.saveWeight(user.userId(), request);
-
-        WeightResponseDTO response = WeightResponseDTO.builder()
-                .id(saved.getWeightRecordId())
-                .weight(saved.getWeight())
-                .bodyFat(saved.getBodyFat())
-                .createdAt(saved.getCreatedAt())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<WeightResponseDTO> saveWeight(@RequestBody WeightRequestDTO request,
+                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        WeightResponseDTO result = weightService.saveWeight(userDetails.userId(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 }

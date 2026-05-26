@@ -18,6 +18,8 @@ public interface CalendarRecordRepository extends JpaRepository<CalendarRecord, 
 
     Optional<CalendarRecord> findFirstByRoutineOrderByTargetDateDesc(Routine routine);
 
+    List<CalendarRecord> findAllByRoutineAndTargetDateAfter(Routine routine, LocalDateTime after);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM CalendarRecord c WHERE c.routine = :routine AND c.targetDate > :after")
     void deleteByRoutineAndTargetDateAfter(@Param("routine") Routine routine, @Param("after") LocalDateTime after);
