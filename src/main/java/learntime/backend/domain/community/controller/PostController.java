@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
+import learntime.backend.domain.community.enums.PostSearchType;
 import learntime.backend.domain.community.service.core.PostService;
 import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -49,11 +50,19 @@ public class PostController {
     }
 
     @GetMapping("/search")
-    @Operation(summary = "게시글 검색", description = "제목 또는 내용에 키워드가 포함된 게시글을 페이징하여 조회합니다.")
+    @Operation(
+            summary = "게시글 검색",
+            description = "제목/내용 또는 작성자 이름으로 게시글을 검색합니다."
+    )
     public ResponseEntity<PageResponse<PostListResponseDTO>> searchPosts(
             @RequestParam String keyword,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<PostListResponseDTO> response = postService.searchPosts(keyword, pageable);
+            @RequestParam(defaultValue = "CONTENT") PostSearchType type,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+
+        Page<PostListResponseDTO> response =
+                postService.searchPosts(keyword, type, pageable);
+
         return ResponseEntity.ok(PageResponse.of(response));
     }
 

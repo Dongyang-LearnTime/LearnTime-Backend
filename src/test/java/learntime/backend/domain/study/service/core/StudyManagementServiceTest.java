@@ -7,7 +7,6 @@ import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
-import learntime.backend.domain.user.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -122,5 +121,11 @@ class StudyManagementServiceTest {
         // 4계층 삭제 확인
         verify(studyRepository).deleteStudyMembersByStudyId(studyId);
         verify(studyRepository).deleteStudyById(studyId);
+    }
+    private StudyMember mockOwnerMember() {
+        StudyMember studyMember = mock(StudyMember.class);
+        given(studyMember.isActive()).willReturn(true);
+        given(studyMember.getStudyMemberRole()).willReturn(StudyMemberRole.OWNER);
+        return studyMember;
     }
 }

@@ -23,6 +23,18 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
             StudyMemberStatus status
     );
 
+    @Query("""
+        SELECT sm.studyMemberId
+        FROM StudyMember sm
+        WHERE sm.study.studyId = :studyId
+          AND sm.user.userId = :userId
+          AND sm.status = learntime.backend.domain.study_member.enums.StudyMemberStatus.ACTIVE
+    """)
+    Optional<Long> findActiveStudyMemberIdByStudyIdAndUserId(
+            @Param("studyId") Long studyId,
+            @Param("userId") Long userId
+    );
+
     List<StudyMember> findAllByStudy_StudyIdAndStatus(Long studyId, StudyMemberStatus status);
 
     @Query("""

@@ -36,7 +36,9 @@ public enum StudyErrorCode implements BaseErrorCode {
     PROMPT_INIT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STUDY-026", "AI 프롬프트 템플릿 초기화에 실패했습니다."),
     STUDY_DAILY_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "STUDY-027", "이미 시작되었거나 종료된 계획입니다."),
     STUDY_USER_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-028", "일일 공부 내용을 찾을 수 없습니다."),
-    HOLIDAY_REGISTRATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-029", "휴무일에는 공부 내용을 등록하거나 수정할 수 없습니다.");
+    HOLIDAY_REGISTRATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-029", "휴무일에는 공부 내용을 등록하거나 수정할 수 없습니다."),
+    STUDY_REST_UPDATE_NOT_READY(HttpStatus.BAD_REQUEST, "STUDY-030", "공부 진도 생성이 완료된 후 휴무 일정을 변경할 수 있습니다."),
+    TODAY_REST_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-031", "오늘을 새 휴무일로 변경할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -20,6 +20,7 @@ import learntime.backend.domain.study.repository.StudyRestDayRepository;
 import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -122,6 +123,7 @@ public class StudyDailyService {
 
     // 일일 학습 계획을 시작(진행 중) 상태로 변경합니다.
     @Transactional
+    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public void startStudyDailyPlan(Long studyDailyPlanId, Long userId) {
         StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(studyDailyPlanId);
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
@@ -142,6 +144,7 @@ public class StudyDailyService {
 
     // 일일 학습 계획을 완료 처리하고 포인트를 지급합니다.
     @Transactional
+    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
         StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(request.studyDailyPlanId());
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);

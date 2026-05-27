@@ -27,6 +27,7 @@ import learntime.backend.domain.study.repository.StudyRestDayRepository;
 import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,7 @@ public class StudyUserContentService {
 
     /** 사용자의 오늘 공부 내용을 추가합니다. */
     @Transactional
+    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public Long addUserContent(StudyUserContentRequestDTO request, Long userId) {
         StudyDailyPlan dailyPlan = studyDailyPlanRepository.findById(request.studyDailyPlanId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));

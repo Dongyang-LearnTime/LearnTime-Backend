@@ -77,20 +77,19 @@ public class StudyQueryService {
 
     // 특정 유저의 전체 통계 지표를 조회합니다.
     @Transactional(readOnly = true)
+    @Cacheable(value = "studyTotalIndicator", key = "#studyId + '_' + #userId")
     public StudyTotalInfoResponseDTO getStudyMemberTotalIndicatorByUserId(Long studyId, Long userId) {
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
-
-        Long studyMemberId = study.getStudyMembers().stream()
-                .filter(m -> m.getUser().getUserId().equals(userId))
-                .filter(StudyMember::isActive)
-                .map(StudyMember::getStudyMemberId)
-                .findFirst()
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+        Long studyMemberId = studyMemberRepository.findActiveStudyMemberIdByStudyIdAndUserId(studyId, userId)
+                .orElseThrow(() -> {
+                    if (!studyRepository.existsById(studyId)) {
+                        return new StudyException(StudyErrorCode.STUDY_NOT_FOUND);
+                    }
+                    return new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND);
+                });
 
         List<StudyDailyPlanStatsDTO> stats = studyStatusRepository.findStatsByStudyMemberId(studyMemberId);
 
-        long totalPlans = study.getStudyDailyPlans().size();
+        long totalPlans = studyDailyPlanRepository.countByStudy_StudyId(studyId);
 
         if (totalPlans == 0) {
             return buildEmptyIndicatorResponse();

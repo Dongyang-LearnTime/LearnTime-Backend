@@ -25,12 +25,46 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findAllPosts(Pageable pageable);
 
     /** 제목 또는 내용으로 게시글을 페이징 조회합니다. (작성자 fetch join) */
-    @Query(value = "SELECT p FROM Post p " +
-            "LEFT JOIN FETCH p.user u " +
-            "WHERE (p.title LIKE %:keyword% OR p.content LIKE %:keyword%) " +
-            "AND p.isNotice = false",
-           countQuery = "SELECT COUNT(p) FROM Post p WHERE (p.title LIKE %:keyword% OR p.content LIKE %:keyword%) AND p.isNotice = false")
-    Page<Post> searchPosts(@Param("keyword") String keyword, Pageable pageable);
+    @Query(
+            value = """
+                SELECT p FROM Post p
+                JOIN FETCH p.user u
+                WHERE (
+                    p.title LIKE CONCAT(:keyword, '%')
+                    OR p.content LIKE CONCAT(:keyword, '%')
+                )
+                AND p.isNotice = false
+                """,
+            countQuery = """
+                SELECT COUNT(p) FROM Post p
+                WHERE (
+                    p.title LIKE CONCAT(:keyword, '%')
+                    OR p.content LIKE CONCAT(:keyword, '%')
+                )
+                AND p.isNotice = false
+                """
+    )
+    Page<Post> searchByKeyword(
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
+    @Query(
+            value = """
+                SELECT p FROM Post p
+                JOIN FETCH p.user u
+                WHERE u.name LIKE CONCAT(:name, '%')
+                AND p.isNotice = false
+                """,
+            countQuery = """
+                SELECT COUNT(p) FROM Post p
+                JOIN p.user u
+                WHERE u.name LIKE CONCAT(:name, '%')
+                AND p.isNotice = false
+                """
+    )
+    Page<Post> searchByAuthorName(@Param("name") String name, Pageable pageable);
+
 
     /** 주간 인기글 목록을 조회합니다. (작성자 fetch join) */
     @Query("SELECT p FROM Post p " +

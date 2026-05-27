@@ -4,12 +4,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study.dto.request.UpdateStudyRestScheduleRequestDTO;
 import learntime.backend.domain.study.dto.request.UpdateStudyTitleRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyMemberRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyProgressIndicatorResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyStatusResponseDTO;
+import learntime.backend.domain.study.dto.response.StudyStudioSummaryResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.TocListResponseDTO;
+import learntime.backend.domain.study.service.core.StudyDailyService;
+import learntime.backend.domain.study.service.core.StudyUserContentService;
 import learntime.backend.domain.study.service.facade.StudyFacade;
 import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.global.security.CustomUserDetails;
@@ -17,11 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -33,6 +39,8 @@ public class StudyController {
 
     private final StudyFacade studyFacade;
     private final StudyQueryService studyQueryService;
+    private final StudyDailyService studyDailyService;
+    private final StudyUserContentService studyUserContentService;
 
     @GetMapping("/progress")
     @Operation(
@@ -62,6 +70,25 @@ public class StudyController {
     public ResponseEntity<List<StudyMemberRecentWeekInfoResponseDTO>> recentWeekStudyIndicator(@PathVariable Long studyId,
                                                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
         List<StudyMemberRecentWeekInfoResponseDTO> result = studyQueryService.getRecentWeekStudyInfos(studyId);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{studyId}/studio-summary")
+    @Operation(
+            summary = "학습 스튜디오 첫 화면 통합 조회",
+            description = "첫 화면에 필요한 오늘의 진도, 사용자 작성 내용, 핵심 지표, 최근 일주일 지표를 한 번에 조회합니다."
+    )
+    public ResponseEntity<StudyStudioSummaryResponseDTO> getStudioSummary(
+            @PathVariable Long studyId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate planDate,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        StudyStudioSummaryResponseDTO result = StudyStudioSummaryResponseDTO.builder()
+                .todayPlan(studyDailyService.getStudyPlanInfoByDate(studyId, planDate, userDetails.userId()))
+                .todayContent(studyUserContentService.getUserContents(studyId, userDetails.userId(), planDate))
+                .totalIndicator(studyQueryService.getStudyMemberTotalIndicatorByUserId(studyId, userDetails.userId()))
+                .recentWeekIndicator(studyQueryService.getRecentWeekStudyInfos(studyId))
+                .build();
+
         return ResponseEntity.ok(result);
     }
 
@@ -109,6 +136,18 @@ public class StudyController {
                                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
         boolean isStudyTitle = false; // 공부 진도 제목 여부
         studyFacade.updateTitle(request, userDetails.userId(), isStudyTitle);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{studyId}/rests")
+    @Operation(
+            summary = "공부 휴무 일정 재조정",
+            description = "휴무 요일/날짜를 변경하며, 기존 공부 내용은 유지한 채 오늘 이후 일정 날짜만 재배치합니다."
+    )
+    public ResponseEntity<Void> updateStudyRestSchedule(@PathVariable Long studyId,
+                                                        @Valid @RequestBody UpdateStudyRestScheduleRequestDTO request,
+                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyFacade.updateRestSchedule(studyId, request, userDetails.userId());
         return ResponseEntity.noContent().build();
     }
 

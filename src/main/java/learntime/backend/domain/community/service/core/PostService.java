@@ -6,6 +6,7 @@ import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
 import learntime.backend.domain.community.dto.request.PostUpdateRequestDTO;
 import learntime.backend.domain.community.dto.response.PostListResponseDTO;
 import learntime.backend.domain.community.dto.response.PostUpdateDetailDTO;
+import learntime.backend.domain.community.enums.PostSearchType;
 import learntime.backend.domain.community.error.code.CommunityErrorCode;
 import learntime.backend.domain.community.error.exception.CommunityException;
 import learntime.backend.domain.community.model.Post;
@@ -66,13 +67,23 @@ public class PostService {
 
     /** 제목 또는 내용으로 게시글 목록 페이징 검색 */
     @Transactional(readOnly = true)
-    public Page<PostListResponseDTO> searchPosts(String keyword, Pageable pageable) {
-        Page<Post> posts = postRepository.searchPosts(keyword, pageable);
-        Map<Long, Long> commentCountMap = getCommentCountMap(posts.getContent());
-        return posts.map(post -> PostConverter.toPostListResponseDTO(
-                post,
-                commentCountMap.getOrDefault(post.getPostId(), 0L)
-        ));
+    public Page<PostListResponseDTO> searchPosts(String keyword, PostSearchType type, Pageable pageable) {
+        Page<Post> posts = switch (type) {
+            case AUTHOR ->
+                    postRepository.searchByAuthorName(keyword, pageable);
+            case CONTENT ->
+                    postRepository.searchByKeyword(keyword, pageable);
+        };
+
+        Map<Long, Long> commentCountMap =
+                getCommentCountMap(posts.getContent());
+
+        return posts.map(post ->
+                PostConverter.toPostListResponseDTO(
+                        post,
+                        commentCountMap.getOrDefault(post.getPostId(), 0L)
+                )
+        );
     }
 
     /** 주간 인기글 3개 조회 */

@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -130,6 +131,7 @@ public class StudyQuizFacade {
 
     // 퀴즈 삭제
     @Transactional
+    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public void deleteStudyQuiz(Long studyQuizId, Long userId) {
         StudyQuiz studyQuiz = findByStudyQuizId(studyQuizId);
         // 본인만 삭제 가능
@@ -140,6 +142,7 @@ public class StudyQuizFacade {
 
     // 퀴즈 이력 삭제
     @Transactional
+    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public void deleteQuizHistory(Long quizHistoryId, Long userId) {
         QuizHistory quizHistory = quizHistoryRepository.findById(quizHistoryId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_HISTORY_NOT_FOUND));

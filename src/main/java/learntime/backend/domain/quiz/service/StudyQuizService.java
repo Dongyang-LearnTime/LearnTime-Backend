@@ -18,6 +18,7 @@ import learntime.backend.domain.quiz.repository.StudyQuizRepository;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -88,6 +89,7 @@ public class StudyQuizService {
     }
 
     @Transactional
+    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public Long solveQuiz(List<QuizSolveRequestDTO> requests, Long userId) {
         List<Long> questionIds = requests.stream()
                 .map(QuizSolveRequestDTO::quizQuestionId)

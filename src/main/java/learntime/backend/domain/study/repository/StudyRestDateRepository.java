@@ -11,4 +11,6 @@ import java.util.List;
 public interface StudyRestDateRepository extends JpaRepository<StudyRestDate, Long>  {
     // 특정 스터디의 지정 휴무일을 모두 조회함
     List<StudyRestDate> findAllByStudy_StudyId(Long studyId);
+
+    void deleteAllByStudy_StudyId(Long studyId);
 }

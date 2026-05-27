@@ -15,10 +15,11 @@ public class CacheCleanupScheduler {
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul") // 매일 자정 실행
     @Caching(evict = {
             @CacheEvict(value = "recentWeekStudyIndicator", allEntries = true),
-            @CacheEvict(value = "studyDailyPlans", allEntries = true)
+            @CacheEvict(value = "studyDailyPlans", allEntries = true),
+            @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     })
     public void evictAllCaches() {
-        log.info("[캐시 초기화] 스케줄러(자정) 캐시 일괄 삭제 완료 (recentWeekStudyIndicator, studyDailyPlans)");
+        log.info("[캐시 초기화] 스케줄러(자정) 캐시 일괄 삭제 완료 (recentWeekStudyIndicator, studyDailyPlans, studyTotalIndicator)");
     }
 
 }
