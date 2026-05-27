@@ -17,6 +17,7 @@ public class MyPageService {
 
     private final UserRepository userRepository;
     private final CustomPasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
     @Transactional(readOnly = true)
     public MyPageResponseDTO getMyInfo(String email) {
@@ -26,13 +27,14 @@ public class MyPageService {
     }
 
     @Transactional
-    public void updateName(String email, String name) {
+    public AuthService.TokenPair updateName(String email, String name) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
         if (userRepository.existsByName(name)) {
             throw new AuthException(AuthErrorCode.USER_NAME_DUPLICATED);
         }
         user.updateInfo(name);
+        return authService.generateTokenPair(user);
     }
 
     @Transactional

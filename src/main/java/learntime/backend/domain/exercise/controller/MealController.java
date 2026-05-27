@@ -24,7 +24,10 @@ public class MealController {
     private final MealService mealService;
 
     @PostMapping("/save")
-    @Operation(summary = "식단 정보 저장", description = "섭취한 식단이 식품영양정보에 존재하는 값일 경우 식품영양정보 값을, 존재하지 않을 경우 Gemini의 추정값을 사용합니다.")
+    @Operation(
+            summary = "식단 정보 저장",
+            description = "섭취한 식단이 식품영양정보에 존재하는 값일 경우 식품영양정보 값을, 존재하지 않을 경우 Gemini의 추정값을 사용합니다."
+    )
     public ResponseEntity<MealResponseDTO> saveMeal(@Valid @RequestBody MealRequestDTO request,
                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -34,10 +37,20 @@ public class MealController {
 
     @GetMapping("/today")
     @Operation(summary = "오늘의 식단 조회", description = "오늘 하루 동안 저장된 식단 목록을 조회합니다.")
-    public ResponseEntity<List<MealResponseDTO>> getTodayMeals(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<List<MealResponseDTO>> getTodayMeals(@AuthenticationPrincipal CustomUserDetails userDetails) {
 
         List<MealResponseDTO> meals = mealService.getTodayMeals(userDetails.userId());
         return ResponseEntity.ok(meals);
     }
+
+    @DeleteMapping("/{mealRecordId}")
+    @Operation(summary = "식단 단일 기록 삭제", description = "식단 정보 1개를 삭제합니다.")
+    public ResponseEntity<Void> deleteMealRecord(@PathVariable Long mealRecordId,
+                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        mealService.deleteMealRecord(mealRecordId, userDetails.userId());
+        return ResponseEntity.noContent().build();
+    }
+
+
 }

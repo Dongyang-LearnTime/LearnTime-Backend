@@ -11,25 +11,34 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import java.security.MessageDigest;
+
 @Component
 public class EncryptionUtil {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
 
-    private static String KEY;
-    private static String IV;
+    private static byte[] KEY;
+    private static byte[] IV;
 
     @Value("${encryption.key}")
     public void setKey(String key) {
-        EncryptionUtil.KEY = key;
-        EncryptionUtil.IV = key.substring(0, 16);
+        try {
+            MessageDigest sha = MessageDigest.getInstance("SHA-256");
+            KEY = sha.digest(key.getBytes(StandardCharsets.UTF_8));
+            
+            IV = new byte[16];
+            System.arraycopy(KEY, 0, IV, 0, 16);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not found", e);
+        }
     }
 
     public static String encrypt(String text) {
         try {
             if (text == null) return null;
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            SecretKeySpec keySpec = new SecretKeySpec(KEY.getBytes(StandardCharsets.UTF_8), "AES");
-            IvParameterSpec ivParamSpec = new IvParameterSpec(IV.getBytes(StandardCharsets.UTF_8));
+            SecretKeySpec keySpec = new SecretKeySpec(KEY, "AES");
+            IvParameterSpec ivParamSpec = new IvParameterSpec(IV);
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParamSpec);
             byte[] encrypted = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(encrypted);
@@ -42,8 +51,8 @@ public class EncryptionUtil {
         try {
             if (cipherText == null) return null;
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            SecretKeySpec keySpec = new SecretKeySpec(KEY.getBytes(StandardCharsets.UTF_8), "AES");
-            IvParameterSpec ivParamSpec = new IvParameterSpec(IV.getBytes(StandardCharsets.UTF_8));
+            SecretKeySpec keySpec = new SecretKeySpec(KEY, "AES");
+            IvParameterSpec ivParamSpec = new IvParameterSpec(IV);
             cipher.init(Cipher.DECRYPT_MODE, keySpec, ivParamSpec);
             byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
             byte[] decrypted = cipher.doFinal(decodedBytes);

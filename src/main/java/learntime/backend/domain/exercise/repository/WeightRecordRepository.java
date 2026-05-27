@@ -18,6 +18,9 @@ public interface WeightRecordRepository extends JpaRepository<WeightRecord, Long
     List<WeightRecord> findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(
             User user, LocalDateTime start, LocalDateTime end);
 
+    // 사용자의 전체 데이터를 최신순으로 조회
+    List<WeightRecord> findAllByUserOrderByCreatedAtDesc(User user);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM WeightRecord w WHERE w.user.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);

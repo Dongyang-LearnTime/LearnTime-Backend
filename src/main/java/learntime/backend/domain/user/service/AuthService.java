@@ -157,7 +157,7 @@ public class AuthService {
     }
 
     // 토큰 DB에 저장 및 return
-    private TokenPair generateTokenPair(User user) {
+    public TokenPair generateTokenPair(User user) {
         String newAccess = jwtProvider.createToken(user, ACCESS_TIME);
         String newRefresh = jwtProvider.createToken(user, REFRESH_TIME);
         LocalDateTime newExpiry = LocalDateTime.now().plusSeconds(REFRESH_TIME / 1000);

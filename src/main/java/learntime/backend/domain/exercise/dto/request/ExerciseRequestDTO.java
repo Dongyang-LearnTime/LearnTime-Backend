@@ -14,4 +14,5 @@ public class ExerciseRequestDTO {
     private List<String> bodyParts;
     private Integer duration;
     private String content;
+    private Double weight;
 }

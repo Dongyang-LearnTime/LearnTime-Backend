@@ -86,7 +86,6 @@ public class StudyController {
         return ResponseEntity.ok(jsonResult);
     }
 
-
     @PostMapping("/generate")
     @Operation(summary = "공부 진도 생성", description = "목차 정보를 기반으로 공부 진도를 생성 후 DB에 저장합니다.")
     public ResponseEntity<Long> createStudyPlan(@Valid @RequestBody GeminiStudyRequestDTO request,

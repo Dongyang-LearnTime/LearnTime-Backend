@@ -2,16 +2,15 @@ package learntime.backend.domain.exercise.converter;
 
 import learntime.backend.domain.exercise.dto.request.ExerciseRequestDTO;
 import learntime.backend.domain.exercise.dto.request.WeightRequestDTO;
-import learntime.backend.domain.exercise.dto.response.ExerciseCalorieResponseDTO;
-import learntime.backend.domain.exercise.dto.response.ExerciseResponseDTO;
-import learntime.backend.domain.exercise.dto.response.MealResponseDTO;
-import learntime.backend.domain.exercise.dto.response.WeightResponseDTO;
+import learntime.backend.domain.exercise.dto.response.*;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
+
+import java.time.LocalDate;
 
 public class ExerciseConverter {
 
@@ -21,11 +20,19 @@ public class ExerciseConverter {
 
     public static ExerciseRecord toExerciseRecord(User user, ExerciseRequestDTO request, ExerciseCalorieResponseDTO response) {
         return ExerciseRecord.builder()
-                .user(user) // 찾은 유저 세팅
+                .user(user)
                 .bodyParts(request.getBodyParts())
                 .duration(request.getDuration())
                 .content(request.getContent())
+                .weight(request.getWeight())
                 .calories(response.getCalories())
+                .build();
+    }
+
+    public static WeeklyWeightStatsResponseDTO toWeeklyWeightStatsResponseDTO(Double dailyTotalWeight, LocalDate date) {
+        return WeeklyWeightStatsResponseDTO.builder()
+                .dailyTotalWeight(dailyTotalWeight)
+                .date(date)
                 .build();
     }
 
@@ -35,6 +42,7 @@ public class ExerciseConverter {
                 .bodyParts(exerciseRecord.getBodyParts())
                 .duration(exerciseRecord.getDuration())
                 .content(exerciseRecord.getContent())
+                .weight(exerciseRecord.getWeight())
                 .calories(exerciseRecord.getCalories())
                 .createdAt(exerciseRecord.getCreatedAt())
                 .build();

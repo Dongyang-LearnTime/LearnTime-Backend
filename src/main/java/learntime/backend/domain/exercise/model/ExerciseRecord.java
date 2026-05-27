@@ -35,4 +35,18 @@ public class ExerciseRecord extends BaseTimeEntity {
 
     private Integer calories; // AI(Gemini)가 계산한 소모 칼로리
 
+    private Double weight; // 중량 (kg)
+
+    public void updateRecord(List<String> bodyParts, Integer duration, String content, Double weight, Integer calories) {
+        this.bodyParts = bodyParts;
+        this.duration = duration;
+        this.content = content;
+        this.weight = weight;
+        this.calories = calories;
+    }
+
+    public void updateCalories(Integer calories) {
+        this.calories = calories;
+    }
+
 }

@@ -16,6 +16,7 @@ import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.infra.foodapi.FoodApiClient;
 import learntime.backend.global.infra.gemini.GeminiClient;
+import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -101,6 +102,15 @@ public class MealService {
         return mealRecords.stream()
                 .map(ExerciseConverter::toMealResponseDTO)
                 .toList();
+    }
+
+    @Transactional
+    public void deleteMealRecord(Long mealRecordId, Long userId) {
+        MealRecord mealRecord = mealRecordRepository.findById(mealRecordId)
+                .orElseThrow(() -> new ExerciseException(ExerciseErrorCode.MEAL_DATA_NOT_FOUND));
+
+        AuthorizationUtil.verifyOwnership(userId, mealRecord.getUser().getUserId());
+        mealRecordRepository.delete(mealRecord);
     }
 
     private Map<String, Object> createGeminiMealPrompt(String userInput) {

@@ -10,6 +10,7 @@ import learntime.backend.domain.user.dto.response.TokenResponseDTO;
 import learntime.backend.domain.user.service.AuthService;
 import learntime.backend.domain.user.service.UserService;
 import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.global.utils.CookieUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -28,7 +29,7 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
-    private static final long REFRESH_TIME = 60 * 60 * 24 * 14; // 초 단위, 14일
+
 
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "이메일, 비밀번호를 받아 검증 후 JWT 토큰을 쿠키와 반환값으로 줌.")
@@ -39,13 +40,7 @@ public class AuthController {
         AuthService.TokenPair token = authService.login(request);
 
         // 리프레쉬 토큰 HttpOnly 쿠키로 전달
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", token.refreshToken())
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(REFRESH_TIME)
-                .sameSite("None")
-                .build();
+        ResponseCookie cookie = CookieUtil.createRefreshTokenCookie(token.refreshToken());
 
         response.addHeader("Set-Cookie", cookie.toString());
 
@@ -67,13 +62,7 @@ public class AuthController {
         try {
             AuthService.TokenPair tokenPair = authService.refresh(refreshToken);
 
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", tokenPair.refreshToken())
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/")
-                    .maxAge(REFRESH_TIME)
-                    .sameSite("None")
-                    .build();
+            ResponseCookie cookie = CookieUtil.createRefreshTokenCookie(tokenPair.refreshToken());
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
@@ -95,12 +84,7 @@ public class AuthController {
         }
 
         // 쿠키 삭제(덮어씌우기)
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .build();
+        ResponseCookie cookie = CookieUtil.createEmptyRefreshTokenCookie();
         response.addHeader("Set-Cookie", cookie.toString());
 
         return ResponseEntity.ok("logout success");
