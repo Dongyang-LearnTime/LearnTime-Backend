@@ -18,4 +18,8 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM PostLike pl WHERE pl.user.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+    /** 특정 사용자의 게시글에 달린 좋아요 총합 */
+    @Query("SELECT COALESCE(SUM(p.likeCount), 0) FROM Post p WHERE p.user.userId = :userId")
+    long sumLikeCountByAuthorId(@Param("userId") Long userId);
 }

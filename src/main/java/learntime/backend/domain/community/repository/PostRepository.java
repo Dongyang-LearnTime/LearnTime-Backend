@@ -88,6 +88,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "ORDER BY p.createdAt DESC")
     List<Post> findRecentPostsByUserId(@Param("userId") Long userId, Pageable pageable);
 
+    /** 내가 쓴 게시글 오프셋 페이징 조회 */
+    @Query(value = "SELECT p FROM Post p LEFT JOIN FETCH p.user u WHERE p.user.userId = :userId AND p.isNotice = false ORDER BY p.createdAt DESC",
+           countQuery = "SELECT COUNT(p) FROM Post p WHERE p.user.userId = :userId AND p.isNotice = false")
+    Page<Post> findMyPosts(@Param("userId") Long userId, Pageable pageable);
+
+    /** 내가 쓴 게시글 총 개수 */
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.user.userId = :userId AND p.isNotice = false")
+    long countByUserId(@Param("userId") Long userId);
+
     @Modifying(clearAutomatically = true) // 쿼리 실행 후 영속성 컨텍스트 초기화
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.postId = :postId")
     int incrementViewCount(@Param("postId") Long postId);

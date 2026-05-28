@@ -1,18 +1,18 @@
-package learntime.backend.global.config.aws;
+package learntime.backend.global.config.aws.prod;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
-import javax.sql.DataSource;
-
+@Profile("prod")
 @Configuration
 @RequiredArgsConstructor
-public class DataSourceConfig {
+public class ProdDataSourceConfig {
 
-    private final RdsIamAuthTokenProvider tokenProvider;
+    private final ProdRdsIamAuthTokenProvider tokenProvider;
 
     @Value("${spring.datasource.url}")
     private String dbUrl;
@@ -20,16 +20,12 @@ public class DataSourceConfig {
     @Value("${spring.datasource.username}")
     private String userName;
 
-
     @Bean
-    public DataSource dataSource() {
-
+    public HikariDataSource dataSource() {
         HikariDataSource dataSource = new HikariDataSource();
-
         dataSource.setJdbcUrl(dbUrl);
         dataSource.setUsername(userName);
         dataSource.setPassword(tokenProvider.generateToken());
-
         return dataSource;
     }
 }

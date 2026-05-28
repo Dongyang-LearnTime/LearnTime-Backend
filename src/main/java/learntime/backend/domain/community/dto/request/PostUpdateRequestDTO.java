@@ -14,6 +14,9 @@ public record PostUpdateRequestDTO(
         String content,
 
         @Schema(description = "삭제할 기존 이미지 URL 목록", example = "[\"https://s3.../image1.jpg\"]")
-        List<String> deletedImageUrls
+        List<String> deletedImageUrls,
+
+        @Schema(description = "연동할 스터디 ID (선택 사항)", example = "1")
+        Long studyId
 ) {
 }

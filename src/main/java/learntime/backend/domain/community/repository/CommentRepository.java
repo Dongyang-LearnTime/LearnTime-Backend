@@ -1,6 +1,7 @@
 package learntime.backend.domain.community.repository;
 
 import learntime.backend.domain.community.model.Comment;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -37,4 +38,13 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     /** 게시글 ID 목록에 따른 댓글 개수 일괄 조회 */
     @Query("SELECT c.post.postId, COUNT(c) FROM Comment c WHERE c.post.postId IN :postIds GROUP BY c.post.postId")
     List<Object[]> countCommentsByPostIds(@Param("postIds") List<Long> postIds);
+
+    /** 내가 쓴 댓글 오프셋 페이징 조회 (게시글 fetch join) */
+    @Query(value = "SELECT c FROM Comment c JOIN FETCH c.post p WHERE c.user.userId = :userId ORDER BY c.createdAt DESC",
+           countQuery = "SELECT COUNT(c) FROM Comment c WHERE c.user.userId = :userId")
+    Page<Comment> findMyComments(@Param("userId") Long userId, Pageable pageable);
+
+    /** 내가 쓴 댓글 총 개수 */
+    @Query("SELECT COUNT(c) FROM Comment c WHERE c.user.userId = :userId")
+    long countByUserId(@Param("userId") Long userId);
 }

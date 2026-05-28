@@ -233,4 +233,11 @@ public class StudyQueryService {
                 ))
                 .toList();
     }
+
+    @Transactional(readOnly = true)
+    public String getStudyTitle(Long studyId) {
+        return studyRepository.findById(studyId)
+                .map(Study::getStudyTitle)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+    }
 }

@@ -142,11 +142,22 @@ public class PostService {
             imageUrls = List.of();
         }
 
+        String studyTitle = null;
+        if (post.getStudyId() != null) {
+            try {
+                studyTitle = studyQueryService.getStudyTitle(post.getStudyId());
+            } catch (Exception e) {
+                log.warn("게시글 수정 상세 조회 중 스터디 제목 조회에 실패했습니다. studyId: {}", post.getStudyId(), e);
+            }
+        }
+
         return PostUpdateDetailDTO.builder()
                 .postId(post.getPostId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .images(imageUrls)
+                .studyId(post.getStudyId())
+                .studyTitle(studyTitle)
                 .build();
     }
 
@@ -158,8 +169,23 @@ public class PostService {
 
         AuthorizationUtil.verifyOwnership(userId, post.getUser().getUserId());
 
+        // 스터디 스냅샷 업데이트 로직
+        String studySnapshot = post.getStudySnapshot();
+        Long newStudyId = request.studyId();
+
+        if (newStudyId == null) {
+            studySnapshot = null;
+        } else {
+            try {
+                StudyTotalInfoResponseDTO studyIndicator = studyQueryService.getStudyMemberTotalIndicatorByUserId(newStudyId, userId);
+                studySnapshot = objectMapper.writeValueAsString(studyIndicator);
+            } catch (Exception e) {
+                log.warn("수정 중 공부 정보 스냅샷 갱신에 실패했습니다. studyId: {}", newStudyId, e);
+            }
+        }
+
         // 본문 업데이트
-        post.updatePost(request.title(), request.content());
+        post.updatePost(request.title(), request.content(), newStudyId, studySnapshot);
 
         // 이미지 삭제 처리
         if (request.deletedImageUrls() != null && !request.deletedImageUrls().isEmpty()) {

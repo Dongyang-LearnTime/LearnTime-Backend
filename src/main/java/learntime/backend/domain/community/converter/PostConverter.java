@@ -60,6 +60,7 @@ public class PostConverter {
                 .images(imageUrls)
                 .comments(comments)
                 .studyTotalIndicator(studyIndicator)
+                .studyId(post.getStudyId())
                 .isNotice(post.isNotice())
                 .build();
     }
@@ -69,6 +70,7 @@ public class PostConverter {
                 .title(request.title())
                 .content(request.content())
                 .user(user)
+                .studyId(request.studyId())
                 .studySnapshot(studySnapshot)
                 .isNotice(request.isNotice())
                 .build();

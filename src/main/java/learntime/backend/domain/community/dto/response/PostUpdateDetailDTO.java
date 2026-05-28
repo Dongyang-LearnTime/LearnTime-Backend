@@ -17,6 +17,12 @@ public record PostUpdateDetailDTO(
         String content,
         
         @Schema(description = "기존에 등록된 이미지 URL 목록")
-        List<String> images
+        List<String> images,
+
+        @Schema(description = "연동된 스터디 ID (선택 사항)", example = "1")
+        Long studyId,
+
+        @Schema(description = "연동된 스터디 제목 (선택 사항)", example = "자바 공부")
+        String studyTitle
 ) {
 }

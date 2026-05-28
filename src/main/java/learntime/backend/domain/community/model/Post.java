@@ -36,6 +36,9 @@ public class Post extends CommunityBaseEntity {
     @Column(columnDefinition = "TEXT")
     private String studySnapshot;
 
+    @Column
+    private Long studyId;
+
     @Column(nullable = false, length = 100)
     private String title;
 
@@ -98,8 +101,10 @@ public class Post extends CommunityBaseEntity {
     public void incrementViewCount() { this.viewCount++; }
 
     // 게시글 수정
-    public void updatePost(String title, String content) {
+    public void updatePost(String title, String content, Long studyId, String studySnapshot) {
         this.title = title;
         this.content = content;
+        this.studyId = studyId;
+        this.studySnapshot = studySnapshot;
     }
 }
