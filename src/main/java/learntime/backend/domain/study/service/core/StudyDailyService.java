@@ -5,6 +5,7 @@ import learntime.backend.domain.point.enums.PointPolicy;
 import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.study.converter.StudyDailyPlanConverter;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
+import learntime.backend.domain.study.dto.request.FocusTimeRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanResponseDTO;
 import learntime.backend.domain.study.enums.CompletionStatus;
@@ -128,11 +129,7 @@ public class StudyDailyService {
         StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(studyDailyPlanId);
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
 
-        StudyStatus studyStatus = studyStatusRepository.findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMember.getStudyMemberId(), studyDailyPlan.getStudyDailyPlanId())
-                .orElseGet(() -> StudyStatus.builder()
-                        .studyMember(studyMember)
-                        .studyDailyPlan(studyDailyPlan)
-                        .build());
+        StudyStatus studyStatus = getOrCreateStudyStatus(studyMember, studyDailyPlan);
 
         if (studyStatus.getProgressStatus() != ProgressStatus.NOT_STARTED) {
             throw new StudyException(StudyErrorCode.STUDY_DAILY_ALREADY_STARTED);
@@ -149,11 +146,7 @@ public class StudyDailyService {
         StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(request.studyDailyPlanId());
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
 
-        StudyStatus studyStatus = studyStatusRepository.findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMember.getStudyMemberId(), studyDailyPlan.getStudyDailyPlanId())
-                .orElseGet(() -> StudyStatus.builder()
-                        .studyMember(studyMember)
-                        .studyDailyPlan(studyDailyPlan)
-                        .build());
+        StudyStatus studyStatus = getOrCreateStudyStatus(studyMember, studyDailyPlan);
 
         // 상태가 완료됨 이거나 실패, 성공 상태가 아니고, 진행 중인 것만 완료되게 수정
         if (studyStatus.getProgressStatus() == ProgressStatus.COMPLETED
@@ -184,6 +177,31 @@ public class StudyDailyService {
         eventPublisher.publishEvent(new learntime.backend.domain.badge.event.StudyCompletedEvent(userId, LocalDateTime.now()));
 
         return calculatedPoint;
+    }
+
+    // 일일 학습 계획의 집중 시간을 등록합니다.
+    @Transactional
+    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
+    public void registerFocusTime(FocusTimeRequestDTO request, Long userId) {
+        StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(request.studyDailyPlanId());
+        StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
+
+        StudyStatus studyStatus = getOrCreateStudyStatus(studyMember, studyDailyPlan);
+
+        // 진행 완료거나 성공, 실패면 집중 시간 등록 불가능
+        if (studyStatus.getProgressStatus() == ProgressStatus.COMPLETED
+                || studyStatus.getCompletionStatus() == CompletionStatus.SUCCESS
+                || studyStatus.getCompletionStatus() == CompletionStatus.FAILURE) {
+            throw new StudyException(StudyErrorCode.STUDY_DAILY_ALREADY_COMPLETED);
+        }
+
+        // '시작 전'인 경우 집중 시간이 입력되었으므로 '진행 중'으로 변경
+        if (studyStatus.getProgressStatus() == ProgressStatus.NOT_STARTED) {
+            studyStatus.startPlan();
+        }
+
+        studyStatus.setFocusTime(request.focusTime());
+        studyStatusRepository.save(studyStatus);
     }
 
     // 학습 완료 상태와 이해도에 따라 지급할 포인트를 계산합니다.
@@ -225,6 +243,16 @@ public class StudyDailyService {
                 updatedCount,
                 (endTime - startTime)
         );
+    }
+
+    // 스터디 멤버와 일일 학습 계획을 기반으로 상태를 조회하거나 생성합니다.
+    private StudyStatus getOrCreateStudyStatus(StudyMember studyMember, StudyDailyPlan studyDailyPlan) {
+        return studyStatusRepository.findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(
+                studyMember.getStudyMemberId(), studyDailyPlan.getStudyDailyPlanId())
+                .orElseGet(() -> StudyStatus.builder()
+                        .studyMember(studyMember)
+                        .studyDailyPlan(studyDailyPlan)
+                        .build());
     }
 
     // 특정 일일 학습 계획을 검증하고 조회합니다.

@@ -1,6 +1,5 @@
 package learntime.backend.domain.user.service;
 
-import learntime.backend.domain.calendar.model.Routine;
 import learntime.backend.domain.calendar.repository.CalendarRecordRepository;
 import learntime.backend.domain.calendar.repository.RoutineRepository;
 import learntime.backend.domain.community.repository.CommentRepository;
@@ -45,6 +44,7 @@ import learntime.backend.domain.study.repository.StudyFeedbackRepository;
 import learntime.backend.domain.user.converter.UserConverter;
 import learntime.backend.domain.user.dto.response.RecentActivityResponseDTO;
 import learntime.backend.domain.user.dto.response.UserSummaryResponseDTO;
+import learntime.backend.global.dto.CursorResponse;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -98,6 +98,31 @@ public class UserService {
     @Transactional(readOnly = true)
     public boolean isEmailDuplicated(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    // 이름(닉네임)으로 사용자 ID 목록 검색 (커서 기반 페이징)
+    @Transactional(readOnly = true)
+    public CursorResponse<Long> searchUserIdsByName(String keyword, Long lastUserId, int size) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return CursorResponse.of(List.of(), null, false);
+        }
+        
+        Pageable limit = PageRequest.of(0, size + 1);
+        List<Long> userIds;
+        if (lastUserId == null) {
+            userIds = userRepository.findUserIdsByNameContaining(keyword.trim(), limit);
+        } else {
+            userIds = userRepository.findUserIdsByNameContainingWithCursor(keyword.trim(), lastUserId, limit);
+        }
+        
+        boolean hasNext = userIds.size() > size;
+        List<Long> content = hasNext ? userIds.subList(0, size) : userIds;
+        Long nextCursor = null;
+        if (!content.isEmpty()) {
+            nextCursor = content.get(content.size() - 1);
+        }
+        
+        return CursorResponse.of(content, hasNext ? nextCursor : null, hasNext);
     }
 
 

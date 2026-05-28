@@ -15,12 +15,9 @@ public class AwsRdsConfig {
 
     @Bean
     public RdsClient rdsClient() {
-
-        // AWS SDK Client는 Thread-safe
-        // Singleton Bean으로 재사용하는 것이 공식 권장 방식
         return RdsClient.builder()
                 .region(Region.of(region))
-                .credentialsProvider(DefaultCredentialsProvider.create())
+                .credentialsProvider(DefaultCredentialsProvider.builder().build())
                 .build();
     }
 }

@@ -61,7 +61,7 @@ public class GeminiQuizService {
         );
 
         try {
-            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_0);
+            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
             return promptParser.parseQuizResponse(rawJson); // 결과 DTO로 파싱
         } catch (Exception e) {
             log.error("AI 퀴즈 생성 실패.", e);

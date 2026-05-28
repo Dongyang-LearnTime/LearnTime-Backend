@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -39,4 +40,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("name") String name,
             @Param("deletedAt") LocalDateTime deletedAt
     );
+
+    @Query("SELECT u.userId FROM User u WHERE u.name LIKE %:keyword% ORDER BY u.userId DESC")
+    List<Long> findUserIdsByNameContaining(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT u.userId FROM User u WHERE u.name LIKE %:keyword% AND u.userId < :lastUserId ORDER BY u.userId DESC")
+    List<Long> findUserIdsByNameContainingWithCursor(@Param("keyword") String keyword, @Param("lastUserId") Long lastUserId, Pageable pageable);
 }

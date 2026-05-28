@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.study.dto.request.PlanCompleteRequestDTO;
+import learntime.backend.domain.study.dto.request.FocusTimeRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyUserContentRequestDTO;
 import learntime.backend.domain.study.dto.request.StudyUserContentUpdateRequestDTO;
 import learntime.backend.domain.study.dto.response.StudyDailyPlanInfoResponseDTO;
@@ -74,6 +75,14 @@ public class StudyDailyController {
                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
         int resultPoint = studyDailyService.completeStudyDailyPlan(request, userDetails.userId());
         return ResponseEntity.ok("포인트 " + resultPoint + "지급 완료!");
+    }
+
+    @PatchMapping("/focus-time")
+    @Operation(summary = "일일 집중 시간 등록", description = "공부 일일 진도의 집중 시간을 등록합니다. (이미 완료/성공/실패된 계획인 경우 등록 불가능)")
+    public ResponseEntity<Void> registerFocusTime(@Valid @RequestBody FocusTimeRequestDTO request,
+                                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyDailyService.registerFocusTime(request, userDetails.userId());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/content")
