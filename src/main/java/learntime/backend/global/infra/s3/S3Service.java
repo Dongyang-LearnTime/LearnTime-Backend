@@ -30,7 +30,6 @@ public class S3Service {
     private String bucketName;
 
     public String uploadFile(MultipartFile file, String dirName) {
-        String originalFileName = file.getOriginalFilename();
         String extension = getExtension(file);
         String uniqueFileName = dirName + "/" + UUID.randomUUID() + extension;
 

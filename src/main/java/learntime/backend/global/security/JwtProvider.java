@@ -18,10 +18,10 @@ import java.util.Date;
 @Component
 public class JwtProvider {
 
-    @Value("${JWT_KEY}")
+    @Value("${jwt.key}")
     private String jwtKey;
 
-    @Value("${JWT_ISSUER}")
+    @Value("${jwt.issuer}")
     private String jwtIssuer;
 
     private SecretKey secretKey;

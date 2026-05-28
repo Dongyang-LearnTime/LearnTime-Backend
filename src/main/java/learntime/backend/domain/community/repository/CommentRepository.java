@@ -1,6 +1,7 @@
 package learntime.backend.domain.community.repository;
 
 import learntime.backend.domain.community.model.Comment;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,13 +18,13 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("SELECT c FROM Comment c LEFT JOIN FETCH c.user " +
             "WHERE c.post.postId = :postId AND c.commentId < :lastCommentId " +
             "ORDER BY c.commentId DESC")
-    List<Comment> findByPostIdWithUserWithCursor(@Param("postId") Long postId, @Param("lastCommentId") Long lastCommentId, org.springframework.data.domain.Pageable pageable);
+    List<Comment> findByPostIdWithUserWithCursor(@Param("postId") Long postId, @Param("lastCommentId") Long lastCommentId, Pageable pageable);
 
     /** 첫 페이지 댓글 목록을 cursor 기반으로 조회.*/
     @Query("SELECT c FROM Comment c LEFT JOIN FETCH c.user " +
             "WHERE c.post.postId = :postId " +
             "ORDER BY c.commentId DESC")
-    List<Comment> findFirstPageByPostIdWithUser(@Param("postId") Long postId, org.springframework.data.domain.Pageable pageable);
+    List<Comment> findFirstPageByPostIdWithUser(@Param("postId") Long postId, Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Comment c SET c.user = null WHERE c.user.userId = :userId")

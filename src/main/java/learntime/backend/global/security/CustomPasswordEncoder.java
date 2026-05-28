@@ -11,7 +11,7 @@ public class CustomPasswordEncoder implements PasswordEncoder {
     private final PasswordEncoder delegate =
             PasswordEncoderFactories.createDelegatingPasswordEncoder();
 
-    @Value("${pepper}")
+    @Value("${security.pepper}")
     private String pepper;
 
     @Override

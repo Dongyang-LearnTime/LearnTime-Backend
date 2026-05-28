@@ -1,4 +1,4 @@
-package learntime.backend.global.config;
+package learntime.backend.global.config.aws;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -11,10 +11,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Configuration
 public class S3Config {
 
-    @Value("${aws.credentials.access-key}")
+    @Value("${aws.s3.access-key}")
     private String accessKey;
 
-    @Value("${aws.credentials.secret-key}")
+    @Value("${aws.s3.secret-key}")
     private String secretKey;
 
     @Value("${aws.region}")

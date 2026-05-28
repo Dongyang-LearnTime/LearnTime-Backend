@@ -20,7 +20,7 @@ public class EncryptionUtil {
     private static byte[] KEY;
     private static byte[] IV;
 
-    @Value("${encryption.key}")
+    @Value("${security.encryption.key}")
     public void setKey(String key) {
         try {
             MessageDigest sha = MessageDigest.getInstance("SHA-256");
