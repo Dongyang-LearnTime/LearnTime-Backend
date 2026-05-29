@@ -10,8 +10,9 @@ import learntime.backend.domain.community.model.PostLike;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
-import learntime.backend.domain.friend.model.Friend;
-import learntime.backend.domain.friend.model.FriendRequest;
+import learntime.backend.domain.relationship.model.Friend;
+import learntime.backend.domain.relationship.model.FriendRequest;
+import learntime.backend.domain.relationship.model.UserBlock;
 import learntime.backend.domain.message.model.Message;
 import learntime.backend.domain.notification.model.Notification;
 import learntime.backend.domain.point.model.PointHistory;
@@ -157,6 +158,14 @@ public class User {
     // 받은 친구 요청
     @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<FriendRequest> receivedFriendRequests = new ArrayList<>();
+
+    // 차단한 사용자
+    @OneToMany(mappedBy = "blocker", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<UserBlock> blockedUsers = new ArrayList<>();
+
+    // 차단 당한 사용자
+    @OneToMany(mappedBy = "blocked", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<UserBlock> blockedByUsers = new ArrayList<>();
 
     // 보낸 쪽지
     @OneToMany(mappedBy = "sender", cascade = {CascadeType.PERSIST, CascadeType.MERGE})

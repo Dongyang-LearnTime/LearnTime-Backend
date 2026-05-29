@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
@@ -81,5 +82,16 @@ public interface StudyInvitationRepository extends JpaRepository<StudyInvitation
             @Param("studyId") Long studyId,
             @Param("status") StudyInvitationStatus status
     );
+
+    /** validateInvitation에서 study·invitedUser·inviterUser를 모두 접근하므로 한 번에 Fetch Join */
+    @Query("""
+        SELECT si
+        FROM StudyInvitation si
+        JOIN FETCH si.study s
+        JOIN FETCH si.invitedUser iu
+        JOIN FETCH si.inviterUser iur
+        WHERE si.studyInvitationId = :invitationId
+    """)
+    Optional<StudyInvitation> findByIdFetchAll(@Param("invitationId") Long invitationId);
 
 }

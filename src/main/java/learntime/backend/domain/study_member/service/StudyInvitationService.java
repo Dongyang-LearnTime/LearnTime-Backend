@@ -18,11 +18,12 @@ import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study_member.repository.StudyInvitationRepository;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.domain.friend.repository.FriendRepository;
+import learntime.backend.domain.relationship.repository.FriendRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.utils.StudyAuthUtil;
+import learntime.backend.global.utils.UserBlockUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,7 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import learntime.backend.domain.study_member.dto.response.StudyMemberFriendResponseDTO;
-import learntime.backend.domain.friend.model.Friend;
+import learntime.backend.domain.relationship.model.Friend;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,8 +46,9 @@ public class StudyInvitationService {
     private final StudyRepository studyRepository;
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
-
     private final ApplicationEventPublisher eventPublisher;
+
+    private final UserBlockUtil userBlockUtil;
 
     private final int STUDY_MEMBER_LIMIT_COUNT = 4;
 
@@ -91,7 +93,6 @@ public class StudyInvitationService {
                 .studyMemberRole(StudyMemberRole.MEMBER)
                 .build());
 
-        log.info("[초대 승인] invitationId={}, studyId={}, userId={}", invitationId, invitation.getStudy().getStudyId(), userId);
         eventPublisher.publishEvent(new StudyInvitationAcceptedEvent(
                 invitation.getStudyInvitationId(),
                 invitation.getStudy().getStudyId(),
@@ -108,7 +109,6 @@ public class StudyInvitationService {
 
         invitation.reject(); // 초대 거절
 
-        log.info("[초대 거절] invitationId={}, userId={}", invitationId, userId);
         eventPublisher.publishEvent(new StudyInvitationRejectedEvent(
                 invitation.getStudyInvitationId(),
                 invitation.getStudy().getStudyId(),
@@ -123,33 +123,7 @@ public class StudyInvitationService {
         StudyInvitation invitation = validateInvitation(invitationId);
         validateInviterUser(invitation, userId);
 
-        log.info("[초대 취소] invitationId={}, userId={}", invitationId, userId);
         invitation.cancel();
-    }
-
-    private StudyInvitation validateInvitation(Long invitationId) {
-        StudyInvitation invitation = studyInvitationRepository.findById(invitationId)
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_INVITATION_NOT_FOUND));
-
-        if (!invitation.isPending()) {
-            log.warn("[검증 실패] 이미 완료된 초대 요청입니다. invitationId={}", invitationId);
-            throw new StudyException(StudyErrorCode.STUDY_INVITATION_NOT_PENDING);
-        }
-        return invitation;
-    }
-
-    private void validateInvitedUser(StudyInvitation invitation, Long userId) {
-        if (!invitation.getInvitedUser().getUserId().equals(userId)) {
-            log.warn("[권한 오류] 초대 대상이 아닌 사용자가 접근했습니다. invitationId={}, userId={}", invitation.getStudyInvitationId(), userId);
-            throw new StudyException(StudyErrorCode.NOT_INVITED_USER);
-        }
-    }
-
-    private void validateInviterUser(StudyInvitation invitation, Long userId) {
-        if (!invitation.getInviterUser().getUserId().equals(userId)) {
-            log.warn("[권한 오류] 초대한 사용자가 아닌 사용자가 접근했습니다. invitationId={}, userId={}", invitation.getStudyInvitationId(), userId);
-            throw new StudyException(StudyErrorCode.NOT_INVITER_USER);
-        }
     }
 
     // 초대 받은 사용자, 초대한 사용자 순으로 받음
@@ -167,13 +141,15 @@ public class StudyInvitationService {
         User invitedUser = userRepository.findById(request.invitedUserId())
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
+        // 차단 당했는지 확인
+        userBlockUtil.validateNotBlockedByUser(inviterUserId, request.invitedUserId());
+
         // OWNER 권한 검증
         StudyAuthUtil.checkOwnerRole(studyMember);
 
         // 친구 관계 검증
         boolean isFriend = friendRepository.existsFriendRelation(inviterUserId, invitedUser.getUserId());
         if (!isFriend) {
-            log.warn("[검증 실패] 친구 관계가 아닙니다. inviter={}, invited={}", inviterUserId, invitedUser.getUserId());
             throw new StudyException(StudyErrorCode.NOT_FRIEND_RELATION);
         }
 
@@ -187,7 +163,6 @@ public class StudyInvitationService {
 
         long memberCount = studyMemberRepository.countByStudyAndStatus(study, StudyMemberStatus.ACTIVE);
         if (memberCount >= STUDY_MEMBER_LIMIT_COUNT) {
-            log.warn("[검증 실패] 인원 제한 초과. studyId={}", study.getStudyId());
             throw new StudyException(StudyErrorCode.STUDY_MEMBER_LIMIT_EXCEEDED);
         }
 
@@ -198,7 +173,6 @@ public class StudyInvitationService {
         );
 
         if (alreadyMember) {
-            log.warn("[검증 실패] 이미 스터디 멤버입니다. studyId={}, userId={}", request.studyId(), invitedUser.getUserId());
             throw new StudyException(StudyErrorCode.ALREADY_STUDY_MEMBER);
         }
 
@@ -210,7 +184,6 @@ public class StudyInvitationService {
                                 StudyInvitationStatus.PENDING
                         );
         if (alreadyInvited) {
-            log.warn("[검증 실패] 이미 초대 중입니다. studyId={}, userId={}", request.studyId(), invitedUser.getUserId());
             throw new StudyException(StudyErrorCode.STUDY_INVITATION_ALREADY_EXISTS);
         }
 
@@ -224,7 +197,6 @@ public class StudyInvitationService {
         StudyInvitation savedStudyInvitation =
                 studyInvitationRepository.save(studyInvitation);
 
-        log.info("[초대 성공] studyId={}, inviterId={}, invitedId={}", request.studyId(), inviterUserId, invitedUser.getUserId());
         // 알림 생성
         eventPublisher.publishEvent(new StudyInvitationSentEvent(
                 savedStudyInvitation.getStudyInvitationId(),
@@ -268,6 +240,28 @@ public class StudyInvitationService {
                         pendingInvitedUserIds
                 ))
                 .toList();
+    }
+
+    private void validateInvitedUser(StudyInvitation invitation, Long userId) {
+        if (!invitation.getInvitedUser().getUserId().equals(userId)) {
+            throw new StudyException(StudyErrorCode.NOT_INVITED_USER);
+        }
+    }
+
+    private void validateInviterUser(StudyInvitation invitation, Long userId) {
+        if (!invitation.getInviterUser().getUserId().equals(userId)) {
+            throw new StudyException(StudyErrorCode.NOT_INVITER_USER);
+        }
+    }
+
+    private StudyInvitation validateInvitation(Long invitationId) {
+        StudyInvitation invitation = studyInvitationRepository.findByIdFetchAll(invitationId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_INVITATION_NOT_FOUND));
+
+        if (!invitation.isPending()) {
+            throw new StudyException(StudyErrorCode.STUDY_INVITATION_NOT_PENDING);
+        }
+        return invitation;
     }
 
 }

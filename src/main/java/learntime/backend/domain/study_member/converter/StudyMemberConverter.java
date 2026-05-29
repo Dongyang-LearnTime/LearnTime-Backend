@@ -6,7 +6,7 @@ import learntime.backend.domain.study_member.dto.response.StudyMemberFriendRespo
 import learntime.backend.domain.study_member.dto.response.StudyMemberResponseDTO;
 import learntime.backend.domain.study_member.model.StudyInvitation;
 import learntime.backend.domain.study_member.model.StudyMember;
-import learntime.backend.domain.friend.model.Friend;
+import learntime.backend.domain.relationship.model.Friend;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;

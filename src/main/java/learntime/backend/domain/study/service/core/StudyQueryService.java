@@ -10,6 +10,7 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -49,10 +50,9 @@ public class StudyQueryService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
-        StudyMember member = study.getStudyMembers().stream()
-                .filter(m -> m.getUser().getUserId().equals(userId))
-                .filter(StudyMember::isActive)
-                .findFirst()
+        // Fix 4: Lazy 컬렉션 스트림 대신 repository 직접 조회로 NPE 방지
+        StudyMember member = studyMemberRepository
+                .findByStudy_StudyIdAndUser_UserIdAndStatus(studyId, userId, StudyMemberStatus.ACTIVE)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         StudyTotalInfoResponseDTO indicator = getStudyMemberTotalIndicatorByUserId(studyId, userId);

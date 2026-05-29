@@ -26,15 +26,4 @@ public record MyCommentListResponseDTO(
         
         @Schema(description = "댓글 수정 일시")
         LocalDateTime updatedAt
-) {
-    public static MyCommentListResponseDTO from(Comment comment) {
-        return MyCommentListResponseDTO.builder()
-                .commentId(comment.getCommentId())
-                .postId(comment.getPost().getPostId())
-                .postTitle(comment.getPost().getTitle())
-                .content(comment.getContent())
-                .createdAt(comment.getCreatedAt())
-                .updatedAt(comment.getUpdatedAt())
-                .build();
-    }
-}
+) { }

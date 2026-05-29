@@ -12,6 +12,7 @@ import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
+import learntime.backend.global.utils.UserBlockUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,6 +33,8 @@ public class MessageService {
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    private final UserBlockUtil userBlockUtil;
+
     // 쪽지 보내기
     @Transactional
     public Long sendMessage(Long senderId, MessageRequestDTO request) {
@@ -41,6 +44,8 @@ public class MessageService {
 
         User sender = getUser(senderId);
         User receiver = getUser(request.receiverId());
+
+        userBlockUtil.validateNotBlockedByUser(senderId, request.receiverId()); // 차단 당했는지 확인
 
         Message message = Message.builder()
                 .content(request.content())

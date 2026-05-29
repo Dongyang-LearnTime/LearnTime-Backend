@@ -64,7 +64,7 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
 
     long countByStudyAndStatus(Study study, StudyMemberStatus status);
 
-    StudyMember findByUser_UserId(Long ownerId);
+    Optional<StudyMember> findByUser_UserId(Long ownerId);
 
     @Query("""
         SELECT sm
@@ -96,4 +96,50 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
           AND sm.status = learntime.backend.domain.study_member.enums.StudyMemberStatus.ACTIVE
     """)
     List<StudyMember> findAllActiveByUserIdFetchStudy(@Param("userId") Long userId);
+
+    // ──────────────────────────────────────────────────────────
+    // WITHDRAWN 포함 조회 (아카이브 / 탈퇴 후 읽기 허용용)
+    // ──────────────────────────────────────────────────────────
+
+    /** ACTIVE 또는 WITHDRAWN 멤버 단건 조회 (탈퇴 후 개인 자산 읽기용) */
+    Optional<StudyMember> findByStudy_StudyIdAndUser_UserIdAndStatusIn(
+            Long studyId,
+            Long userId,
+            List<StudyMemberStatus> statuses
+    );
+
+    /** ACTIVE 또는 WITHDRAWN 멤버 존재 여부 확인 (verifyStudyMemberAllowWithdrawn용) */
+    boolean existsByStudy_StudyIdAndUser_UserIdAndStatusIn(
+            Long studyId,
+            Long userId,
+            List<StudyMemberStatus> statuses
+    );
+
+    /** ACTIVE 또는 WITHDRAWN StudyMemberId 조회 (아카이브 진도 조회용) */
+    @Query("""
+        SELECT sm.studyMemberId
+        FROM StudyMember sm
+        WHERE sm.study.studyId = :studyId
+          AND sm.user.userId = :userId
+          AND sm.status IN :statuses
+    """)
+    Optional<Long> findStudyMemberIdByStudyIdAndUserIdAndStatusIn(
+            @Param("studyId") Long studyId,
+            @Param("userId") Long userId,
+            @Param("statuses") List<StudyMemberStatus> statuses
+    );
+
+    /** 사용자의 전체 스터디 참여 이력 조회 — WITHDRAWN 포함 (마이페이지 아카이브 목록용) */
+    @Query("""
+        SELECT sm
+        FROM StudyMember sm
+        JOIN FETCH sm.study s
+        WHERE sm.user.userId = :userId
+          AND sm.status IN :statuses
+        ORDER BY sm.joinedAt DESC
+    """)
+    List<StudyMember> findAllByUserIdAndStatusIn(
+            @Param("userId") Long userId,
+            @Param("statuses") List<StudyMemberStatus> statuses
+    );
 }

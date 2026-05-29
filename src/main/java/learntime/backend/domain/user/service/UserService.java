@@ -10,14 +10,15 @@ import learntime.backend.domain.exercise.repository.MealRecordRepository;
 import learntime.backend.domain.exercise.repository.WeightRecordRepository;
 import learntime.backend.domain.notification.repository.NotificationRepository;
 import learntime.backend.domain.notification.repository.ReminderRepository;
+import learntime.backend.domain.relationship.repository.UserBlockRepository;
 import learntime.backend.domain.study_member.repository.StudyInvitationRepository;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.user.model.User;
-import learntime.backend.domain.friend.repository.FriendRepository;
-import learntime.backend.domain.friend.repository.FriendRequestRepository;
+import learntime.backend.domain.relationship.repository.FriendRepository;
+import learntime.backend.domain.relationship.repository.FriendRequestRepository;
 import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserTermsRepository;
@@ -84,6 +85,7 @@ public class UserService {
     private final QuizHistoryRepository quizHistoryRepository;
     private final ProfileRepository profileRepository;
     private final RoutineRepository routineRepository;
+    private final UserBlockRepository userBlockRepository;
 
     private static final DateTimeFormatter DELETED_USER_TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -172,15 +174,18 @@ public class UserService {
 
     // 회원 탈퇴 로직
     @Transactional
-    public void deleteUser(String email) {
-        User user = userRepository.findByEmail(email)
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
-        Long userId = user.getUserId();
+
         LocalDateTime deletedAt = LocalDateTime.now();
 
         // 탈퇴 시 토큰/할당량/개인 기록을 먼저 정리한다.
         refreshTokenRepository.deleteByUser(user);
         promptQuotaRepository.deleteByUserId(userId);
+
+        userBlockRepository.deleteAllByBlockerId(userId);
+        userBlockRepository.deleteAllByBlockedId(userId);
 
         exerciseRecordRepository.deleteBodyPartsByUserId(userId);
         exerciseRecordRepository.deleteAllByUserId(userId);
@@ -203,7 +208,7 @@ public class UserService {
         messageRepository.deleteSentMessagesByUserId(userId);
         messageRepository.deleteReceivedMessagesByUserId(userId);
         studyInvitationRepository.cancelPendingByUserId(userId, deletedAt);
-        reassignOwnedStudies(userId);
+        reassignOwnedStudies(userId); // 공부 진도 방장 이동
         studyMemberRepository.withdrawAllByUserId(userId);
         userTermsRepository.deleteAllByUserId(userId);
         userBadgeRepository.deleteAllByUserId(userId);

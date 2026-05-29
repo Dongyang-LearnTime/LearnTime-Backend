@@ -9,6 +9,7 @@ import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.utils.AuthorizationUtil;
+import learntime.backend.global.utils.UserBlockUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,8 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+
+    private final UserBlockUtil userBlockUtil;
 
     /** 특정 게시글에 작성된 댓글 목록을 커서 기반으로 조회 */
     @Transactional(readOnly = true)
@@ -57,6 +60,8 @@ public class CommentService {
                 .orElseThrow(() -> new CommunityException(CommunityErrorCode.POST_NOT_FOUND));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+
+        userBlockUtil.validateNotBlockedByUser(userId, post.getUser().getUserId()); // 차단 당했는지 확인
 
         Comment comment = Comment.builder()
                 .content(request.content())

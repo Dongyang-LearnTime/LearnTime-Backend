@@ -1,5 +1,6 @@
 package learntime.backend.domain.user.service;
 
+import learntime.backend.domain.community.converter.CommentConverter;
 import learntime.backend.domain.community.converter.PostConverter;
 import learntime.backend.domain.community.dto.response.MyCommentListResponseDTO;
 import learntime.backend.domain.community.dto.response.PostListResponseDTO;
@@ -8,6 +9,10 @@ import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostLikeRepository;
 import learntime.backend.domain.community.repository.PostRepository;
+import learntime.backend.domain.relationship.converter.UserBlockConverter;
+import learntime.backend.domain.relationship.dto.response.MyBlockedUserListResponseDTO;
+import learntime.backend.domain.relationship.model.UserBlock;
+import learntime.backend.domain.relationship.repository.UserBlockRepository;
 import learntime.backend.domain.user.converter.UserConverter;
 import learntime.backend.domain.user.dto.response.MyPageResponseDTO;
 import learntime.backend.domain.user.dto.response.MyPageSummaryResponseDTO;
@@ -23,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -36,18 +42,19 @@ public class MyPageService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PostLikeRepository postLikeRepository;
+    private final UserBlockRepository userBlockRepository;
 
     @Transactional(readOnly = true)
-    public MyPageResponseDTO getMyInfo(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+    public MyPageResponseDTO getMyInfo(Long userId) {
+        User user = findByUserOrThrow(userId);
+
         return UserConverter.toMyPageResponseDTO(user);
     }
 
     @Transactional
-    public AuthService.TokenPair updateName(String email, String name) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+    public AuthService.TokenPair updateName(Long userId, String name) {
+        User user = findByUserOrThrow(userId);
+
         if (userRepository.existsByName(name)) {
             throw new AuthException(AuthErrorCode.USER_NAME_DUPLICATED);
         }
@@ -56,9 +63,9 @@ public class MyPageService {
     }
 
     @Transactional
-    public void updatePassword(String email, String currentPassword, String newPassword) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+    public void updatePassword(Long userId, String currentPassword, String newPassword) {
+        User user = findByUserOrThrow(userId);
+
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new AuthException(AuthErrorCode.PASSWORD_NOT_MATCH);
         }
@@ -67,12 +74,12 @@ public class MyPageService {
 
     /** 마이페이지 요약 통계 조회 */
     @Transactional(readOnly = true)
-    public MyPageSummaryResponseDTO getMySummary(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
-        long postCount = postRepository.countByUserId(user.getUserId());
-        long commentCount = commentRepository.countByUserId(user.getUserId());
-        long totalLike = postLikeRepository.sumLikeCountByAuthorId(user.getUserId());
+    public MyPageSummaryResponseDTO getMySummary(Long userId) {
+        User user = findByUserOrThrow(userId);
+
+        long postCount = postRepository.countByUserId(userId);
+        long commentCount = commentRepository.countByUserId(userId);
+        long totalLike = postLikeRepository.sumLikeCountByAuthorId(userId);
         return MyPageSummaryResponseDTO.builder()
                 .postCount(postCount)
                 .commentCount(commentCount)
@@ -83,13 +90,12 @@ public class MyPageService {
 
     /** 내가 쓴 게시글 오프셋 페이지 조회 */
     @Transactional(readOnly = true)
-    public PageResponse<PostListResponseDTO> getMyPosts(String email, Pageable pageable) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
-        Page<Post> posts = postRepository.findMyPosts(user.getUserId(), pageable);
+    public PageResponse<PostListResponseDTO> getMyPosts(Long userId, Pageable pageable) {
+
+        Page<Post> posts = postRepository.findMyPosts(userId, pageable);
 
         // 댓글 수 일괄 조회
-        java.util.List<Long> postIds = posts.getContent().stream().map(Post::getPostId).toList();
+        List<Long> postIds = posts.getContent().stream().map(Post::getPostId).toList();
         Map<Long, Long> commentCountMap;
         if (postIds.isEmpty()) {
             commentCountMap = Map.of();
@@ -105,11 +111,29 @@ public class MyPageService {
 
     /** 내가 쓴 댓글 오프셋 페이지 조회 */
     @Transactional(readOnly = true)
-    public PageResponse<MyCommentListResponseDTO> getMyComments(String email, Pageable pageable) {
-        User user = userRepository.findByEmail(email)
+    public PageResponse<MyCommentListResponseDTO> getMyComments(Long userId, Pageable pageable) {
+        Page<Comment> comments = commentRepository.findMyComments(userId, pageable);
+
+        Page<MyCommentListResponseDTO> response = comments.map(
+                CommentConverter::toMyCommentListResponseDTO
+        );
+
+        return PageResponse.of(response);
+    }
+
+    public PageResponse<MyBlockedUserListResponseDTO> getMyBlockedUsers(Long userId, Pageable pageable) {
+        Page <UserBlock> blocks = userBlockRepository.findBlockedUsers(userId, pageable);
+
+        Page <MyBlockedUserListResponseDTO> response = blocks.map(
+                UserBlockConverter::toMyBlockedUserListResponseDTO
+        );
+
+        return PageResponse.of(response);
+    }
+
+    private User findByUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
-        Page<Comment> comments = commentRepository.findMyComments(user.getUserId(), pageable);
-        return PageResponse.of(comments.map(MyCommentListResponseDTO::from));
     }
 
 }

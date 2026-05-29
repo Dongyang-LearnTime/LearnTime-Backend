@@ -64,13 +64,14 @@ public class StudyFeedbackService {
         return StudyConverter.toStudyFeedbackResponseDTO(feedback);
     }
 
-    /** 특정 스터디 멤버의 모든 피드백 기록을 조회합니다. (오프셋 페이징) */
+    /** 특정 스터디 멤버의 모든 피드백 기록을 조회합니다. (오프셋 페이징)
+     * 탈퇴(WITHDRAWN) 멤버도 자신의 과거 피드백을 조회할 수 있습니다. */
     @Transactional(readOnly = true)
     public PageResponse<StudyFeedbackResponseDTO> getMemberFeedbacks(Long studyId, Pageable pageable, Long userId) {
-        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                         studyId,
                         userId,
-                        StudyMemberStatus.ACTIVE
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 

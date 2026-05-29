@@ -69,6 +69,7 @@ public class StudyDailyService {
     private static final int UNDERSTANDING_SCORE_WEIGHT = 2; // 이해도에 따른 가중치 (이해도 2면 10*2)
 
     // 특정 날짜의 학습 계획 정보를 조회합니다.
+    // 탈퇴(WITHDRAWN) 멤버도 자신의 과거 진도를 조회할 수 있습니다.
     @Transactional(readOnly = true)
     public StudyDailyPlanInfoResponseDTO getStudyPlanInfoByDate(Long studyId, LocalDate planDate, Long userId) {
         Study study = studyRepository.findById(studyId)
@@ -83,15 +84,17 @@ public class StudyDailyService {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findByStudyIdAndPlanDate(studyId, planDate)
                 .orElse(null);
 
-        Long studyMemberId = study.getStudyMembers().stream()
-                .filter(m -> m.getUser().getUserId().equals(userId))
-                .filter(StudyMember::isActive)
-                .map(StudyMember::getStudyMemberId)
-                .findFirst()
+        // ACTIVE + WITHDRAWN 모두 허용 — 탈퇴 후에도 과거 진도 조회 가능
+        Long studyMemberId = studyMemberRepository
+                .findStudyMemberIdByStudyIdAndUserIdAndStatusIn(
+                        studyId, userId,
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)
+                )
                 .orElse(null);
 
-        List<Long> allStudyMemberIds = study.getStudyMembers().stream()
-                .filter(StudyMember::isActive)
+        List<Long> allStudyMemberIds = studyMemberRepository
+                .findAllActiveByStudyIdFetchUser(studyId)
+                .stream()
                 .map(StudyMember::getStudyMemberId)
                 .toList();
 
@@ -112,7 +115,8 @@ public class StudyDailyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
 
-        StudyAuthUtil.verifyStudyMember(study, userId);
+        // Fix 5: Study 엔티티의 Lazy 컬렉션 대신 repository 직접 조회
+        StudyAuthUtil.verifyStudyMember(studyId, userId, studyMemberRepository);
 
         List<StudyDailyPlan> studyDailyPlanList =
                 studyDailyPlanRepository.findAllByStudy(study);
@@ -268,12 +272,10 @@ public class StudyDailyService {
         return studyDailyPlan;
     }
 
-    // 스터디 멤버 권한을 검증하고 스터디 멤버를 조회합니다.
+    // Fix 3: Lazy 컬렉션 스트림 대신 repository 직접 조회로 NPE 방지
     private StudyMember validateAndGetStudyMember(Study study, Long userId) {
-        return study.getStudyMembers().stream()
-                .filter(m -> m.getUser().getUserId().equals(userId))
-                .filter(StudyMember::isActive)
-                .findFirst()
+        return studyMemberRepository
+                .findByStudy_StudyIdAndUser_UserIdAndStatus(study.getStudyId(), userId, StudyMemberStatus.ACTIVE)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
     }
 

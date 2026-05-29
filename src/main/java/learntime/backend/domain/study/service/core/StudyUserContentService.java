@@ -28,6 +28,7 @@ import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,9 +43,9 @@ public class StudyUserContentService {
     private final StudyStatusRepository studyStatusRepository;
     private final StudyRestDayRepository studyRestDayRepository;
     private final StudyRestDateRepository studyRestDateRepository;
-    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
-    /** 사용자의 오늘 공부 내용을 추가합니다. */
+    /** 사용자의 오늘 공부 내용을 추가합니다. ACTIVE 멤버 전용. */
     @Transactional
     @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public Long addUserContent(StudyUserContentRequestDTO request, Long userId) {
@@ -53,6 +54,7 @@ public class StudyUserContentService {
 
         validateNotHoliday(dailyPlan.getStudy().getStudyId(), dailyPlan.getPlanDate());
 
+        // ACTIVE 멤버만 공부 내용 추가 가능
         StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
                         dailyPlan.getStudy().getStudyId(),
                         userId,
@@ -81,12 +83,13 @@ public class StudyUserContentService {
         } catch (IllegalStateException ignored) {
             // 이미 진행 중이거나 완료된 경우 무시
         }
-        
+
         eventPublisher.publishEvent(new learntime.backend.domain.badge.event.NoteUploadedEvent(userId, java.time.LocalDateTime.now()));
         return content.getStudyMemberContentId();
     }
 
-    /** 사용자의 일일 진도 내용을 수정합니다. */
+    /** 사용자의 일일 진도 내용을 수정합니다.
+     * 탈퇴(WITHDRAWN) 멤버는 수정할 수 없습니다. */
     @Transactional
     public void updateUserContent(Long studyMemberContentId, StudyUserContentUpdateRequestDTO request, Long userId) {
         StudyMemberContent content = studyUserContentRepository.findById(studyMemberContentId)
@@ -94,6 +97,11 @@ public class StudyUserContentService {
 
         // 작성자 본인인지 확인
         StudyAuthUtil.verifyOwnership(content.getStudyMember(), userId);
+
+        // 탈퇴(WITHDRAWN) 멤버는 일일 공부 내용 수정 불가
+        if (!content.getStudyMember().isActive()) {
+            throw new StudyException(StudyErrorCode.WITHDRAWN_MEMBER_WRITE_NOT_ALLOWED);
+        }
 
         validateNotHoliday(content.getStudyDailyPlan().getStudy().getStudyId(), content.getStudyDailyPlan().getPlanDate());
 
@@ -112,13 +120,15 @@ public class StudyUserContentService {
         }
     }
 
-    /** 사용자의 특정 일자의 공부 내용을 조회합니다. */
+    /** 사용자의 특정 일자의 공부 내용을 조회합니다.
+     * 탈퇴(WITHDRAWN) 멤버도 자신의 과거 공부 내용을 조회할 수 있습니다. */
     @Transactional(readOnly = true)
     public StudyMemberContentResponseDTO getUserContents(Long studyId, Long userId, LocalDate planDate) {
-        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+        // ACTIVE + WITHDRAWN 모두 허용 — 과거 공부 내용 조회
+        StudyMember member = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                         studyId,
                         userId,
-                        StudyMemberStatus.ACTIVE
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
@@ -157,7 +167,7 @@ public class StudyUserContentService {
         );
     }
 
-    /** 사용자의 일일 진도 내용을 삭제합니다. */
+    /** 사용자의 일일 진도 내용을 삭제합니다. (소유자 본인만 가능) */
     @Transactional
     public void deleteUserContent(Long studyMemberContentId, Long userId) {
         StudyMemberContent content = studyUserContentRepository.findById(studyMemberContentId)

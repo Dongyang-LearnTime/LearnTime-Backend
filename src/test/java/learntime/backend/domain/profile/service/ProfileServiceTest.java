@@ -1,9 +1,9 @@
 package learntime.backend.domain.profile.service;
 
-import learntime.backend.domain.friend.model.Friend;
-import learntime.backend.domain.friend.model.FriendRequest;
-import learntime.backend.domain.friend.repository.FriendRepository;
-import learntime.backend.domain.friend.repository.FriendRequestRepository;
+import learntime.backend.domain.relationship.model.Friend;
+import learntime.backend.domain.relationship.model.FriendRequest;
+import learntime.backend.domain.relationship.repository.FriendRepository;
+import learntime.backend.domain.relationship.repository.FriendRequestRepository;
 import learntime.backend.domain.profile.dto.response.ProfileResponseDTO;
 import learntime.backend.domain.profile.enums.ProfileVisibility;
 import learntime.backend.domain.profile.model.Profile;

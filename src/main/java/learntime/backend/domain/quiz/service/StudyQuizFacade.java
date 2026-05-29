@@ -48,9 +48,9 @@ public class StudyQuizFacade {
 
     @Transactional(readOnly = true)
     public PageResponse<StudyQuizInfoResponseDTO> getStudyQuizList(Long studyId, Pageable pageable, Long userId) {
-        StudyMember studyMember = findByStudyIdAndUserId(studyId, userId);
-        // 스터디 멤버이면 조회 가능
-        StudyAuthUtil.verifyStudyMember(studyMember.getStudy(), userId);
+        // 탈퇴(WITHDRAWN) 멤버도 자신의 퀴즈 목록을 조회할 수 있음
+        StudyMember studyMember = findByStudyIdAndUserIdAllowWithdrawn(studyId, userId);
+        StudyAuthUtil.verifyStudyMemberAllowWithdrawn(studyId, userId, studyMemberRepository);
 
         return studyQuizService.getStudyQuizList(studyMember.getStudyMemberId(), pageable);
     }
@@ -81,7 +81,7 @@ public class StudyQuizFacade {
     public StudyQuizResultResponseDTO getQuizResult(Long quizHistoryId, Long userId) {
         QuizHistory quizHistory = quizHistoryRepository.findById(quizHistoryId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_HISTORY_NOT_FOUND));
-                
+
         // 본인만 조회 가능
         StudyAuthUtil.verifyOwnership(quizHistory.getStudyQuiz().getStudyMember(), userId);
 
@@ -136,7 +136,7 @@ public class StudyQuizFacade {
         StudyQuiz studyQuiz = findByStudyQuizId(studyQuizId);
         // 본인만 삭제 가능
         StudyAuthUtil.verifyOwnership(studyQuiz.getStudyMember(), userId);
-        
+
         studyQuizRepository.deleteById(studyQuizId);
     }
 
@@ -153,6 +153,7 @@ public class StudyQuizFacade {
         quizHistoryRepository.deleteById(quizHistoryId);
     }
 
+    /** ACTIVE 멤버 전용 조회 (퀴즈 생성 등 쓰기 작업용) */
     private StudyMember findByStudyIdAndUserId(Long studyId, Long userId) {
         return studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
                         studyId,
@@ -162,11 +163,20 @@ public class StudyQuizFacade {
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
     }
 
-    private StudyQuiz findByStudyQuizId(Long studyQuizId){
+    /** ACTIVE + WITHDRAWN 모두 허용 (퀴즈 목록 조회용) */
+    private StudyMember findByStudyIdAndUserIdAllowWithdrawn(Long studyId, Long userId) {
+        return studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
+                        studyId,
+                        userId,
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)
+                )
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+    }
+
+    private StudyQuiz findByStudyQuizId(Long studyQuizId) {
         return studyQuizRepository.findById(studyQuizId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND));
     }
-
 
     // 필기 내용에서 HTML 태그를 뺀 문장만 추출
     private String preprocessNoteContent(String htmlContent) {

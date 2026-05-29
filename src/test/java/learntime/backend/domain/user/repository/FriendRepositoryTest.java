@@ -1,7 +1,7 @@
 package learntime.backend.domain.user.repository;
 
-import learntime.backend.domain.friend.model.Friend;
-import learntime.backend.domain.friend.repository.FriendRepository;
+import learntime.backend.domain.relationship.model.Friend;
+import learntime.backend.domain.relationship.repository.FriendRepository;
 import learntime.backend.domain.user.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

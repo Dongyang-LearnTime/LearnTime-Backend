@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,8 +40,8 @@ public class StudyNotesService {
     @Transactional(readOnly = true)
     public PageResponse<StudyNotesResponseDTO> getNotesList(Long studyId, Pageable pageable, Long userId) {
         StudyMember studyMember = findByStudyIdAndUserId(studyId, userId);
-        // 스터디 멤버이면 해당 스터디의 필기 목록을 조회할 수 있음
-        StudyAuthUtil.verifyStudyMember(studyMember.getStudy(), userId);
+        // 탈퇴(WITHDRAWN) 멤버도 자신의 필기 목록을 조회할 수 있음
+        StudyAuthUtil.verifyStudyMemberAllowWithdrawn(studyId, userId, studyMemberRepository);
 
         // StudyMember 기준으로 필기 목록 가져옴
         Page<StudyNotes> notes = studyNotesRepository.findByStudyMember(studyMember, pageable);
@@ -85,11 +84,12 @@ public class StudyNotesService {
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOTE_NOT_FOUND));
     }
 
+    // ACTIVE + WITHDRAWN 모두 허용 — 필기는 개인 자산이므로 탈퇴 후에도 Full CRUD
     private StudyMember findByStudyIdAndUserId(Long studyId, Long userId) {
-        return studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+        return studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                         studyId,
                         userId,
-                        StudyMemberStatus.ACTIVE
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
     }

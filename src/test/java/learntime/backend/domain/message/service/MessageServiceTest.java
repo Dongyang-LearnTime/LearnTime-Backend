@@ -270,7 +270,7 @@ class MessageServiceTest {
         Message message = messageRepository.save(new Message("내용", sender, receiver));
 
         // when: 송신자 탈퇴
-        userService.deleteUser(sender.getEmail());
+        userService.deleteUser(sender.getUserId());
 
         // then: 송신자 삭제 여부만 true로 변경되어야 함
         Message updatedMessage = messageRepository.findById(message.getMessageId()).get();
