@@ -17,6 +17,7 @@ import java.util.Optional;
 public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> {
     Optional<StudyMember> findByStudy_StudyIdAndUser_UserId(Long studyId, Long userId);
 
+
     Optional<StudyMember> findByStudy_StudyIdAndUser_UserIdAndStatus(
             Long studyId,
             Long userId,
@@ -28,7 +29,7 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
         FROM StudyMember sm
         WHERE sm.study.studyId = :studyId
           AND sm.user.userId = :userId
-          AND sm.status = learntime.backend.domain.study_member.enums.StudyMemberStatus.ACTIVE
+          AND sm.status = StudyMemberStatus.ACTIVE
     """)
     Optional<Long> findActiveStudyMemberIdByStudyIdAndUserId(
             @Param("studyId") Long studyId,
@@ -65,10 +66,18 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
 
     StudyMember findByUser_UserId(Long ownerId);
 
-    List<StudyMember> findAllByUser_UserIdAndStudyMemberRoleAndStatus(
-            Long userId,
-            StudyMemberRole studyMemberRole,
-            StudyMemberStatus status
+    @Query("""
+        SELECT sm
+        FROM StudyMember sm
+        JOIN FETCH sm.study
+        WHERE sm.user.userId = :userId
+          AND sm.studyMemberRole = :role
+          AND sm.status = :status
+    """)
+    List<StudyMember> findOwnedMemberships(
+            @Param("userId") Long userId,
+            @Param("role") StudyMemberRole role,
+            @Param("status") StudyMemberStatus status
     );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

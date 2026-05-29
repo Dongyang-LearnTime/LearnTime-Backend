@@ -18,6 +18,7 @@ import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study.repository.StudyRestDateRepository;
 import learntime.backend.domain.study.repository.StudyRestDayRepository;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -231,7 +232,7 @@ public class StudyDailyService {
         long startTime = System.currentTimeMillis();
 
         // 미생성된 상태를 FAILURE로 일괄 생성함
-        int insertedCount = studyStatusRepository.insertMissingStatusesAsFailure(today);
+        int insertedCount = studyStatusRepository.insertMissingStatusesAsFailure(today, StudyMemberStatus.ACTIVE);
         
         // 미완료된 상태를 FAILURE로 업데이트함
         int updatedCount = studyStatusRepository.bulkFailIncompleteStatuses(today);

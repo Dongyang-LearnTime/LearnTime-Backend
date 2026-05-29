@@ -230,7 +230,7 @@ public class UserService {
     }
 
     private void reassignOwnedStudies(Long userId) {
-        List<StudyMember> ownedMemberships = studyMemberRepository.findAllByUser_UserIdAndStudyMemberRoleAndStatus(
+        List<StudyMember> ownedMemberships = studyMemberRepository.findOwnedMemberships(
                 userId,
                 StudyMemberRole.OWNER,
                 StudyMemberStatus.ACTIVE

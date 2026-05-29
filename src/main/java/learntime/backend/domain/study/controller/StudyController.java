@@ -92,7 +92,6 @@ public class StudyController {
         return ResponseEntity.ok(result);
     }
 
-
     @GetMapping("/{studyId}/status")
     @Operation(summary = "공부 진도 생성 상태 확인", description = "스터디의 현재 생성 상태(PLANNING/READY/FAILED)를 확인합니다.")
     public ResponseEntity<StudyStatusResponseDTO> getStudyStatus(@PathVariable Long studyId) {
@@ -105,10 +104,11 @@ public class StudyController {
     )
     @Operation(summary = "사진 인식(목차 추출)", description = "사진 파일을 받아 AI를 통해 목차 정보를 추출합니다.")
     public ResponseEntity<List<TocListResponseDTO>> extractToc(
-            @RequestParam("image") MultipartFile imageFile) {
+            @RequestParam("image") MultipartFile imageFile,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         log.info("[TOC Extract] 목차 추출 요청: {}", imageFile.getOriginalFilename());
-        List<TocListResponseDTO> jsonResult = studyFacade.extractToc(imageFile);
+        List<TocListResponseDTO> jsonResult = studyFacade.extractToc(imageFile, userDetails.userId());
 
         return ResponseEntity.ok(jsonResult);
     }
@@ -116,7 +116,7 @@ public class StudyController {
     @PostMapping("/generate")
     @Operation(summary = "공부 진도 생성", description = "목차 정보를 기반으로 공부 진도를 생성 후 DB에 저장합니다.")
     public ResponseEntity<Long> createStudyPlan(@Valid @RequestBody GeminiStudyRequestDTO request,
-                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
+                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long studyId = studyFacade.generateAndSaveStudyPlan(request, userDetails.userId());
         return ResponseEntity.status(HttpStatus.CREATED).body(studyId);
     }

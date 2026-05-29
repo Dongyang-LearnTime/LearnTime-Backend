@@ -48,11 +48,6 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
-    // AWS SDK
-    implementation 'software.amazon.awssdk:rds:2.32.16'
-    implementation 'software.amazon.awssdk:auth'
-    implementation 'software.amazon.awssdk:regions'
-
     // AWS S3
     implementation platform("software.amazon.awssdk:bom:2.44.3")
     implementation "software.amazon.awssdk:s3"

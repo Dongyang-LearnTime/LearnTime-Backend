@@ -192,10 +192,9 @@ public class StudyInvitationService {
         }
 
         // 이미 스터디 멤버인지 검증
-        boolean alreadyMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatus(
+        boolean alreadyMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserId(
                 request.studyId(),
-                invitedUser.getUserId(),
-                StudyMemberStatus.ACTIVE
+                invitedUser.getUserId()
         );
 
         if (alreadyMember) {

@@ -47,8 +47,9 @@ public class MealService {
 
         Map<String, Object> geminiRequest = createGeminiMealPrompt(request.getContent());
 
+
         try {
-            String rawJson = geminiClient.sendRequest(geminiRequest, GeminiModel.GEMINI_3_1);
+            String rawJson = geminiClient.sendRequest(geminiRequest, GeminiModel.GEMINI_3_0);
             JsonNode analysis = parseGeminiResponse(rawJson);
 
             String searchKeyword = analysis.get("searchKeyword").asText();
@@ -58,7 +59,7 @@ public class MealService {
             double finalProtein;
             boolean isEstimated = false;
 
-            // 2. 공공데이터 API 호출
+            // 공공데이터 API 호출
             FoodApiClient.FoodNutrientInfo apiResult = foodApiClient.searchFood(searchKeyword);
 
             if (apiResult != null) {
@@ -76,7 +77,7 @@ public class MealService {
                 isEstimated = true;
             }
 
-            // 4. DB 저장
+            // DB 저장
             MealRecord record = ExerciseConverter.toMealRecord(user, searchKeyword, finalCalories, finalProtein, isEstimated);
             MealRecord saveRecord = mealRecordRepository.save(record);
 

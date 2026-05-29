@@ -10,6 +10,7 @@ import learntime.backend.domain.study.service.core.StudyManagementService;
 import learntime.backend.domain.study.service.core.StudyPlanGenerationService;
 import learntime.backend.domain.study.service.core.StudyRestService;
 import learntime.backend.global.utils.FileValidatorUtil;
+import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,11 +29,18 @@ public class StudyFacade {
     private final StudyPlanGenerationService studyPlanGenerationService;
     private final StudyRestService studyRestService;
     private final StudyManagementService studyManagementService;
+    private final PromptQuotaUtil promptQuotaUtil;
 
     // 업로드된 이미지에서 AI를 활용하여 목차 정보를 추출합니다.
-    public List<TocListResponseDTO> extractToc(MultipartFile imageFile) {
+    public List<TocListResponseDTO> extractToc(MultipartFile imageFile, Long userId) {
         fileValidatorUtil.validateImage(imageFile);
-        return tocExtractionService.extractTocAsJson(imageFile);
+        promptQuotaUtil.decreasePromptQuota(userId); // Gemini 이용량 차감
+        try {
+            return tocExtractionService.extractTocAsJson(imageFile);
+        } catch (Exception e) {
+            promptQuotaUtil.restorePromptQuota(userId); // 예외 발생 시 할당량 복구
+            throw e;
+        }
     }
 
     // AI를 활용해 새로운 스마트 학습 계획을 생성하고 저장합니다. (비동기 처리)

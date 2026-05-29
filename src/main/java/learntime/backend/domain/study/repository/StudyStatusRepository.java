@@ -3,6 +3,7 @@ package learntime.backend.domain.study.repository;
 import learntime.backend.domain.study.dto.StudyDailyPlanStatsDTO;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.StudyStatus;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -71,8 +72,9 @@ public interface StudyStatusRepository extends JpaRepository<StudyStatus, Long> 
                    "      SELECT 1 FROM study_status s " +
                    "      WHERE s.study_member_id = m.study_member_id " +
                    "        AND s.study_daily_plan_id = p.study_daily_plan_id " +
+                   "        AND m.status = :status" +
                    ")", nativeQuery = true)
-    int insertMissingStatusesAsFailure(@Param("targetDate") LocalDate targetDate);
+    int insertMissingStatusesAsFailure(@Param("targetDate") LocalDate targetDate, @Param("status") StudyMemberStatus status);
 
     // 기존 미완료 과거 상태를 실패로 업데이트함
     @Modifying(clearAutomatically = true)
