@@ -54,15 +54,15 @@ public class GeminiPromptParser {
         );
     }
 
-    public Map<String, Object> createOcrRequestBody(String userPrompt, String base64Data, String mimeType) {
+    public Map<String, Object> createOcrRequestBody(String userPrompt, String fileUri, String mimeType, Map<String, Object> responseSchema) {
         return buildBaseRequest(
                 List.of(
                         Map.of("text", userPrompt),
-                        Map.of("inlineData", Map.of("mimeType", mimeType, "data", base64Data))
+                        Map.of("fileData", Map.of("mimeType", mimeType, "fileUri", fileUri))
                 ),
                 OCR_SYSTEM_INSTRUCTION,
                 0.1,
-                null
+                responseSchema
         );
     }
 

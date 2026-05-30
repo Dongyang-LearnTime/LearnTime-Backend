@@ -54,10 +54,24 @@ public class GeminiQuizService {
                 cleanedText
         );
 
+        Map<String, Object> responseSchema = Map.of(
+                "type", "ARRAY",
+                "items", Map.of(
+                        "type", "OBJECT",
+                        "properties", Map.of(
+                                "questionContent", Map.of("type", "STRING", "description", "The content of the quiz question"),
+                                "correctAnswer", Map.of("type", "STRING", "description", "The correct answer to the question"),
+                                "quizType", Map.of("type", "STRING", "description", "The type of the quiz (OX, MULTIPLE_CHOICE, SHORT_ANSWER)")
+                        ),
+                        "required", List.of("questionContent", "correctAnswer", "quizType")
+                )
+        );
+
         Map<String, Object> requestBody = promptParser.createRequestBody(
                 userPrompt,
                 STUDY_QUIZ_INSTRUCTION,
-                QUIZ_AI_TEMPERATURE
+                QUIZ_AI_TEMPERATURE,
+                responseSchema
         );
 
         try {

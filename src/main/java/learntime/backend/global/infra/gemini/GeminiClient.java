@@ -16,6 +16,8 @@ import org.springframework.web.client.RestClient;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Component
@@ -26,6 +28,7 @@ public class GeminiClient {
     private String apiKey;
 
     private final RestClient restClient;
+    private final ObjectMapper objectMapper;
 
     private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
@@ -81,6 +84,42 @@ public class GeminiClient {
                             responseBytes,
                             StandardCharsets.UTF_8
                     );
+                });
+    }
+
+    @Retryable(
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 300, multiplier = 2)
+    )
+    public String uploadFile(byte[] fileBytes, String mimeType, String displayName) {
+        long startTime = System.nanoTime();
+        
+        return restClient.post()
+                .uri(GeminiModel.UPLOAD_ENDPOINT + "?key=" + apiKey)
+                .contentType(MediaType.parseMediaType(mimeType))
+                .header("X-Goog-Upload-Protocol", "raw")
+                .header("X-Goog-Upload-File-Data", displayName)
+                .body(fileBytes)
+                .exchange((request, response) -> {
+                    InputStream bodyStream = response.getBody();
+                    byte[] responseBytes = bodyStream.readAllBytes();
+                    
+                    if (response.getStatusCode().isError()) {
+                        String errorBody = new String(responseBytes, StandardCharsets.UTF_8);
+                        throw new RuntimeException("Gemini Upload Error [%s] | Body: %s".formatted(response.getStatusCode(), errorBody));
+                    }
+                    
+                    String jsonResponse = new String(responseBytes, StandardCharsets.UTF_8);
+                    
+                    long durationMs = (System.nanoTime() - startTime) / 1_000_000;
+                    log.info("[Gemini Upload API] {}ms | size: {} bytes", durationMs, fileBytes.length);
+                    
+                    try {
+                        JsonNode root = objectMapper.readTree(jsonResponse);
+                        return root.path("file").path("uri").asText();
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to parse upload response", e);
+                    }
                 });
     }
 
