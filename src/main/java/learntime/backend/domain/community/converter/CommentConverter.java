@@ -12,7 +12,7 @@ public class CommentConverter {
         throw new BusinessException(ErrorCode.UTILITY_CLASS_INSTANTIATION);
     }
 
-    public static CommentResponseDTO toCommentResponseDTO(Comment comment) {
+    public static CommentResponseDTO toCommentResponseDTO(Comment comment, Boolean hasBlocked) {
         Long authorId = comment.getUser() != null ? comment.getUser().getUserId() : null;
         String authorName = comment.getUser() != null ? comment.getUser().getName() : "탈퇴한 사용자";
 
@@ -20,6 +20,7 @@ public class CommentConverter {
                 .commentId(comment.getCommentId())
                 .authorId(authorId)
                 .authorName(authorName)
+                .hasBlocked(hasBlocked)
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())

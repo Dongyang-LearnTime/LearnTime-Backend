@@ -6,7 +6,6 @@ import learntime.backend.domain.community.model.PostImage;
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostRepository;
-import learntime.backend.domain.community.service.core.CommunityCleanupService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.infra.s3.S3Service;

@@ -4,14 +4,12 @@ import org.springframework.http.ResponseCookie;
 
 public class CookieUtil {
 
-    private static final long REFRESH_TIME = 60 * 60 * 24 * 14; // 14일 (초 단위)
-
-    public static ResponseCookie createRefreshTokenCookie(String refreshToken) {
+    public static ResponseCookie createRefreshTokenCookie(String refreshToken, long refreshTime) {
         return ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(REFRESH_TIME)
+                .maxAge(refreshTime)
                 .sameSite("None")
                 .build();
     }

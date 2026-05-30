@@ -1,4 +1,4 @@
-package learntime.backend.domain.community.service.core;
+package learntime.backend.domain.community.service;
 
 import learntime.backend.domain.community.converter.CommentConverter;
 import learntime.backend.domain.community.dto.response.CommentResponseDTO;
@@ -35,10 +35,11 @@ public class CommentService {
     private final UserRepository userRepository;
 
     private final UserBlockUtil userBlockUtil;
+    private final learntime.backend.domain.relationship.repository.UserBlockRepository userBlockRepository;
 
     /** 특정 게시글에 작성된 댓글 목록을 커서 기반으로 조회 */
     @Transactional(readOnly = true)
-    public List<CommentResponseDTO> getCommentsByPostId(Long postId, Long lastCommentId, int size) {
+    public List<CommentResponseDTO> getCommentsByPostId(Long postId, Long lastCommentId, int size, Long userId) {
         Pageable pageable = PageRequest.of(0, size);
         List<Comment> comments;
         if (lastCommentId == null) { // 첫 페이지
@@ -48,8 +49,15 @@ public class CommentService {
             comments = commentRepository.findByPostIdWithUserWithCursor(postId, lastCommentId, pageable);
         }
 
+        java.util.Set<Long> blockedIds = userId == null
+                ? java.util.Collections.emptySet()
+                : userBlockRepository.findBlockedUserIds(userId);
+
         return comments.stream()
-                .map(CommentConverter::toCommentResponseDTO)
+                .map(comment -> {
+                    Boolean hasBlocked = userId == null ? null : (comment.getUser() != null && blockedIds.contains(comment.getUser().getUserId()));
+                    return CommentConverter.toCommentResponseDTO(comment, hasBlocked);
+                })
                 .toList();
     }
 

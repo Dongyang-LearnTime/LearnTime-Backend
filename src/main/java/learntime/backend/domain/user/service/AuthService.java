@@ -46,8 +46,11 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final CustomPasswordEncoder customPasswordEncoder;
 
-    private static final long ACCESS_TIME = 1000L * 60 * 30; // 엑세스 토큰 유효기간, 30분
-    private static final long REFRESH_TIME = 1000L * 60 * 60 * 24 * 14; // 리프레쉬 토큰 유효기간, 14일
+    @Value("${jwt.access-expiration}")
+    private long accessTime; // 엑세스 토큰 유효기간
+
+    @Value("${jwt.refresh-expiration}")
+    private long refreshTime; // 리프레쉬 토큰 유효기간
 
     private static final int MAX_PASSWORD_ATTEMPTS = 5; // 비밀번호 5회 제한
 
@@ -158,9 +161,9 @@ public class AuthService {
 
     // 토큰 DB에 저장 및 return
     public TokenPair generateTokenPair(User user) {
-        String newAccess = jwtProvider.createToken(user, ACCESS_TIME);
-        String newRefresh = jwtProvider.createToken(user, REFRESH_TIME);
-        LocalDateTime newExpiry = LocalDateTime.now().plusSeconds(REFRESH_TIME / 1000);
+        String newAccess = jwtProvider.createToken(user, accessTime);
+        String newRefresh = jwtProvider.createToken(user, refreshTime);
+        LocalDateTime newExpiry = LocalDateTime.now().plusSeconds(refreshTime / 1000);
 
         refreshTokenRepository.upsertToken(user.getUserId(), newRefresh, newExpiry);
 

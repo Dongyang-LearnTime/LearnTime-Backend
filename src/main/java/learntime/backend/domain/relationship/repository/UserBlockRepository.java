@@ -10,8 +10,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Set;
+
 @Repository
 public interface UserBlockRepository extends JpaRepository<UserBlock, Long> {
+    // 내가 차단한 사용자의 id
+    @Query("""
+        SELECT ub.blocked.userId
+        FROM UserBlock ub
+        WHERE ub.blocker.userId = :myUserId
+    """)
+    Set<Long> findBlockedUserIds(
+            @Param("myUserId") Long myUserId
+    );
 
     void deleteByBlocker_UserIdAndBlocked_UserId(
             Long blockerId,

@@ -54,4 +54,25 @@ public class StudyMemberController {
         return ResponseEntity.ok(result);
     }
 
+    // 방장의 스터디원 강퇴
+    @DeleteMapping("/{studyId}/kick/{userIdToKick}")
+    @Operation(summary = "스터디원 강퇴", description = "방장이 스터디원을 강퇴시킵니다. (상태가 WITHDRAWN으로 변경됨)")
+    public ResponseEntity<Void> kickStudyMember(
+            @PathVariable Long studyId,
+            @PathVariable Long userIdToKick,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyMemberService.kickStudyMember(studyId, userIdToKick, userDetails.userId());
+        return ResponseEntity.ok().build();
+    }
+
+    // 스터디 탈퇴
+    @DeleteMapping("/{studyId}/leave")
+    @Operation(summary = "스터디 탈퇴", description = "자발적으로 스터디를 탈퇴합니다. 방장은 위임 전까지 탈퇴할 수 없습니다.")
+    public ResponseEntity<Void> leaveStudy(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyMemberService.leaveStudy(studyId, userDetails.userId());
+        return ResponseEntity.ok().build();
+    }
+
 }

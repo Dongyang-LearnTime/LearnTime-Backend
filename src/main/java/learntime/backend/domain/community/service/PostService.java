@@ -1,23 +1,17 @@
-package learntime.backend.domain.community.service.core;
+package learntime.backend.domain.community.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.community.converter.PostConverter;
 import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
 import learntime.backend.domain.community.dto.request.PostUpdateRequestDTO;
-import learntime.backend.domain.community.dto.response.PostListResponseDTO;
-import learntime.backend.domain.community.dto.response.PostUpdateDetailDTO;
-import learntime.backend.domain.community.enums.PostSearchType;
 import learntime.backend.domain.community.error.code.CommunityErrorCode;
 import learntime.backend.domain.community.error.exception.CommunityException;
 import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.model.PostImage;
-import learntime.backend.domain.community.model.PostLike;
-import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostLikeRepository;
 import learntime.backend.domain.community.repository.PostRepository;
-import java.util.Map;
-import java.util.stream.Collectors;
+
 import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.domain.user.model.User;
@@ -29,8 +23,6 @@ import learntime.backend.global.utils.AuthorizationUtil;
 import learntime.backend.global.utils.FileValidatorUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,8 +35,8 @@ import java.util.List;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
+
     private final StudyQueryService studyQueryService;
     private final S3Service s3Service;
     private final FileValidatorUtil fileValidatorUtil;
@@ -53,113 +45,6 @@ public class PostService {
     private final ObjectMapper objectMapper;
 
     private static final int IMAGE_LIMIT_COUNT = 3;
-
-    /** 오프셋 기반 게시글 목록 페이징 조회 */
-    @Transactional(readOnly = true)
-    public Page<PostListResponseDTO> getPostList(Pageable pageable) {
-        Page<Post> posts = postRepository.findAllPosts(pageable);
-        Map<Long, Long> commentCountMap = getCommentCountMap(posts.getContent());
-        return posts.map(post -> PostConverter.toPostListResponseDTO(
-                post,
-                commentCountMap.getOrDefault(post.getPostId(), 0L)
-        ));
-    }
-
-    /** 제목 또는 내용으로 게시글 목록 페이징 검색 */
-    @Transactional(readOnly = true)
-    public Page<PostListResponseDTO> searchPosts(String keyword, PostSearchType type, Pageable pageable) {
-        Page<Post> posts = switch (type) {
-            case AUTHOR ->
-                    postRepository.searchByAuthorName(keyword, pageable);
-            case CONTENT ->
-                    postRepository.searchByKeyword(keyword, pageable);
-        };
-
-        Map<Long, Long> commentCountMap =
-                getCommentCountMap(posts.getContent());
-
-        return posts.map(post ->
-                PostConverter.toPostListResponseDTO(
-                        post,
-                        commentCountMap.getOrDefault(post.getPostId(), 0L)
-                )
-        );
-    }
-
-    /** 주간 인기글 3개 조회 */
-    @Transactional(readOnly = true)
-    public List<PostListResponseDTO> getWeeklyPopularPosts(Pageable pageable) {
-        java.time.LocalDateTime oneWeekAgo = java.time.LocalDateTime.now().minusWeeks(1);
-        List<Post> posts = postRepository.findWeeklyPopularPosts(oneWeekAgo, pageable);
-        Map<Long, Long> commentCountMap = getCommentCountMap(posts);
-        return posts.stream()
-                .map(post -> PostConverter.toPostListResponseDTO(
-                        post,
-                        commentCountMap.getOrDefault(post.getPostId(), 0L)
-                ))
-                .toList();
-    }
-
-    /** 공지사항 목록 조회 */
-    @Transactional(readOnly = true)
-    public List<PostListResponseDTO> getNoticePosts() {
-        List<Post> posts = postRepository.findNoticePosts();
-        Map<Long, Long> commentCountMap = getCommentCountMap(posts);
-        return posts.stream()
-                .map(post -> PostConverter.toPostListResponseDTO(
-                        post,
-                        commentCountMap.getOrDefault(post.getPostId(), 0L)
-                ))
-                .toList();
-    }
-
-    private Map<Long, Long> getCommentCountMap(List<Post> posts) {
-        if (posts.isEmpty()) {
-            return Map.of();
-        }
-        List<Long> postIds = posts.stream()
-                .map(Post::getPostId)
-                .toList();
-        List<Object[]> results = commentRepository.countCommentsByPostIds(postIds);
-        return results.stream()
-                .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> (Long) row[1],
-                        (a, b) -> a
-                ));
-    }
-
-    /** 게시글 수정용 상세 정보 조회 */
-    @Transactional(readOnly = true)
-    public PostUpdateDetailDTO getPostForUpdate(Long postId, Long userId) {
-        Post post = postRepository.findByIdWithDetails(postId)
-                .orElseThrow(() -> new CommunityException(CommunityErrorCode.POST_NOT_FOUND));
-
-        AuthorizationUtil.verifyOwnership(userId, post.getUser().getUserId());
-
-        List<String> imageUrls = getPostImageUrls(postId);
-        if (imageUrls == null) {
-            imageUrls = List.of();
-        }
-
-        String studyTitle = null;
-        if (post.getStudyId() != null) {
-            try {
-                studyTitle = studyQueryService.getStudyTitle(post.getStudyId());
-            } catch (Exception e) {
-                log.warn("게시글 수정 상세 조회 중 스터디 제목 조회에 실패했습니다. studyId: {}", post.getStudyId(), e);
-            }
-        }
-
-        return PostUpdateDetailDTO.builder()
-                .postId(post.getPostId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .images(imageUrls)
-                .studyId(post.getStudyId())
-                .studyTitle(studyTitle)
-                .build();
-    }
 
     /** 게시글 수정 */
     @Transactional

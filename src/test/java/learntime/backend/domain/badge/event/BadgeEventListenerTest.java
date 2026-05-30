@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,6 +43,9 @@ class BadgeEventListenerTest {
 
     @Mock
     private UserBadgeRepository userBadgeRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private User user;
 
@@ -290,35 +294,94 @@ class BadgeEventListenerTest {
     }
 
     @Test
-    @DisplayName("오전 8시 전 운동 완료 시 미라클 모닝 연속 횟수가 증가하고, 오전 8시 이후이면 갱신되지 않는다")
-    void handleExerciseCompleted_miracleMorningCheck() {
-        // given 1: 오전 7시 완료 (오전 8시 전)
-        LocalDateTime completedAtUTC1 = LocalDateTime.of(2026, 5, 24, 22, 0, 0); // KST 2026-05-25 07:00:00
-        ExerciseCompletedEvent eventBefore8 = new ExerciseCompletedEvent(1L, completedAtUTC1);
+    @DisplayName("하루 첫 운동 시 10p가 지급되고 연속 운동 일수가 1 증가한다 (미라클 모닝도 포함)")
+    void handleExerciseCompleted_firstTime_awardsPoint() {
+        // given: 오전 7시 완료 (오전 8시 전)
+        LocalDateTime completedAtUTC = LocalDateTime.of(2026, 5, 24, 22, 0, 0); // KST 2026-05-25 07:00:00
+        ExerciseCompletedEvent event = new ExerciseCompletedEvent(1L, completedAtUTC);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(statRepository.findAllByUser_UserId(1L)).thenReturn(new ArrayList<>());
         when(userBadgeRepository.findBadgeTypesByUserId(1L)).thenReturn(new ArrayList<>());
 
-        // when 1
-        badgeEventListener.handleExerciseCompleted(eventBefore8);
+        // when
+        badgeEventListener.handleExerciseCompleted(event);
 
-        // then 1
-        verify(statRepository, times(1)).saveAll(anyList());
-        verify(userBadgeRepository, times(1)).save(any(UserBadge.class)); // 일찍 일어나는 새 배지 획득
+        // then
+        // 통계 저장 확인 (운동 연속 + 미라클 모닝)
+        ArgumentCaptor<List<UserActivityStat>> statsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(statRepository, times(1)).saveAll(statsCaptor.capture());
+        
+        List<UserActivityStat> savedStats = statsCaptor.getValue();
+        UserActivityStat exerciseStat = savedStats.stream()
+                .filter(s -> s.getStatKey() == StatKey.CONSECUTIVE_EXERCISE_DAYS)
+                .findFirst().orElseThrow();
+        assertThat(exerciseStat.getStatValue()).isEqualTo(1L);
 
-        // reset mocks for case 2
-        reset(userRepository, statRepository, userBadgeRepository);
+        // 일일 포인트 이벤트 발행 확인
+        ArgumentCaptor<learntime.backend.domain.point.dto.PointEventDTO> pointCaptor = ArgumentCaptor.forClass(learntime.backend.domain.point.dto.PointEventDTO.class);
+        verify(eventPublisher, times(1)).publishEvent(pointCaptor.capture());
+        assertThat(pointCaptor.getValue().amount()).isEqualTo(10);
+    }
 
-        // given 2: 오전 9시 완료 (오전 8시 이후)
-        LocalDateTime completedAtUTC2 = LocalDateTime.of(2026, 5, 25, 0, 0, 0); // KST 2026-05-25 09:00:00
-        ExerciseCompletedEvent eventAfter8 = new ExerciseCompletedEvent(1L, completedAtUTC2);
+    @Test
+    @DisplayName("같은 날 여러 번 운동해도 일일 포인트는 한 번만 지급된다")
+    void handleExerciseCompleted_idempotent_noExtraPoint() {
+        // given: 오전 9시 완료
+        LocalDateTime completedAtUTC = LocalDateTime.of(2026, 5, 25, 0, 0, 0); // KST 2026-05-25 09:00:00
+        ExerciseCompletedEvent event = new ExerciseCompletedEvent(1L, completedAtUTC);
 
-        // when 2
-        badgeEventListener.handleExerciseCompleted(eventAfter8);
+        UserActivityStat existingStat = UserActivityStat.builder()
+                .user(user)
+                .statKey(StatKey.CONSECUTIVE_EXERCISE_DAYS)
+                .build();
+        existingStat.resetValueToOne();
+        existingStat.updateLastActionDate(LocalDate.of(2026, 5, 25)); // 오늘 이미 운동 완료
 
-        // then 2: 오전 8시 이후이므로 어떠한 Repository 호출도 없어야 함
-        verifyNoInteractions(userRepository, statRepository, userBadgeRepository);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(statRepository.findAllByUser_UserId(1L)).thenReturn(List.of(existingStat));
+        when(userBadgeRepository.findBadgeTypesByUserId(1L)).thenReturn(new ArrayList<>());
+
+        // when
+        badgeEventListener.handleExerciseCompleted(event);
+
+        // then
+        assertThat(existingStat.getStatValue()).isEqualTo(1L); // 증가하지 않음
+        // 포인트 이벤트가 더 이상 발생하지 않아야 함
+        verify(eventPublisher, never()).publishEvent(any(learntime.backend.domain.point.dto.PointEventDTO.class));
+    }
+
+    @Test
+    @DisplayName("3일 연속 운동 시 일일 포인트 10p와 보너스 50p가 함께 지급된다")
+    void handleExerciseCompleted_consecutive3Days_awardsBonus() {
+        // given: 오전 9시 완료
+        LocalDateTime completedAtUTC = LocalDateTime.of(2026, 5, 25, 0, 0, 0); // KST 2026-05-25 09:00:00
+        ExerciseCompletedEvent event = new ExerciseCompletedEvent(1L, completedAtUTC);
+
+        UserActivityStat existingStat = UserActivityStat.builder()
+                .user(user)
+                .statKey(StatKey.CONSECUTIVE_EXERCISE_DAYS)
+                .build();
+        existingStat.incrementValue();
+        existingStat.incrementValue(); // 2일 연속 상태
+        existingStat.updateLastActionDate(LocalDate.of(2026, 5, 24)); // 마지막이 어제
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(statRepository.findAllByUser_UserId(1L)).thenReturn(List.of(existingStat));
+        when(userBadgeRepository.findBadgeTypesByUserId(1L)).thenReturn(new ArrayList<>());
+
+        // when
+        badgeEventListener.handleExerciseCompleted(event);
+
+        // then
+        assertThat(existingStat.getStatValue()).isEqualTo(3L);
+
+        // 일일 포인트(10p)와 보너스 포인트(50p) 총 2개의 이벤트 발행 확인
+        ArgumentCaptor<learntime.backend.domain.point.dto.PointEventDTO> pointCaptor = ArgumentCaptor.forClass(learntime.backend.domain.point.dto.PointEventDTO.class);
+        verify(eventPublisher, times(2)).publishEvent(pointCaptor.capture());
+        
+        List<learntime.backend.domain.point.dto.PointEventDTO> publishedEvents = pointCaptor.getAllValues();
+        assertThat(publishedEvents).extracting("amount").containsExactlyInAnyOrder(10, 50);
     }
 
     @Test

@@ -39,7 +39,9 @@ public enum StudyErrorCode implements BaseErrorCode {
     HOLIDAY_REGISTRATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-029", "휴무일에는 공부 내용을 등록하거나 수정할 수 없습니다."),
     STUDY_REST_UPDATE_NOT_READY(HttpStatus.BAD_REQUEST, "STUDY-030", "공부 진도 생성이 완료된 후 휴무 일정을 변경할 수 있습니다."),
     TODAY_REST_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-031", "오늘을 새 휴무일로 변경할 수 없습니다."),
-    WITHDRAWN_MEMBER_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "STUDY-032", "탈퇴한 스터디에서는 해당 작업을 수행할 수 없습니다.");
+    WITHDRAWN_MEMBER_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "STUDY-032", "탈퇴한 스터디에서는 해당 작업을 수행할 수 없습니다."),
+    OWNER_LEAVE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-033", "방장은 스터디를 탈퇴할 수 없습니다. 방장을 위임한 후 탈퇴해주세요."),
+    CANNOT_KICK_OWNER(HttpStatus.BAD_REQUEST, "STUDY-034", "방장은 강퇴할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

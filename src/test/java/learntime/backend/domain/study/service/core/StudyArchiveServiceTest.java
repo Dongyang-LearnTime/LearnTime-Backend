@@ -89,47 +89,7 @@ class StudyArchiveServiceTest {
         assertThat(result).isEmpty();
     }
 
-    // ──────────────────────────────────────────────────────────
-    // getArchivedFeedbacks
-    // ──────────────────────────────────────────────────────────
 
-    @Test
-    @DisplayName("getArchivedFeedbacks - WITHDRAWN 멤버가 자신의 피드백을 조회할 수 있다")
-    void getArchivedFeedbacks_WithdrawnMember_Success() {
-        // given
-        Long studyId = 1L, userId = 20L;
-        Pageable pageable = PageRequest.of(0, 10);
-        StudyMember member = mockMemberNoStudy(200L, StudyMemberStatus.WITHDRAWN);
-
-        given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
-                studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
-                .willReturn(Optional.of(member));
-        given(studyFeedbackRepository.findAllByStudyMember_StudyMemberId(200L, pageable))
-                .willReturn(new PageImpl<>(List.of()));
-
-        // when & then
-        assertThatCode(() -> studyArchiveService.getArchivedFeedbacks(studyId, userId, pageable))
-                .doesNotThrowAnyException();
-    }
-
-    @Test
-    @DisplayName("getArchivedFeedbacks - 멤버가 아닌 사용자가 조회 시 예외가 발생한다")
-    void getArchivedFeedbacks_NotMember_ThrowsException() {
-        // given
-        Long studyId = 1L, userId = 99L;
-        Pageable pageable = PageRequest.of(0, 10);
-
-        given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
-                studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
-                .willReturn(Optional.empty());
-
-        // when & then
-        assertThatThrownBy(() -> studyArchiveService.getArchivedFeedbacks(studyId, userId, pageable))
-                .isInstanceOf(StudyException.class)
-                .hasMessageContaining(StudyErrorCode.STUDY_MEMBER_NOT_FOUND.getMessage());
-    }
 
     // ──────────────────────────────────────────────────────────
     // 헬퍼

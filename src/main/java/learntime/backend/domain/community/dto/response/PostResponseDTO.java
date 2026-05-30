@@ -21,6 +21,9 @@ public record PostResponseDTO(
         
         @Schema(description = "작성자 프로필 이미지 URL", example = "https://s3.ap-northeast-2.amazonaws.com/...")
         String userProfileImageUrl,
+
+        @Schema(description = "현재 로그인한 사용자가 작성자 차단했는지 여부. 로그아웃 상태면 NULL'", example = "false")
+        Boolean hasBlocked,
         
         @Schema(description = "게시글 제목", example = "오늘 공부 인증합니다!")
         String title,

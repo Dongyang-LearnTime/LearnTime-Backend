@@ -1,5 +1,6 @@
 package learntime.backend.domain.study_member.service;
 
+import learntime.backend.domain.relationship.repository.UserBlockRepository;
 import learntime.backend.domain.study_member.converter.StudyMemberConverter;
 import learntime.backend.domain.study_member.dto.response.StudyMemberResponseDTO;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
@@ -15,12 +16,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
 public class StudyMemberService {
 
     private final StudyMemberRepository studyMemberRepository;
+    private final UserBlockRepository userBlockRepository;
 
     @Transactional(readOnly = true)
     public List<StudyMemberResponseDTO> getAllStudyMember(Long studyId, Long userId) {
@@ -35,8 +38,15 @@ public class StudyMemberService {
         }
 
         List<StudyMember> studyMemberList = studyMemberRepository.findAllActiveByStudyIdFetchUser(studyId);
+
+        Set<Long> blockedIds = userBlockRepository.findBlockedUserIds(userId);
+
         return studyMemberList.stream()
-                .map(StudyMemberConverter::toStudyMemberResponse)
+                .map(studyMember -> StudyMemberConverter.toStudyMemberResponseDTO(
+                                studyMember,
+                                blockedIds
+                        )
+                )
                 .toList();
     }
 
@@ -65,6 +75,40 @@ public class StudyMemberService {
 
         ownerStudyMember.changeRole(StudyMemberRole.MEMBER);
         newOwnerStudyMember.changeRole(StudyMemberRole.OWNER);
+    }
+
+    @Transactional
+    public void kickStudyMember(Long studyId, Long memberIdToKick, Long requesterId) {
+        // requester 검증 (방장인지)
+        StudyMember requester = studyMemberRepository
+                .findByStudy_StudyIdAndUser_UserIdAndStatus(studyId, requesterId, StudyMemberStatus.ACTIVE)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        StudyAuthUtil.checkOwnerRole(requester);
+
+        // kick 대상 검증
+        StudyMember memberToKick = studyMemberRepository
+                .findByStudy_StudyIdAndUser_UserIdAndStatus(studyId, memberIdToKick, StudyMemberStatus.ACTIVE)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        if (memberToKick.getStudyMemberRole() == StudyMemberRole.OWNER) {
+            throw new StudyException(StudyErrorCode.CANNOT_KICK_OWNER);
+        }
+
+        memberToKick.withdraw();
+    }
+
+    @Transactional
+    public void leaveStudy(Long studyId, Long userId) {
+        StudyMember studyMember = studyMemberRepository
+                .findByStudy_StudyIdAndUser_UserIdAndStatus(studyId, userId, StudyMemberStatus.ACTIVE)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        if (studyMember.getStudyMemberRole() == StudyMemberRole.OWNER) {
+            throw new StudyException(StudyErrorCode.OWNER_LEAVE_NOT_ALLOWED);
+        }
+
+        studyMember.withdraw();
     }
 
 }

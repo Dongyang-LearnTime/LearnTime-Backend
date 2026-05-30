@@ -18,6 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import org.springframework.context.ApplicationEventPublisher;
+import learntime.backend.domain.point.dto.PointEventDTO;
+import learntime.backend.domain.point.enums.PointPolicy;
+import learntime.backend.domain.point.enums.PointType;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -33,6 +38,7 @@ public class BadgeEventListener {
     private final UserRepository userRepository;
     private final UserActivityStatRepository statRepository;
     private final UserBadgeRepository userBadgeRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final ZoneId KST_ZONE = ZoneId.of("Asia/Seoul");
 
     // 매일 일정 완료 시 배지 검증 (연속 일정 완료 & 미라클 모닝 체크)
@@ -88,7 +94,7 @@ public class BadgeEventListener {
         });
     }
     
-    // 운동 기록 저장 완료 시 배지 검증 (미라클 모닝 체크)
+    // 운동 기록 저장 완료 시 배지 검증 및 포인트 지급
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -97,12 +103,35 @@ public class BadgeEventListener {
         LocalDate todayKST = kstTime.toLocalDate();
         LocalTime timeKST = kstTime.toLocalTime();
         
-        // 오전 8시 전일 때만 통계 갱신 및 검증 수행
-        if (timeKST.isBefore(LocalTime.of(8, 0))) {
-            processBadgeEvent(event.userId(), userStats -> {
+        processBadgeEvent(event.userId(), userStats -> {
+            // 1. 연속 운동 달성 통계 갱신 및 포인트 지급 검증
+            UserActivityStat exerciseStat = userStats.getStat(StatKey.CONSECUTIVE_EXERCISE_DAYS);
+            boolean isFirstExerciseToday = exerciseStat.getLastActionDate() == null || !exerciseStat.getLastActionDate().isEqual(todayKST);
+            
+            updateConsecutiveStat(userStats, StatKey.CONSECUTIVE_EXERCISE_DAYS, todayKST);
+            
+            // 오늘 처음 운동 기록인 경우에만 포인트 지급 (하루 지급 횟수 제한)
+            if (isFirstExerciseToday) {
+                // 일일 운동 기록 완료 포인트 지급
+                eventPublisher.publishEvent(new PointEventDTO(event.userId(), PointPolicy.EXERCISE_DAILY_COMPLETED.getAmount(), PointType.EARN, PointPolicy.EXERCISE_DAILY_COMPLETED.getDescription()));
+                
+                // 연속 달성 보너스 포인트 지급 검증
+                long consecutiveDays = exerciseStat.getStatValue();
+                if (consecutiveDays == 3) {
+                    eventPublisher.publishEvent(new PointEventDTO(event.userId(), PointPolicy.EXERCISE_CONSECUTIVE_3_DAYS.getAmount(), PointType.EARN, PointPolicy.EXERCISE_CONSECUTIVE_3_DAYS.getDescription()));
+                } else if (consecutiveDays == 7) {
+                    eventPublisher.publishEvent(new PointEventDTO(event.userId(), PointPolicy.EXERCISE_CONSECUTIVE_7_DAYS.getAmount(), PointType.EARN, PointPolicy.EXERCISE_CONSECUTIVE_7_DAYS.getDescription()));
+                } else if (consecutiveDays == 30) {
+                    eventPublisher.publishEvent(new PointEventDTO(event.userId(), PointPolicy.EXERCISE_CONSECUTIVE_30_DAYS.getAmount(), PointType.EARN, PointPolicy.EXERCISE_CONSECUTIVE_30_DAYS.getDescription()));
+                }
+            }
+            
+            // 2. 미라클 모닝 체크
+            // 오전 8시 전일 때만 통계 갱신 및 검증 수행
+            if (timeKST.isBefore(LocalTime.of(8, 0))) {
                 updateConsecutiveStat(userStats, StatKey.CONSECUTIVE_MIRACLE_MORNING, todayKST);
-            });
-        }
+            }
+        });
     }
 
     // 중복되는 유저 및 통계 로드, 저장, 배지 획득 검증을 통합 처리하는 헬퍼 메서드

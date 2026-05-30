@@ -43,7 +43,7 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
         FROM StudyMember sm
         JOIN FETCH sm.user u
         WHERE sm.study.studyId = :studyId
-        AND sm.status = learntime.backend.domain.study_member.enums.StudyMemberStatus.ACTIVE
+        AND sm.status = StudyMemberStatus.ACTIVE
     """)
     List<StudyMember> findAllActiveByStudyIdFetchUser(
             @Param("studyId") Long studyId
@@ -60,11 +60,9 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
             StudyMemberStatus status
     );
 
-    long countByStudy(Study study);
 
     long countByStudyAndStatus(Study study, StudyMemberStatus status);
 
-    Optional<StudyMember> findByUser_UserId(Long ownerId);
 
     @Query("""
         SELECT sm
@@ -83,7 +81,7 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE StudyMember sm
-            SET sm.status = learntime.backend.domain.study_member.enums.StudyMemberStatus.WITHDRAWN
+            SET sm.status = StudyMemberStatus.WITHDRAWN
             WHERE sm.user.userId = :userId
             """)
     void withdrawAllByUserId(@Param("userId") Long userId);
@@ -93,7 +91,7 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
         FROM StudyMember sm
         JOIN FETCH sm.study s
         WHERE sm.user.userId = :userId
-          AND sm.status = learntime.backend.domain.study_member.enums.StudyMemberStatus.ACTIVE
+          AND sm.status = StudyMemberStatus.ACTIVE
     """)
     List<StudyMember> findAllActiveByUserIdFetchStudy(@Param("userId") Long userId);
 

@@ -12,14 +12,21 @@ public class CommunityConverter {
         throw new BusinessException(ErrorCode.UTILITY_CLASS_INSTANTIATION);
     }
 
-    public static PointRankingResponseDTO toPointRankingResponseDTO(User user, int rank) {
-        return new PointRankingResponseDTO(
-                user.getUserId(),
-                user.getName(),
-                user.getPoint(),
-                PointMilestone.getTier(user.getPoint()).getTierName(),
-                rank
-        );
+    public static PointRankingResponseDTO toPointRankingResponseDTO(
+            User user,
+            int rank,
+            Boolean hasBlocked
+    ) {
+        String tireName = PointMilestone.getTier(user.getPoint()).getTierName();
+
+        return PointRankingResponseDTO.builder()
+                .userId(user.getUserId())
+                .name(user.getName())
+                .point(user.getPoint())
+                .tierName(tireName)
+                .rank(rank)
+                .hasBlocked(hasBlocked)
+                .build();
     }
 
 }

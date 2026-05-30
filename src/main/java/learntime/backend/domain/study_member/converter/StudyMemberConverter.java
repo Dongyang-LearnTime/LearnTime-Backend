@@ -50,12 +50,22 @@ public class StudyMemberConverter {
                 .build();
     }
 
-    public static StudyMemberResponseDTO toStudyMemberResponse(StudyMember studyMember) {
+    public static StudyMemberResponseDTO toStudyMemberResponseDTO(
+            StudyMember studyMember,
+            Set<Long> blockedIds
+    ) {
         String profileImageUrl = null;
-        if (studyMember.getUser() != null && studyMember.getUser().getProfile() != null) {
-            profileImageUrl = studyMember.getUser().getProfile().getProfileImageUrl();
+        if (studyMember.getUser().getProfile() != null) {
+            profileImageUrl = studyMember.getUser()
+                    .getProfile()
+                    .getProfileImageUrl();
         }
-        
+
+        // 현재 사용자가 해당 멤버를 차단했는지
+        Boolean hasBlocked = blockedIds.contains(
+                studyMember.getUser().getUserId()
+        );
+
         return StudyMemberResponseDTO.builder()
                 .studyMemberId(studyMember.getStudyMemberId())
                 .studyMemberRole(studyMember.getStudyMemberRole())
@@ -64,6 +74,7 @@ public class StudyMemberConverter {
                 .userId(studyMember.getUser().getUserId())
                 .userName(studyMember.getUser().getName())
                 .profileImageUrl(profileImageUrl)
+                .hasBlocked(hasBlocked)
                 .build();
     }
 

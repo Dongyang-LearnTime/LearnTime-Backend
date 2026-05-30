@@ -23,12 +23,16 @@ public class PostConverter {
         throw new BusinessException(ErrorCode.UTILITY_CLASS_INSTANTIATION);
     }
 
-    public static PostResponseDTO toPostResponseDTO(Post post,
-                                                    List<String> imageUrls,
-                                                    Boolean isImageLoadSuccessful,
-                                                    List<CommentResponseDTO> comments,
-                                                    Boolean isLiked) {
+    public static PostResponseDTO toPostResponseDTO(
+            Post post,
+            List<String> imageUrls,
+            Boolean isImageLoadSuccessful,
+            List<CommentResponseDTO> comments,
+            Boolean isLiked,
+            Boolean hasBlocked
+        ) {
         Long userId = post.getUser() != null ? post.getUser().getUserId() : null;
+
         String userName = post.getUser() != null ? post.getUser().getName() : "탈퇴한 사용자";
         String userProfileImageUrl = (post.getUser() != null && post.getUser().getProfile() != null)
                 ? post.getUser().getProfile().getProfileImageUrl()
@@ -49,6 +53,7 @@ public class PostConverter {
                 .userId(userId)
                 .userName(userName)
                 .userProfileImageUrl(userProfileImageUrl)
+                .hasBlocked(hasBlocked)
                 .title(post.getTitle())
                 .content(post.getContent())
                 .createdAt(post.getCreatedAt())
@@ -83,7 +88,7 @@ public class PostConverter {
                 .build();
     }
 
-    public static PostListResponseDTO toPostListResponseDTO(Post post, Long commentCount) {
+    public static PostListResponseDTO toPostListResponseDTO(Post post, Long commentCount, Boolean hasBlocked) {
         Long userId = post.getUser() != null ? post.getUser().getUserId() : null;
         String userName = post.getUser() != null ? post.getUser().getName() : "탈퇴한 사용자";
         String userProfileImageUrl = (post.getUser() != null && post.getUser().getProfile() != null)
@@ -95,6 +100,7 @@ public class PostConverter {
                 .userId(userId)
                 .userName(userName)
                 .userProfileImageUrl(userProfileImageUrl)
+                .hasBlocked(hasBlocked)
                 .title(post.getTitle())
                 .viewCount(post.getViewCount())
                 .likeCount(post.getLikeCount())

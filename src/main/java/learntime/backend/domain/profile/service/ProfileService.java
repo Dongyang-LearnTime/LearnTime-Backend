@@ -83,7 +83,7 @@ public class ProfileService {
                 ));
 
         List<PostListResponseDTO> recentPostDTOs = recentPosts.stream()
-                .map(post -> PostConverter.toPostListResponseDTO(post, commentCounts.getOrDefault(post.getPostId(), 0L)))
+                .map(post -> PostConverter.toPostListResponseDTO(post, commentCounts.getOrDefault(post.getPostId(), 0L), null))
                 .toList();
 
         PointMilestone tier = PointMilestone.getTier(targetUser.getPoint());

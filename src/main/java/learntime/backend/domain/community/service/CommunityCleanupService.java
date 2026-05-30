@@ -1,4 +1,4 @@
-package learntime.backend.domain.community.service.core;
+package learntime.backend.domain.community.service;
 
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostRepository;

@@ -6,7 +6,6 @@ import learntime.backend.domain.community.model.PostImage;
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostRepository;
-import learntime.backend.domain.community.service.core.PostService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -15,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

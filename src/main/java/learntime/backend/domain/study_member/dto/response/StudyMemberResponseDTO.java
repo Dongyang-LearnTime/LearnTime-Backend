@@ -14,6 +14,7 @@ public record StudyMemberResponseDTO(
         Long userId,
         String userName,
         String profileImageUrl,
-        StudyMemberStatus status
+        StudyMemberStatus status,
+        Boolean hasBlocked
 ) {
 }

@@ -105,7 +105,7 @@ public class MyPageService {
         }
 
         Page<PostListResponseDTO> dtoPage = posts.map(post ->
-                PostConverter.toPostListResponseDTO(post, commentCountMap.getOrDefault(post.getPostId(), 0L)));
+                PostConverter.toPostListResponseDTO(post, commentCountMap.getOrDefault(post.getPostId(), 0L), false));
         return PageResponse.of(dtoPage);
     }
 
