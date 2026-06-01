@@ -16,6 +16,7 @@ import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study.service.core.StudyQueryService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.domain.user.enums.Role;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.infra.s3.S3Service;
@@ -94,7 +95,7 @@ public class PostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        if (request.isNotice() && user.getRole() != learntime.backend.domain.user.enums.Role.ROLE_ADMIN) {
+        if (request.isNotice() && user.getRole() != Role.ROLE_ADMIN) {
             throw new AuthException(AuthErrorCode.UNAUTHORIZED_ACCESS);
         }
 

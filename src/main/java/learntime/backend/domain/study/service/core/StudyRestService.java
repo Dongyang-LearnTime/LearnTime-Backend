@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -65,11 +66,11 @@ public class StudyRestService {
         Set<DayOfWeek> currentRestDays = studyRestDayRepository.findAllByStudy_StudyId(studyId)
                 .stream()
                 .map(StudyRestDay::getDayOfWeek)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
         Set<LocalDate> currentRestDates = studyRestDateRepository.findAllByStudy_StudyId(studyId)
                 .stream()
                 .map(StudyRestDate::getRestDate)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
 
         List<DayOfWeek> newRestDays = normalizeRestDays(request.restDays());
         List<LocalDate> newRestDates = normalizeRestDates(request.restDates());

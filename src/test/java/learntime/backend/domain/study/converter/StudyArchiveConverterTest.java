@@ -5,6 +5,7 @@ import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.global.error.exception.BusinessException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -89,6 +90,6 @@ class StudyArchiveConverterTest {
             var ctor = StudyArchiveConverter.class.getDeclaredConstructor();
             ctor.setAccessible(true);
             ctor.newInstance();
-        }).hasCauseInstanceOf(learntime.backend.global.error.exception.BusinessException.class);
+        }).hasCauseInstanceOf(BusinessException.class);
     }
 }

@@ -24,6 +24,9 @@ import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Field;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -180,7 +183,7 @@ class MessageServiceTest {
         Message message3 = messageRepository.save(new Message("내용3", sender, receiver));
 
         // when (1번과 2번만 읽음 처리)
-        messageService.readMessages(receiver.getUserId(), java.util.List.of(message1.getMessageId(), message2.getMessageId()));
+        messageService.readMessages(receiver.getUserId(), List.of(message1.getMessageId(), message2.getMessageId()));
 
         // then
         Message updated1 = messageRepository.findById(message1.getMessageId()).get();
@@ -248,9 +251,9 @@ class MessageServiceTest {
 
         // when 2: 읽음 처리 후 1개월하고 1일 전으로 readAt 수정
         message.readMessage();
-        java.lang.reflect.Field readAtField = Message.class.getDeclaredField("readAt");
+        Field readAtField = Message.class.getDeclaredField("readAt");
         readAtField.setAccessible(true);
-        readAtField.set(message, java.time.LocalDateTime.now().minusMonths(1).minusDays(1));
+        readAtField.set(message, LocalDateTime.now().minusMonths(1).minusDays(1));
         messageRepository.saveAndFlush(message);
 
         // 스케줄러 실행

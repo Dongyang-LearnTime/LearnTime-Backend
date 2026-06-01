@@ -6,6 +6,7 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.StudyFeedback;
 import learntime.backend.domain.study.repository.StudyFeedbackRepository;
+import learntime.backend.domain.study.service.ai.GeminiFeedbackService;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
@@ -37,7 +38,7 @@ class StudyFeedbackServiceTest {
     @Mock private StudyFeedbackRepository studyFeedbackRepository;
     @Mock private StudyMemberRepository studyMemberRepository;
     @Mock private StudyQueryService studyQueryService;
-    @Mock private learntime.backend.domain.study.service.ai.GeminiFeedbackService geminiFeedbackService;
+    @Mock private GeminiFeedbackService geminiFeedbackService;
 
     @InjectMocks
     private StudyFeedbackService studyFeedbackService;

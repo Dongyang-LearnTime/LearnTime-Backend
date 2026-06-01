@@ -21,6 +21,7 @@ import org.springframework.cache.annotation.Cacheable;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Service
@@ -126,7 +127,7 @@ public class StudyQueryService {
         Study study = studyRepository.findByIdWithStudyMembersAndUser(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
-        LocalDate today = LocalDate.now(java.util.TimeZone.getTimeZone("Asia/Seoul").toZoneId());
+        LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
         List<StudyDailyPlan> recentPlans = studyDailyPlanRepository.findByStudyIdAndPlanDateBetweenOrderByPlanDateAsc(
                 studyId,
                 today.minusDays(7),

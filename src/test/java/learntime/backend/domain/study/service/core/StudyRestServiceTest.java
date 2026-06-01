@@ -15,6 +15,7 @@ import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.enums.StudyPlanStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -159,13 +160,13 @@ class StudyRestServiceTest {
         verify(studyRestManager).saveRestDays(study, request.restDays());
         verify(studyRestManager).saveRestDates(study, request.restDates());
 
-        org.assertj.core.api.Assertions.assertThat(yesterdayPlan.getPlanDate()).isEqualTo(today.minusDays(1));
-        org.assertj.core.api.Assertions.assertThat(todayPlan.getPlanDate()).isEqualTo(today);
-        org.assertj.core.api.Assertions.assertThat(futurePlan1.getPlanDate()).isEqualTo(today.plusDays(2));
-        org.assertj.core.api.Assertions.assertThat(futurePlan2.getPlanDate()).isEqualTo(today.plusDays(4));
-        org.assertj.core.api.Assertions.assertThat(futurePlan1.getPlanContent()).isEqualTo("future-1");
-        org.assertj.core.api.Assertions.assertThat(futurePlan2.getPlanContent()).isEqualTo("future-2");
-        org.assertj.core.api.Assertions.assertThat(study.getEndDate()).isEqualTo(today.plusDays(4));
+        Assertions.assertThat(yesterdayPlan.getPlanDate()).isEqualTo(today.minusDays(1));
+        Assertions.assertThat(todayPlan.getPlanDate()).isEqualTo(today);
+        Assertions.assertThat(futurePlan1.getPlanDate()).isEqualTo(today.plusDays(2));
+        Assertions.assertThat(futurePlan2.getPlanDate()).isEqualTo(today.plusDays(4));
+        Assertions.assertThat(futurePlan1.getPlanContent()).isEqualTo("future-1");
+        Assertions.assertThat(futurePlan2.getPlanContent()).isEqualTo("future-2");
+        Assertions.assertThat(study.getEndDate()).isEqualTo(today.plusDays(4));
     }
 
     private StudyMember mockOwnerMember() {

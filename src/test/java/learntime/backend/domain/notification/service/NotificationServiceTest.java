@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,7 +83,7 @@ class NotificationServiceTest {
     void deleteNotifications_CallsRepository() {
         // given
         Long userId = 1L;
-        java.util.List<Long> ids = java.util.List.of(100L, 101L, 102L);
+        List<Long> ids = List.of(100L, 101L, 102L);
 
         // when
         notificationService.deleteNotifications(userId, ids);

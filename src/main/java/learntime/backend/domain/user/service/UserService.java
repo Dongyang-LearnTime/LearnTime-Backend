@@ -15,6 +15,7 @@ import learntime.backend.domain.study_member.repository.StudyInvitationRepositor
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
+import learntime.backend.domain.study_member.enums.StudyPlanStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.relationship.repository.FriendRepository;
@@ -43,6 +44,7 @@ import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
 import learntime.backend.domain.study.model.StudyFeedback;
 import learntime.backend.domain.study.repository.StudyFeedbackRepository;
 import learntime.backend.domain.user.converter.UserConverter;
+import learntime.backend.domain.user.dto.response.BadgeTierInfoResponseDTO;
 import learntime.backend.domain.user.dto.response.RecentActivityResponseDTO;
 import learntime.backend.domain.user.dto.response.UserSummaryResponseDTO;
 import learntime.backend.global.dto.CursorResponse;
@@ -141,7 +143,7 @@ public class UserService {
 
     // 전체 티어, 뱃지 정보 및 사용자의 취득 상태
     @Transactional(readOnly = true)
-    public learntime.backend.domain.user.dto.response.BadgeTierInfoResponseDTO getBadgeTierInfo(String email) {
+    public BadgeTierInfoResponseDTO getBadgeTierInfo(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
@@ -252,6 +254,7 @@ public class UserService {
                     .toList();
 
             if (candidates.isEmpty()) {
+                ownedMembership.getStudy().updateStatus(StudyPlanStatus.FAILED);
                 continue;
             }
 

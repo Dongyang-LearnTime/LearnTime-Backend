@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,7 +43,7 @@ public class ExerciseService {
     private final GeminiClient geminiClient;
     private final ObjectMapper objectMapper;
     private final YoutubeClient youtubeClient;
-    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
     private final ExercisePromptProvider promptProvider;
 
     public List<YoutubeVideoResponseDTO> getRecommendedVideos(List<String> bodyParts) {

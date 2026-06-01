@@ -104,9 +104,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
-            SET p.likeCount = p.likeCount - 1
-            WHERE p.likeCount > 0
-              AND p.postId IN (
+            SET p.likeCount = CASE WHEN p.likeCount > 0 THEN p.likeCount - 1 ELSE 0 END
+            WHERE p.postId IN (
                   SELECT pl.post.postId
                   FROM PostLike pl
                   WHERE pl.user.userId = :userId

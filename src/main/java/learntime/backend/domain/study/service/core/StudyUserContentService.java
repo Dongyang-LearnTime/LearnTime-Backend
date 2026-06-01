@@ -6,9 +6,11 @@ import learntime.backend.domain.study.dto.request.StudyUserContentUpdateRequestD
 import learntime.backend.domain.study.dto.response.StudyMemberContentResponseDTO;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Optional;
+import learntime.backend.domain.badge.event.NoteUploadedEvent;
 
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
@@ -84,7 +86,7 @@ public class StudyUserContentService {
             // 이미 진행 중이거나 완료된 경우 무시
         }
 
-        eventPublisher.publishEvent(new learntime.backend.domain.badge.event.NoteUploadedEvent(userId, java.time.LocalDateTime.now()));
+        eventPublisher.publishEvent(new NoteUploadedEvent(userId, LocalDateTime.now()));
         return content.getStudyMemberContentId();
     }
 

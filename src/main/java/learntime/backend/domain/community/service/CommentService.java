@@ -25,6 +25,9 @@ import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.repository.PostRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.domain.relationship.repository.UserBlockRepository;
+import java.util.Set;
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +38,7 @@ public class CommentService {
     private final UserRepository userRepository;
 
     private final UserBlockUtil userBlockUtil;
-    private final learntime.backend.domain.relationship.repository.UserBlockRepository userBlockRepository;
+    private final UserBlockRepository userBlockRepository;
 
     /** 특정 게시글에 작성된 댓글 목록을 커서 기반으로 조회 */
     @Transactional(readOnly = true)
@@ -49,8 +52,8 @@ public class CommentService {
             comments = commentRepository.findByPostIdWithUserWithCursor(postId, lastCommentId, pageable);
         }
 
-        java.util.Set<Long> blockedIds = userId == null
-                ? java.util.Collections.emptySet()
+        Set<Long> blockedIds = userId == null
+                ? Collections.emptySet()
                 : userBlockRepository.findBlockedUserIds(userId);
 
         return comments.stream()

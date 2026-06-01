@@ -9,6 +9,7 @@ import learntime.backend.domain.profile.enums.ProfileVisibility;
 import learntime.backend.domain.profile.model.Profile;
 import learntime.backend.domain.profile.repository.ProfileRepository;
 import learntime.backend.domain.user.enums.AuthProvider;
+import learntime.backend.domain.user.enums.FriendRequestStatus;
 import learntime.backend.domain.user.enums.Role;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
@@ -144,7 +145,7 @@ class ProfileServiceTest {
         FriendRequest request = FriendRequest.builder()
                 .requester(loginUser)
                 .receiver(target)
-                .status(learntime.backend.domain.user.enums.FriendRequestStatus.PENDING)
+                .status(FriendRequestStatus.PENDING)
                 .build();
         friendRequestRepository.save(request);
 
@@ -169,7 +170,7 @@ class ProfileServiceTest {
         FriendRequest request = FriendRequest.builder()
                 .requester(target)
                 .receiver(loginUser)
-                .status(learntime.backend.domain.user.enums.FriendRequestStatus.PENDING)
+                .status(FriendRequestStatus.PENDING)
                 .build();
         friendRequestRepository.save(request);
 

@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 @Component
 public class EncryptionUtil {
@@ -28,7 +29,7 @@ public class EncryptionUtil {
             
             IV = new byte[16];
             System.arraycopy(KEY, 0, IV, 0, 16);
-        } catch (java.security.NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 algorithm not found", e);
         }
     }

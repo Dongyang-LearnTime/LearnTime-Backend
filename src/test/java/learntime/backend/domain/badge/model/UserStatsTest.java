@@ -5,6 +5,7 @@ import learntime.backend.domain.user.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,7 @@ class UserStatsTest {
         // given
         User user = User.builder().email("test@test.com").build();
         try {
-            java.lang.reflect.Field field = User.class.getDeclaredField("userId");
+            Field field = User.class.getDeclaredField("userId");
             field.setAccessible(true);
             field.set(user, 1L);
         } catch (Exception e) {

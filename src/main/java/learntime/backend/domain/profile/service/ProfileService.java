@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import learntime.backend.global.infra.s3.S3Service;
@@ -95,7 +96,7 @@ public class ProfileService {
         Long pendingFriendRequestId = null;
 
         if (currentUserId != null) {
-            java.util.Optional<FriendRequest> pendingRequest = friendRequestRepository.findPendingRequest(currentUserId, targetUserId);
+            Optional<FriendRequest> pendingRequest = friendRequestRepository.findPendingRequest(currentUserId, targetUserId);
             if (pendingRequest.isPresent()) {
                 FriendRequest request = pendingRequest.get();
                 pendingFriendRequestId = request.getFriendRequestId();

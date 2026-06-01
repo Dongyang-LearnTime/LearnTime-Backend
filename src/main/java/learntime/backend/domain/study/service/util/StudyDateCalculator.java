@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -36,7 +37,7 @@ public class StudyDateCalculator {
                                           int planCount,
                                           Set<DayOfWeek> restDays,
                                           Set<LocalDate> restDates) {
-        List<LocalDate> planDates = new java.util.ArrayList<>(planCount);
+        List<LocalDate> planDates = new ArrayList<>(planCount);
         LocalDate current = startDate;
 
         for (int i = 0; i < planCount; i++) {

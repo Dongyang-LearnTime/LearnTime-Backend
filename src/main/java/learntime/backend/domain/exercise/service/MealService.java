@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -94,9 +95,9 @@ public class MealService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        LocalDate today = java.time.LocalDate.now();
+        LocalDate today = LocalDate.now();
         LocalDateTime start = today.atStartOfDay();
-        LocalDateTime end = today.atTime(java.time.LocalTime.MAX);
+        LocalDateTime end = today.atTime(LocalTime.MAX);
 
         List<MealRecord> mealRecords = mealRecordRepository.findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(user, start, end);
 

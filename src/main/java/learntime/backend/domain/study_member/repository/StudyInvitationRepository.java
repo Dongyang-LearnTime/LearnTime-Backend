@@ -56,15 +56,15 @@ public interface StudyInvitationRepository extends JpaRepository<StudyInvitation
     @Query("DELETE FROM StudyInvitation s WHERE s.status = :status AND s.updatedAt <= :cutoffDate")
     void deleteOldInvitationsByStatus(
             @Param("status") StudyInvitationStatus status,
-            @Param("cutoffDate") java.time.LocalDateTime cutoffDate
+            @Param("cutoffDate") LocalDateTime cutoffDate
     );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE StudyInvitation s
-            SET s.status = learntime.backend.domain.study_member.enums.StudyInvitationStatus.CANCELED
+            SET s.status = StudyInvitationStatus.CANCELED
                 , s.updatedAt = :updatedAt
-            WHERE s.status = learntime.backend.domain.study_member.enums.StudyInvitationStatus.PENDING
+            WHERE s.status = StudyInvitationStatus.PENDING
               AND (s.invitedUser.userId = :userId OR s.inviterUser.userId = :userId)
             """)
     void cancelPendingByUserId(

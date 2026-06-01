@@ -10,7 +10,7 @@ public class CookieUtil {
                 .secure(true)
                 .path("/")
                 .maxAge(refreshTime)
-                .sameSite("None")
+                .sameSite("Strict")
                 .build();
     }
 
@@ -20,6 +20,7 @@ public class CookieUtil {
                 .secure(true)
                 .path("/")
                 .maxAge(0)
+                .sameSite("Strict")
                 .build();
     }
 }

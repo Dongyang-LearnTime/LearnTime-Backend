@@ -41,6 +41,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("deletedAt") LocalDateTime deletedAt
     );
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM user WHERE deleted_at > '2000-01-01 00:00:00' AND deleted_at < :thresholdDate", nativeQuery = true)
+    int hardDeleteOldUsers(@Param("thresholdDate") LocalDateTime thresholdDate);
+
     @Query("SELECT u.userId FROM User u WHERE u.name LIKE %:keyword% ORDER BY u.userId DESC")
     List<Long> findUserIdsByNameContaining(@Param("keyword") String keyword, Pageable pageable);
 

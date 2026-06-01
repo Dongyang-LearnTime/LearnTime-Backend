@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -90,7 +91,7 @@ public class SseController {
     @PostMapping("/test-send")
     @Operation(summary = "SSE 테스트 알림 발송 (테스트용)", description = "현재 로그인한 사용자 본인에게 테스트 SSE 이벤트를 강제로 발송하여 연결을 확인합니다.")
     public ResponseEntity<String> sendTestNotification(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        String testMessage = "서버 테스트 메시지입니다. 발송 시간: " + java.time.LocalDateTime.now();
+        String testMessage = "서버 테스트 메시지입니다. 발송 시간: " + LocalDateTime.now();
         
         // DB에 저장하지 않고 현재 연결된 SSE로만 이벤트를 쏩니다 (이름: "test-event")
         notificationService.send(userDetails.getUserId(), testMessage, "test-event");

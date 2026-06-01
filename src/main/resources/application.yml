@@ -82,3 +82,6 @@ security:
   pepper: ${PEPPER}
   encryption:
     key: ${ENCRYPTION_KEY}
+
+cors:
+  allowed-origins: "http://localhost:5173"

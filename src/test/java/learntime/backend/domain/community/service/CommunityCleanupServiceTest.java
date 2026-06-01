@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,8 +54,8 @@ class CommunityCleanupServiceTest {
     void hardDeleteOldPostsAndComments() throws Exception {
         // given
         User user = User.builder()
-                .email("test_" + java.util.UUID.randomUUID().toString().substring(0, 8) + "@test.com")
-                .name("testUser_" + java.util.UUID.randomUUID().toString().substring(0, 8))
+                .email("test_" + UUID.randomUUID().toString().substring(0, 8) + "@test.com")
+                .name("testUser_" + UUID.randomUUID().toString().substring(0, 8))
                 .build();
         userRepository.save(user);
 

@@ -5,6 +5,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import learntime.backend.domain.user.model.User;
+import learntime.backend.domain.user.repository.RefreshTokenRepository;
+import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.global.error.code.AuthErrorCode;
+import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -16,6 +21,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Component
@@ -23,6 +29,8 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
+    private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     protected void doFilterInternal(
@@ -48,6 +56,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String name = claims.get("name", String.class); // 이름 추출
                 String role = claims.get("role", String.class);
                 Long userId = claims.get("userId", Long.class); // PK 추출
+
+                // DB를 통한 추가 검증 (Redis 없이 토큰 무효화 제어)
+                User user = userRepository.findById(userId)
+                        .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+
+                // 탈퇴한 사용자 접근 차단
+                if (!user.getDeletedAt().equals(LocalDateTime.of(1970, 1, 1, 0, 0))) {
+                    throw new AuthException(AuthErrorCode.DELETED_USER);
+                }
+
+                // 로그아웃된 토큰 차단 (RefreshToken이 없다면 로그아웃된 것으로 간주)
+                if (!refreshTokenRepository.existsByUser_UserId(userId)) {
+                    throw new AuthException(AuthErrorCode.INVALID_TOKEN);
+                }
 
                 // CustomUserDetails 객체 생성
                 CustomUserDetails principal = new CustomUserDetails(userId, email, name, "", role, false);

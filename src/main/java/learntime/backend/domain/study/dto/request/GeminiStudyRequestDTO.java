@@ -12,6 +12,7 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Schema(description = "공부 진도 메타데이터와 목차 정보를 담은 요청 DTO")
 public record GeminiStudyRequestDTO(
@@ -49,7 +50,7 @@ public record GeminiStudyRequestDTO(
                 : restDays.stream()
                         .map(this::parseDayOfWeek)
                         .filter(Objects::nonNull)
-                        .collect(java.util.stream.Collectors.toCollection(() -> EnumSet.noneOf(DayOfWeek.class)));
+                        .collect(Collectors.toCollection(() -> EnumSet.noneOf(DayOfWeek.class)));
 
         Set<LocalDate> restDateSet = (restDates == null || restDates.isEmpty())
                 ? Collections.emptySet()

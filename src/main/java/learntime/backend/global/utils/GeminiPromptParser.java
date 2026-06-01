@@ -13,6 +13,7 @@ import learntime.backend.global.error.code.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,7 +68,7 @@ public class GeminiPromptParser {
     }
 
     private Map<String, Object> buildBaseRequest(List<Map<String, Object>> parts, Map<String, Object> systemInstruction, double temperature, Map<String, Object> responseSchema) {
-        Map<String, Object> generationConfig = new java.util.HashMap<>(Map.of(
+        Map<String, Object> generationConfig = new HashMap<>(Map.of(
                 "temperature", temperature,
                 "responseMimeType", "application/json"
         ));

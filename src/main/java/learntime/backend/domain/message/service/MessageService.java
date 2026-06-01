@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -92,7 +93,7 @@ public class MessageService {
 
     //쪽지 일괄 읽음 처리
     @Transactional
-    public void readMessages(Long userId, java.util.List<Long> messageIds) {
+    public void readMessages(Long userId, List<Long> messageIds) {
         messageRepository.markAsRead(messageIds, userId, LocalDateTime.now());
     }
 

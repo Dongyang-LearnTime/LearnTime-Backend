@@ -25,11 +25,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import learntime.backend.domain.badge.event.QuizCompletedEvent;
 import learntime.backend.domain.quiz.model.QuizAnswer;
 import learntime.backend.domain.quiz.model.QuizHistory;
 import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
@@ -158,10 +160,8 @@ public class StudyQuizService {
         }
         
         boolean isPerfect = (correctCount == questions.size() && questions.size() > 0);
-        eventPublisher.publishEvent(new learntime.backend.domain.badge.event.QuizCompletedEvent(userId, isPerfect, java.time.LocalDateTime.now()));
+        eventPublisher.publishEvent(new QuizCompletedEvent(userId, isPerfect, LocalDateTime.now()));
 
         return quizHistory.getQuizHistoryId();
     }
-
 }
-

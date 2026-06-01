@@ -32,6 +32,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.TimeZone;
+import learntime.backend.domain.badge.event.StudyCompletedEvent;
 
 import learntime.backend.domain.study.model.StudyRestDay;
 import learntime.backend.domain.study.model.StudyRestDate;
@@ -179,7 +181,7 @@ public class StudyDailyService {
                 description
         ));
         
-        eventPublisher.publishEvent(new learntime.backend.domain.badge.event.StudyCompletedEvent(userId, LocalDateTime.now()));
+        eventPublisher.publishEvent(new StudyCompletedEvent(userId, LocalDateTime.now()));
 
         return calculatedPoint;
     }
@@ -265,7 +267,7 @@ public class StudyDailyService {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(studyDailyPlanId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
 
-        LocalDate today = LocalDate.now(java.util.TimeZone.getTimeZone("Asia/Seoul").toZoneId());
+        LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
         if (studyDailyPlan.getPlanDate().isAfter(today)) {
             throw new StudyException(StudyErrorCode.STUDY_DAILY_NOT_YET_STARTED);
         }

@@ -8,6 +8,7 @@ import learntime.backend.domain.badge.repository.UserActivityStatRepository;
 import learntime.backend.domain.badge.repository.UserBadgeRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.domain.point.dto.PointEventDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -56,7 +58,7 @@ class BadgeEventListenerTest {
                 .name("테스터")
                 .build();
         try {
-            java.lang.reflect.Field field = User.class.getDeclaredField("userId");
+            Field field = User.class.getDeclaredField("userId");
             field.setAccessible(true);
             field.set(user, 1L);
         } catch (Exception e) {
@@ -319,7 +321,7 @@ class BadgeEventListenerTest {
         assertThat(exerciseStat.getStatValue()).isEqualTo(1L);
 
         // 일일 포인트 이벤트 발행 확인
-        ArgumentCaptor<learntime.backend.domain.point.dto.PointEventDTO> pointCaptor = ArgumentCaptor.forClass(learntime.backend.domain.point.dto.PointEventDTO.class);
+        ArgumentCaptor<PointEventDTO> pointCaptor = ArgumentCaptor.forClass(PointEventDTO.class);
         verify(eventPublisher, times(1)).publishEvent(pointCaptor.capture());
         assertThat(pointCaptor.getValue().amount()).isEqualTo(10);
     }
@@ -348,7 +350,7 @@ class BadgeEventListenerTest {
         // then
         assertThat(existingStat.getStatValue()).isEqualTo(1L); // 증가하지 않음
         // 포인트 이벤트가 더 이상 발생하지 않아야 함
-        verify(eventPublisher, never()).publishEvent(any(learntime.backend.domain.point.dto.PointEventDTO.class));
+        verify(eventPublisher, never()).publishEvent(any(PointEventDTO.class));
     }
 
     @Test
@@ -377,10 +379,10 @@ class BadgeEventListenerTest {
         assertThat(existingStat.getStatValue()).isEqualTo(3L);
 
         // 일일 포인트(10p)와 보너스 포인트(50p) 총 2개의 이벤트 발행 확인
-        ArgumentCaptor<learntime.backend.domain.point.dto.PointEventDTO> pointCaptor = ArgumentCaptor.forClass(learntime.backend.domain.point.dto.PointEventDTO.class);
+        ArgumentCaptor<PointEventDTO> pointCaptor = ArgumentCaptor.forClass(PointEventDTO.class);
         verify(eventPublisher, times(2)).publishEvent(pointCaptor.capture());
         
-        List<learntime.backend.domain.point.dto.PointEventDTO> publishedEvents = pointCaptor.getAllValues();
+        List<PointEventDTO> publishedEvents = pointCaptor.getAllValues();
         assertThat(publishedEvents).extracting("amount").containsExactlyInAnyOrder(10, 50);
     }
 

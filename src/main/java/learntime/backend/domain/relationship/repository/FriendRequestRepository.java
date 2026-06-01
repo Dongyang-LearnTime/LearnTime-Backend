@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,7 +66,7 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
     @Query("DELETE FROM FriendRequest f WHERE f.status = :status AND f.updatedAt <= :cutoffDate")
     void deleteOldRequestsByStatus(
             @Param("status") FriendRequestStatus status,
-            @Param("cutoffDate") java.time.LocalDateTime cutoffDate
+            @Param("cutoffDate") LocalDateTime cutoffDate
     );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

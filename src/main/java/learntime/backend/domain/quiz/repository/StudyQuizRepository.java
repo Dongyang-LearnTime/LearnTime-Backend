@@ -1,6 +1,8 @@
 package learntime.backend.domain.quiz.repository;
 
 import learntime.backend.domain.quiz.model.StudyQuiz;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,5 +18,5 @@ public interface StudyQuizRepository extends JpaRepository<StudyQuiz, Long> {
 
     List<StudyQuiz> findAllByStudyMember_StudyMemberIdOrderByCreatedAtDesc(Long studyId);
 
-    org.springframework.data.domain.Page<StudyQuiz> findAllByStudyMember_StudyMemberId(Long studyMemberId, org.springframework.data.domain.Pageable pageable);
+    Page<StudyQuiz> findAllByStudyMember_StudyMemberId(Long studyMemberId, Pageable pageable);
 }
