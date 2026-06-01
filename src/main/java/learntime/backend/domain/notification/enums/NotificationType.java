@@ -26,7 +26,10 @@ public enum NotificationType {
     STUDY_INVITATION_ACCEPTED("study-invitation-accepted"),
 
     // 내가 보낸 스터디 초대가 거절되었을 때 발생하는 알림
-    STUDY_INVITATION_REJECTED("study-invitation-rejected");
+    STUDY_INVITATION_REJECTED("study-invitation-rejected"),
+
+    // 쪽지를 받았을 때 발생하는 알림
+    MESSAGE_RECEIVED("message-received");
 
 
 

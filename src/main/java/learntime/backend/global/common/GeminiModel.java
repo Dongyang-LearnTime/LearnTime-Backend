@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum GeminiModel {
     GEMINI_3_0("https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent"),
-    GEMINI_3_1("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent");
+    GEMINI_3_1("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent");
 
     private final String endpoint; // 실제 API URL
+    public static final String UPLOAD_ENDPOINT = "https://generativelanguage.googleapis.com/upload/v1beta/files";
 }

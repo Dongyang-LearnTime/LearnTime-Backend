@@ -4,17 +4,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import learntime.backend.domain.exercise.dto.request.WeightRequestDTO;
 import learntime.backend.domain.exercise.dto.response.WeightResponseDTO;
-import learntime.backend.domain.exercise.model.WeightRecord;
 import learntime.backend.domain.exercise.service.WeightService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/exercise/weight")
@@ -25,19 +23,25 @@ public class WeightController {
 
     @PostMapping("/save")
     @Operation(summary = "신체 데이터 저장", description = "체중과 체지방량을 입력하면, 해당 내용이 암호화되어 DB에 저장됩니다.")
-    public ResponseEntity<WeightResponseDTO> saveWeight(
-            @AuthenticationPrincipal CustomUserDetails user,
-            @RequestBody WeightRequestDTO request) {
+    public ResponseEntity<WeightResponseDTO> saveWeight(@RequestBody WeightRequestDTO request,
+                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        WeightResponseDTO result = weightService.saveWeight(userDetails.userId(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
 
-        WeightRecord saved = weightService.saveWeight(user.userId(), request);
+    @GetMapping
+    @Operation(summary = "최근 신체 데이터 목록 조회", description = "사용자의 전체 신체 데이터 목록을 최신순으로 반환합니다.")
+    public ResponseEntity<List<WeightResponseDTO>> getRecentWeights(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(weightService.getRecentWeights(userDetails.userId()));
+    }
 
-        WeightResponseDTO response = WeightResponseDTO.builder()
-                .id(saved.getWeightRecordId())
-                .weight(saved.getWeight())
-                .bodyFat(saved.getBodyFat())
-                .createdAt(saved.getCreatedAt())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @DeleteMapping("/{weightRecordId}")
+    @Operation(summary = "신체 데이터 삭제", description = "특정 신체 데이터를 삭제합니다.")
+    public ResponseEntity<Void> deleteWeight(
+            @PathVariable Long weightRecordId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        weightService.deleteWeight(userDetails.userId(), weightRecordId);
+        return ResponseEntity.noContent().build();
     }
 }

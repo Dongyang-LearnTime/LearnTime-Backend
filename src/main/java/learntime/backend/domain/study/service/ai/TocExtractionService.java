@@ -58,15 +58,35 @@ public class TocExtractionService {
         try {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             Thumbnails.of(imageFile.getInputStream())
-                    .size(1024, 1024)
+                    .size(1600, 1600)
                     .outputFormat("jpg")
-                    .outputQuality(0.7)
+                    .outputQuality(0.85)
                     .toOutputStream(os);
 
-            String base64Image = Base64.getEncoder().encodeToString(os.toByteArray());
+            byte[] imageBytes = os.toByteArray();
             String mimeType = "image/jpeg";
+            
+            // 1. Upload file using Gemini File API
+            String fileUri = geminiClient.uploadFile(imageBytes, mimeType, imageFile.getOriginalFilename());
 
-            Map<String, Object> requestBody = promptParser.createOcrRequestBody(promptTemplate, base64Image, mimeType);
+            // 2. Build Structured Output Schema
+            Map<String, Object> responseSchema = Map.of(
+                    "type", "ARRAY",
+                    "items", Map.of(
+                            "type", "OBJECT",
+                            "properties", Map.of(
+                                    "chapter", Map.of("type", "STRING", "description", "The chapter number or name"),
+                                    "title", Map.of("type", "STRING", "description", "The title of the section"),
+                                    "page", Map.of("type", "INTEGER", "description", "The page number")
+                            ),
+                            "required", List.of("chapter", "title")
+                    )
+            );
+
+            // 3. Generate Request Body with File URI and Schema
+            Map<String, Object> requestBody = promptParser.createOcrRequestBody(promptTemplate, fileUri, mimeType, responseSchema);
+            
+            // 4. Send Request
             String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
 
             return promptParser.parseOcrResponse(rawJson);

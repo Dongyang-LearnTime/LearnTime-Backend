@@ -18,10 +18,13 @@ public interface ExerciseRecordRepository extends JpaRepository<ExerciseRecord, 
     List<ExerciseRecord> findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(
             User user, LocalDateTime start, LocalDateTime end);
 
+    // 특정 사용자의 전체 운동 내역을 최신순으로 조회
+    List<ExerciseRecord> findAllByUserOrderByCreatedAtDesc(User user);
+
     // 자식 테이블(exercise_parts) 선행 삭제
     @Modifying
     @Query(value = "DELETE FROM exercise_parts WHERE exercise_record_id IN " +
-            "(SELECT id FROM exercise_record WHERE user_id = :userId)",
+            "(SELECT exercise_record_id FROM exercise_record WHERE user_id = :userId)",
             nativeQuery = true)
     void deleteBodyPartsByUserId(@Param("userId") Long userId);
 

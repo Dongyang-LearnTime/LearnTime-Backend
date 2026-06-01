@@ -17,6 +17,9 @@ public record CommentResponseDTO(
         @Schema(description = "댓글 작성자 이름. 탈퇴한 경우 '탈퇴한 사용자'", example = "김철수")
         String authorName,
         
+        @Schema(description = "로그인 한 사용자의 작성자 차단 여부", example = "false")
+        Boolean hasBlocked,
+        
         @Schema(description = "댓글 본문 내용", example = "좋은 글 감사합니다!")
         String content,
         

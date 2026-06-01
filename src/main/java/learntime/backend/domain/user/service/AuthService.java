@@ -2,26 +2,30 @@ package learntime.backend.domain.user.service;
 
 import learntime.backend.domain.user.dto.request.LoginRequestDTO;
 import learntime.backend.domain.user.dto.request.SignUpRequestDTO;
-import learntime.backend.domain.user.enums.Role;
 import learntime.backend.domain.user.enums.Terms;
 import learntime.backend.domain.user.model.PromptQuotas;
 import learntime.backend.domain.user.model.RefreshToken;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.model.UserTerms;
 import learntime.backend.domain.user.converter.UserConverter;
+import learntime.backend.domain.profile.enums.ProfileVisibility;
+import learntime.backend.domain.profile.model.Profile;
+import learntime.backend.domain.profile.repository.ProfileRepository;
 import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.RefreshTokenRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.domain.user.repository.UserTermsRepository;
-import learntime.backend.global.config.security.CustomPasswordEncoder;
-import learntime.backend.global.config.security.jwt.JwtProvider;
+import learntime.backend.global.security.CustomPasswordEncoder;
+import learntime.backend.global.security.JwtProvider;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,12 +40,17 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PromptQuotaRepository promptQuotaRepository;
     private final UserTermsRepository userTermsRepository;
+    private final ProfileRepository profileRepository;
 
+    private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
     private final CustomPasswordEncoder customPasswordEncoder;
 
-    private static final long ACCESS_TIME = 1000L * 60 * 30; // 엑세스 토큰 유효기간, 30분
-    private static final long REFRESH_TIME = 1000L * 60 * 60 * 24 * 14; // 리프레쉬 토큰 유효기간, 14일
+    @Value("${jwt.access-expiration}")
+    private long accessTime; // 엑세스 토큰 유효기간
+
+    @Value("${jwt.refresh-expiration}")
+    private long refreshTime; // 리프레쉬 토큰 유효기간
 
     private static final int MAX_PASSWORD_ATTEMPTS = 5; // 비밀번호 5회 제한
 
@@ -53,34 +62,39 @@ public class AuthService {
             String refreshToken
     ) {}
 
-    @Transactional(noRollbackFor = {BadCredentialsException.class, LockedException.class})
+    @Transactional(noRollbackFor = {BadCredentialsException.class, LockedException.class, AuthException.class})
     public TokenPair login(LoginRequestDTO request) {
-
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.PASSWORD_NOT_MATCH));
 
-        // 계정 잠금 여부 확인
+        // 계정 잠금 확인
         if (user.isAccountLocked()) {
-            throw new LockedException("비밀번호 5회 오류로 계정이 잠겼습니다.");
+            throw new AuthException(AuthErrorCode.LOCKED_ACCOUNT);
         }
+        try {
+            // 인증 수행
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.email(),
+                            request.password()
+                    )
+            );
 
-        if (!customPasswordEncoder.matches(request.password(), user.getPassword())) {
-            user.incrementFailedAttempts();
+            user.resetFailedAttempts(); // 성공 시 실패 횟수 초기화
 
-            // 증가시킨 횟수가 5회 이상이 되는 순간
+            return generateTokenPair(user);
+
+        } catch (BadCredentialsException e) {
+            user.incrementFailedAttempts(); // 실패 횟수 증가
+            // 잠금 처리
             if (user.getFailedAttempts() >= MAX_PASSWORD_ATTEMPTS) {
-                user.lockAccount(); // 계정 잠금 시간 기록
-
-                throw new LockedException("비밀번호 5회 오류로 계정이 잠겼습니다. 30분 후 다시 시도해주세요.");
+                user.lockAccount();
+                throw new AuthException(AuthErrorCode.LOCKED_ACCOUNT);
             }
-
-            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
+            throw new AuthException(AuthErrorCode.PASSWORD_NOT_MATCH);
         }
-
-        user.resetFailedAttempts(); // 성공 시 카운트 및 잠금 해제
-
-        return generateTokenPair(user);
     }
+
     // 토큰 검증
     @Transactional
     public TokenPair refresh(String refreshToken) {
@@ -136,13 +150,20 @@ public class AuthService {
         // 프롬프트 할당량 생성
         PromptQuotas quota = new PromptQuotas(savedUser, maxQuota);
         promptQuotaRepository.save(quota);
+
+        // 기본 프로필 생성
+        Profile profile = Profile.builder()
+                .user(savedUser)
+                .profileVisibility(ProfileVisibility.PUBLIC)
+                .build();
+        profileRepository.save(profile);
     }
 
     // 토큰 DB에 저장 및 return
-    private TokenPair generateTokenPair(User user) {
-        String newAccess = jwtProvider.createToken(user, ACCESS_TIME);
-        String newRefresh = jwtProvider.createToken(user, REFRESH_TIME);
-        LocalDateTime newExpiry = LocalDateTime.now().plusSeconds(REFRESH_TIME / 1000);
+    public TokenPair generateTokenPair(User user) {
+        String newAccess = jwtProvider.createToken(user, accessTime);
+        String newRefresh = jwtProvider.createToken(user, refreshTime);
+        LocalDateTime newExpiry = LocalDateTime.now().plusSeconds(refreshTime / 1000);
 
         refreshTokenRepository.upsertToken(user.getUserId(), newRefresh, newExpiry);
 

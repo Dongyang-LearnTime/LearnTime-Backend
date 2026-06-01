@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class MealRecord {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "meal_id")
-    private Long MealRecordId;
+    private Long mealRecordId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

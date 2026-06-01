@@ -23,6 +23,15 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     """)
     Optional<Study> findByIdWithPessimisticLock(Long studyId);
 
+    @Query("""
+        SELECT s
+        FROM Study s
+        LEFT JOIN FETCH s.studyMembers sm
+        LEFT JOIN FETCH sm.user
+        WHERE s.studyId = :studyId
+    """)
+    Optional<Study> findByIdWithStudyMembersAndUser(@Param("studyId") Long studyId);
+
     // --- 벌크 삭제 쿼리 모음 (하위부터 삭제) ---
 
     // 1계층 삭제
@@ -37,6 +46,10 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     @Modifying
     @Query("DELETE FROM StudyFeedback sf WHERE sf.studyMember.study.studyId = :studyId")
     void deleteStudyFeedbacksByStudyId(@Param("studyId") Long studyId);
+
+    @Modifying
+    @Query("DELETE FROM QuizAnswer qa WHERE qa.quizHistory.studyQuiz.studyMember.study.studyId = :studyId")
+    void deleteQuizAnswersByStudyId(@Param("studyId") Long studyId);
 
     @Modifying
     @Query("DELETE FROM QuizHistory qh WHERE qh.studyQuiz.studyMember.study.studyId = :studyId")

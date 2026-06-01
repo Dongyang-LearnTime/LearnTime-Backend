@@ -6,17 +6,16 @@ import learntime.backend.domain.community.model.PostImage;
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostRepository;
-import learntime.backend.domain.community.service.core.PostService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,7 +40,7 @@ class PostSoftDeleteTest {
     private UserRepository userRepository;
 
     @Autowired
-    private jakarta.persistence.EntityManager entityManager;
+    private EntityManager entityManager;
 
     @Test
     @DisplayName("게시글 삭제 시 하위 엔티티(이미지, 댓글)가 모두 soft delete 되어야 한다")
@@ -76,6 +75,6 @@ class PostSoftDeleteTest {
         assertThat(postImageRepository.findByPost_PostId(post.getPostId())).isEmpty();
 
         // 3. 댓글이 조회되지 않음 (Soft Delete Cascading 확인)
-        assertThat(commentRepository.findFirstPageByPostIdWithUser(post.getPostId(), org.springframework.data.domain.Pageable.unpaged())).isEmpty();
+        assertThat(commentRepository.findFirstPageByPostIdWithUser(post.getPostId(), Pageable.unpaged())).isEmpty();
     }
 }

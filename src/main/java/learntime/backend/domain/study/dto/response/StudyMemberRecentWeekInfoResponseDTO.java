@@ -9,6 +9,9 @@ public record StudyMemberRecentWeekInfoResponseDTO(
         @Schema(description = "스터디 멤버 ID")
         Long studyMemberId,
         
+        @Schema(description = "스터디 멤버 이름")
+        String name,
+        
         @Schema(description = "해당 멤버의 최근 일주일 상태 목록")
         List<StudyRecentWeekInfoResponseDTO> recentWeekInfos
 ) {

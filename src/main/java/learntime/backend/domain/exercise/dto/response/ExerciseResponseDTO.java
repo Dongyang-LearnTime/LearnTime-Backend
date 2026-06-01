@@ -15,6 +15,7 @@ public class ExerciseResponseDTO {
     private List<String> bodyParts;
     private Integer duration;
     private String content;
+    private Double weight;
     private Integer calories; // AI가 계산한 결과 포함
     private LocalDateTime createdAt;
 }

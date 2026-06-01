@@ -1,17 +1,19 @@
 package learntime.backend.domain.calendar.service;
 
+import learntime.backend.domain.calendar.converter.CalenderConverter;
 import learntime.backend.domain.calendar.dto.request.CalendarRequestDTO;
 import learntime.backend.domain.calendar.dto.response.CalendarResponseDTO;
 import learntime.backend.domain.calendar.error.code.CalenderErrorCode;
 import learntime.backend.domain.calendar.error.exception.CalenderException;
-import learntime.backend.domain.calendar.dto.event.CalendarReminderDeleteEvent;
-import learntime.backend.domain.calendar.dto.event.CalendarReminderUpsertEvent;
+import learntime.backend.domain.calendar.event.CalendarReminderDeleteEvent;
+import learntime.backend.domain.calendar.event.CalendarReminderUpsertEvent;
 import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.calendar.repository.CalendarRecordRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
+import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -37,19 +39,13 @@ public class CalendarService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        CalendarRecord record = CalendarRecord.builder()
-                .user(user)
-                .title(request.title())
-                .content(request.content())
-                .targetDate(request.targetDate())
-                .isCompleted(request.isCompleted() != null && request.isCompleted())
-                .build();
+        CalendarRecord record = CalenderConverter.toCalendarRecord(request, user);
 
         CalendarRecord saved = calendarRecordRepository.save(record);
 
         // 리마인더 예약은 이벤트 리스너가 같은 트랜잭션 커밋 직전에 처리
         eventPublisher.publishEvent(new CalendarReminderUpsertEvent(saved));
-        return CalendarResponseDTO.from(saved);
+        return CalenderConverter.toCalendarResponseDTO(saved);
     }
 
     // 월별 일정 조회
@@ -66,29 +62,35 @@ public class CalendarService {
                 .findAllByUserAndTargetDateBetweenOrderByTargetDateAsc(user, startOfMonth, endOfMonth);
 
         return records.stream()
-                .map(CalendarResponseDTO::from)
+                .map(CalenderConverter::toCalendarResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // 일정 수정
     @Transactional
-    public CalendarResponseDTO updateSchedule(Long calendarRecordId, CalendarRequestDTO request) {
+    public CalendarResponseDTO updateSchedule(Long calendarRecordId, CalendarRequestDTO request, Long userId) {
         CalendarRecord record = calendarRecordRepository.findById(calendarRecordId)
                 .orElseThrow(() -> new CalenderException(CalenderErrorCode.CALENDAR_NOT_FOUND));
 
-        record.update(request.title(), request.content(), request.targetDate(), request.isCompleted());
+        AuthorizationUtil.verifyOwnership(userId, record.getUser().getUserId());
+
+        record.update(request.content(),
+                request.targetDate(),
+                request.isImportant() != null && request.isImportant());
 
         // 리마인더 재예약은 이벤트 리스너가 같은 트랜잭션 커밋 직전에 처리
         eventPublisher.publishEvent(new CalendarReminderUpsertEvent(record));
 
-        return CalendarResponseDTO.from(record);
+        return CalenderConverter.toCalendarResponseDTO(record);
     }
 
     // 일정 삭제
     @Transactional
-    public void deleteSchedule(Long calendarRecordId) {
+    public void deleteSchedule(Long calendarRecordId, Long userId) {
         CalendarRecord record = calendarRecordRepository.findById(calendarRecordId)
                 .orElseThrow(() -> new CalenderException(CalenderErrorCode.CALENDAR_NOT_FOUND));
+
+        AuthorizationUtil.verifyOwnership(userId, record.getUser().getUserId());
 
         // 리마인더 삭제는 이벤트 리스너가 캘린더 삭제 커밋 직전에 처리
         eventPublisher.publishEvent(new CalendarReminderDeleteEvent(record));

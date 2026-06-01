@@ -1,6 +1,8 @@
 package learntime.backend.domain.user.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.badge.model.UserActivityStat;
+import learntime.backend.domain.badge.model.UserBadge;
 import learntime.backend.domain.calendar.model.CalendarRecord;
 import learntime.backend.domain.community.model.Comment;
 import learntime.backend.domain.community.model.Post;
@@ -8,10 +10,15 @@ import learntime.backend.domain.community.model.PostLike;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
 import learntime.backend.domain.exercise.model.MealRecord;
 import learntime.backend.domain.exercise.model.WeightRecord;
+import learntime.backend.domain.relationship.model.Friend;
+import learntime.backend.domain.relationship.model.FriendRequest;
+import learntime.backend.domain.relationship.model.UserBlock;
+import learntime.backend.domain.message.model.Message;
 import learntime.backend.domain.notification.model.Notification;
 import learntime.backend.domain.point.model.PointHistory;
-import learntime.backend.domain.studymember.model.StudyMember;
-import learntime.backend.domain.studymember.model.StudyInvitation;
+import learntime.backend.domain.profile.model.Profile;
+import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyInvitation;
 import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.domain.user.enums.Role;
 import lombok.*;
@@ -27,9 +34,7 @@ import java.util.List;
 
 @Entity
 @Table(uniqueConstraints = {
-        @UniqueConstraint(name = "uq_user_email", columnNames = {"email", "deleted_at"}),
-        @UniqueConstraint(name = "uq_user_name", columnNames = {"name", "deleted_at"}),
-        @UniqueConstraint(name = "uq_social_user", columnNames = {"social_id", "social_provider", "deleted_at"})
+        @UniqueConstraint(name = "uq_social_user", columnNames = {"social_id", "social_provider"})
 })
 @SQLDelete(sql = "UPDATE user SET deleted_at = NOW() WHERE user_id = ?") // DELECT 수행 시, 삭제 대신 deletedAt에 시간 표시(soft delete)
 @SQLRestriction("deleted_at = '1970-01-01 00:00:00'") // 삭제 처리가 안된 데이터만 기본적으로 조회
@@ -154,9 +159,38 @@ public class User {
     @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<FriendRequest> receivedFriendRequests = new ArrayList<>();
 
+    // 차단한 사용자
+    @OneToMany(mappedBy = "blocker", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<UserBlock> blockedUsers = new ArrayList<>();
+
+    // 차단 당한 사용자
+    @OneToMany(mappedBy = "blocked", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<UserBlock> blockedByUsers = new ArrayList<>();
+
+    // 보낸 쪽지
+    @OneToMany(mappedBy = "sender", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Message> sentMessageList = new ArrayList<>();
+
+    // 받은 쪽지
+    @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Message> receiverMessageList = new ArrayList<>();
+
     // 알림 목록
     @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Notification> notifications = new ArrayList<>();
+
+    // 획득한 배지
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<UserBadge> userBadges = new ArrayList<>();
+
+    // 사용자 활동 통계
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<UserActivityStat> userActivityStats = new ArrayList<>();
+
+    // 사용자 프로필
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Profile profile;
+
 
     @Builder
     public User(String email, String password, String name, String socialId, AuthProvider socialProvider, Role role) {

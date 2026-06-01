@@ -13,6 +13,7 @@ import learntime.backend.global.error.code.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,20 +55,20 @@ public class GeminiPromptParser {
         );
     }
 
-    public Map<String, Object> createOcrRequestBody(String userPrompt, String base64Data, String mimeType) {
+    public Map<String, Object> createOcrRequestBody(String userPrompt, String fileUri, String mimeType, Map<String, Object> responseSchema) {
         return buildBaseRequest(
                 List.of(
                         Map.of("text", userPrompt),
-                        Map.of("inlineData", Map.of("mimeType", mimeType, "data", base64Data))
+                        Map.of("fileData", Map.of("mimeType", mimeType, "fileUri", fileUri))
                 ),
                 OCR_SYSTEM_INSTRUCTION,
                 0.1,
-                null
+                responseSchema
         );
     }
 
     private Map<String, Object> buildBaseRequest(List<Map<String, Object>> parts, Map<String, Object> systemInstruction, double temperature, Map<String, Object> responseSchema) {
-        Map<String, Object> generationConfig = new java.util.HashMap<>(Map.of(
+        Map<String, Object> generationConfig = new HashMap<>(Map.of(
                 "temperature", temperature,
                 "responseMimeType", "application/json"
         ));

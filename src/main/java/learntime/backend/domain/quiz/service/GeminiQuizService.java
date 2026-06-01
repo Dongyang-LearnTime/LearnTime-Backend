@@ -54,14 +54,28 @@ public class GeminiQuizService {
                 cleanedText
         );
 
+        Map<String, Object> responseSchema = Map.of(
+                "type", "ARRAY",
+                "items", Map.of(
+                        "type", "OBJECT",
+                        "properties", Map.of(
+                                "questionContent", Map.of("type", "STRING", "description", "The content of the quiz question"),
+                                "correctAnswer", Map.of("type", "STRING", "description", "The correct answer to the question"),
+                                "quizType", Map.of("type", "STRING", "description", "The type of the quiz (OX, MULTIPLE_CHOICE, SHORT_ANSWER)")
+                        ),
+                        "required", List.of("questionContent", "correctAnswer", "quizType")
+                )
+        );
+
         Map<String, Object> requestBody = promptParser.createRequestBody(
                 userPrompt,
                 STUDY_QUIZ_INSTRUCTION,
-                QUIZ_AI_TEMPERATURE
+                QUIZ_AI_TEMPERATURE,
+                responseSchema
         );
 
         try {
-            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_0);
+            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
             return promptParser.parseQuizResponse(rawJson); // 결과 DTO로 파싱
         } catch (Exception e) {
             log.error("AI 퀴즈 생성 실패.", e);

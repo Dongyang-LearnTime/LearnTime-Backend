@@ -10,18 +10,16 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.*;
 import learntime.backend.domain.study.repository.*;
-import learntime.backend.domain.studymember.model.StudyMember;
-import learntime.backend.global.error.code.ErrorCode;
-import learntime.backend.global.error.exception.BusinessException;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
+import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.cache.annotation.Cacheable;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +32,7 @@ public class StudyQueryService {
     private final StudyRestDayRepository studyRestDayRepository;
     private final StudyStatusRepository studyStatusRepository;
     private final QuizHistoryRepository quizHistoryRepository;
+    private final StudyMemberRepository studyMemberRepository;
 
     public StudyStatusResponseDTO getStudyStatus(Long studyId) {
         Study study = studyRepository.findById(studyId)
@@ -50,9 +49,9 @@ public class StudyQueryService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
-        StudyMember member = study.getStudyMembers().stream()
-                .filter(m -> m.getUser().getUserId().equals(userId))
-                .findFirst()
+        // Fix 4: Lazy 컬렉션 스트림 대신 repository 직접 조회로 NPE 방지
+        StudyMember member = studyMemberRepository
+                .findByStudy_StudyIdAndUser_UserIdAndStatus(studyId, userId, StudyMemberStatus.ACTIVE)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         StudyTotalInfoResponseDTO indicator = getStudyMemberTotalIndicatorByUserId(studyId, userId);
@@ -78,18 +77,17 @@ public class StudyQueryService {
     // 특정 유저의 전체 통계 지표를 조회합니다.
     @Transactional(readOnly = true)
     public StudyTotalInfoResponseDTO getStudyMemberTotalIndicatorByUserId(Long studyId, Long userId) {
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
-
-        Long studyMemberId = study.getStudyMembers().stream()
-                .filter(m -> m.getUser().getUserId().equals(userId))
-                .map(StudyMember::getStudyMemberId)
-                .findFirst()
-                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+        Long studyMemberId = studyMemberRepository.findActiveStudyMemberIdByStudyIdAndUserId(studyId, userId)
+                .orElseThrow(() -> {
+                    if (!studyRepository.existsById(studyId)) {
+                        return new StudyException(StudyErrorCode.STUDY_NOT_FOUND);
+                    }
+                    return new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND);
+                });
 
         List<StudyDailyPlanStatsDTO> stats = studyStatusRepository.findStatsByStudyMemberId(studyMemberId);
 
-        long totalPlans = study.getStudyDailyPlans().size();
+        long totalPlans = studyDailyPlanRepository.countByStudy_StudyId(studyId);
 
         if (totalPlans == 0) {
             return buildEmptyIndicatorResponse();
@@ -121,12 +119,11 @@ public class StudyQueryService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "recentWeekStudyIndicator", key = "#studyId + ':' + #userId")
-    public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId, Long userId) {
-        Study study = studyRepository.findById(studyId)
+    public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId) {
+        Study study = studyRepository.findByIdWithStudyMembersAndUser(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
-        LocalDate today = LocalDate.now(java.util.TimeZone.getTimeZone("Asia/Seoul").toZoneId());
+        LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
         List<StudyDailyPlan> recentPlans = studyDailyPlanRepository.findByStudyIdAndPlanDateBetweenOrderByPlanDateAsc(
                 studyId,
                 today.minusDays(7),
@@ -143,15 +140,26 @@ public class StudyQueryService {
                 .map(StudyRestDate::getRestDate)
                 .collect(Collectors.toSet());
 
-        return study.getStudyMembers().stream()
+        List<StudyMember> studyMembers = study.getStudyMembers().stream()
+                .filter(StudyMember::isActive)
+                .toList();
+        List<Long> studyMemberIds = studyMembers.stream()
+                .map(StudyMember::getStudyMemberId)
+                .toList();
+
+        List<StudyStatus> allStatuses = studyStatusRepository.findByStudyMemberIdInAndPlanDateBetween(
+                studyMemberIds,
+                today.minusDays(7),
+                today.minusDays(1)
+        );
+
+        Map<Long, List<StudyStatus>> statusMap = allStatuses.stream()
+                .collect(Collectors.groupingBy(status -> status.getStudyMember().getStudyMemberId()));
+
+        return studyMembers.stream()
                 .map(member -> {
-                    List<StudyStatus> statuses = studyStatusRepository.findByMemberIdAndPlanDateBetween(
-                            member.getStudyMemberId(),
-                            today.minusDays(7),
-                            today.minusDays(1)
-                    );
-                    List<StudyRecentWeekInfoResponseDTO> memberRecentWeekInfos = StudyConverter.toRecentWeekStudyInfoResponseDTOs(recentPlans, statuses, today, restDays, restDates);
-                    return new StudyMemberRecentWeekInfoResponseDTO(member.getStudyMemberId(), memberRecentWeekInfos);
+                    List<StudyStatus> statuses = statusMap.getOrDefault(member.getStudyMemberId(), List.of());
+                    return StudyConverter.toStudyMemberRecentWeekInfoResponseDTO(member, recentPlans, statuses, today, restDays, restDates);
                 })
                 .collect(Collectors.toList());
     }
@@ -197,5 +205,36 @@ public class StudyQueryService {
         return totalAnswers > 0
                 ? Math.round(((double) correctAnswers / totalAnswers) * 10000) / 100.0
                 : null;
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudyProgressIndicatorResponseDTO> getMyStudyProgresses(Long userId) {
+        List<StudyMember> activeMembers = studyMemberRepository.findAllActiveByUserIdFetchStudy(userId);
+        if (activeMembers.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> activeStudyIds = activeMembers.stream()
+                .map(sm -> sm.getStudy().getStudyId())
+                .toList();
+
+        LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
+        List<Long> studyIdsWithTodayPlan = studyDailyPlanRepository.findStudyIdsWithPlanDate(activeStudyIds, today);
+        Set<Long> studyIdsWithTodayPlanSet = new HashSet<>(studyIdsWithTodayPlan);
+
+        return activeMembers.stream()
+                .map(sm -> StudyConverter.toStudyProgressIndicatorResponseDTO(
+                        sm.getStudy().getStudyId(),
+                        sm.getStudy().getStudyTitle(),
+                        studyIdsWithTodayPlanSet.contains(sm.getStudy().getStudyId())
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public String getStudyTitle(Long studyId) {
+        return studyRepository.findById(studyId)
+                .map(Study::getStudyTitle)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
     }
 }

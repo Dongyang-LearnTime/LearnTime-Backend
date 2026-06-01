@@ -17,6 +17,12 @@ public record PostListResponseDTO(
         @Schema(description = "작성자 이름 또는 닉네임. 탈퇴한 경우 '탈퇴한 사용자'", example = "홍길동")
         String userName,
         
+        @Schema(description = "작성자 프로필 이미지 URL", example = "https://s3.ap-northeast-2.amazonaws.com/...")
+        String userProfileImageUrl,
+
+        @Schema(description = "현재 로그인한 사용자가 작성자 차단했는지 여부. 로그아웃 상태면 NULL'", example = "false")
+        Boolean hasBlocked,
+        
         @Schema(description = "게시글 제목", example = "오늘 공부 인증합니다!")
         String title,
         
@@ -30,7 +36,10 @@ public record PostListResponseDTO(
         Long commentCount,
         
         @Schema(description = "게시글 생성 일시")
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+
+        @Schema(description = "공지사항 여부", example = "false")
+        Boolean isNotice
 ) {
     public PostListResponseDTO {
         if (userName == null) {

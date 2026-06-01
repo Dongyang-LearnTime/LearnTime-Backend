@@ -1,10 +1,11 @@
 package learntime.backend.domain.notification.event;
 
+import learntime.backend.domain.notification.enums.NotificationReferenceType;
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.notification.service.NotificationService;
-import learntime.backend.domain.user.event.FriendRequestAcceptedEvent;
-import learntime.backend.domain.user.event.FriendRequestRejectedEvent;
-import learntime.backend.domain.user.event.FriendRequestSentEvent;
+import learntime.backend.domain.relationship.event.FriendRequestAcceptedEvent;
+import learntime.backend.domain.relationship.event.FriendRequestRejectedEvent;
+import learntime.backend.domain.relationship.event.FriendRequestSentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -30,7 +31,7 @@ public class FriendNotificationEventListener {
                     "친구 요청",
                     event.requesterName() + "님이 친구 요청을 보냈습니다.",
                     event.friendRequestId(),
-                    "FRIEND_REQUEST"
+                    NotificationReferenceType.FRIEND_REQUEST
             );
         } catch (Exception e) {
             log.error("친구 요청 알림 생성 실패. friendRequestId: {}", event.friendRequestId(), e);
@@ -48,7 +49,7 @@ public class FriendNotificationEventListener {
                     "친구 요청 승인",
                     event.receiverName() + "님이 친구 요청을 승인했습니다.",
                     event.friendRequestId(),
-                    "FRIEND_REQUEST"
+                    NotificationReferenceType.FRIEND_REQUEST
             );
         } catch (Exception e) {
             log.error("친구 요청 승인 알림 생성 실패. friendRequestId: {}", event.friendRequestId(), e);
@@ -66,7 +67,7 @@ public class FriendNotificationEventListener {
                     "친구 요청 거절",
                     event.receiverName() + "님이 친구 요청을 거절했습니다.",
                     event.friendRequestId(),
-                    "FRIEND_REQUEST"
+                    NotificationReferenceType.FRIEND_REQUEST
             );
         } catch (Exception e) {
             log.error("친구 요청 거절 알림 생성 실패. friendRequestId: {}", event.friendRequestId(), e);

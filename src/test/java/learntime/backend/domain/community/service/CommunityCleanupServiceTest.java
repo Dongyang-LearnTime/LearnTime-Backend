@@ -6,7 +6,6 @@ import learntime.backend.domain.community.model.PostImage;
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostRepository;
-import learntime.backend.domain.community.service.core.CommunityCleanupService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.infra.s3.S3Service;
@@ -20,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -54,8 +54,8 @@ class CommunityCleanupServiceTest {
     void hardDeleteOldPostsAndComments() throws Exception {
         // given
         User user = User.builder()
-                .email("test@test.com")
-                .name("testUser")
+                .email("test_" + UUID.randomUUID().toString().substring(0, 8) + "@test.com")
+                .name("testUser_" + UUID.randomUUID().toString().substring(0, 8))
                 .build();
         userRepository.save(user);
 

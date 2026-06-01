@@ -3,7 +3,9 @@ package learntime.backend.domain.study.repository;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +15,13 @@ import java.util.Optional;
 
 @Repository
 public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM StudyDailyPlan p WHERE p.studyDailyPlanId = :id")
+    Optional<StudyDailyPlan> findByIdForUpdate(@Param("id") Long id);
+
+    @Query("SELECT p FROM StudyDailyPlan p WHERE p.study = :study")
+    List<StudyDailyPlan> findAllByStudy(@Param("study") Study study);
 
     // 가장 큰 일차(마지막 일차)를 조회함
     @Query("""
@@ -39,5 +48,18 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
                                                                            @Param("startDate") LocalDate startDate,
                                                                            @Param("endDate") LocalDate endDate);
 
-}
+    @Query("""
+           SELECT p.study.studyId
+           FROM StudyDailyPlan p
+           WHERE p.study.studyId IN :studyIds
+             AND p.planDate = :planDate
+           """)
+    List<Long> findStudyIdsWithPlanDate(@Param("studyIds") List<Long> studyIds, @Param("planDate") LocalDate planDate);
 
+    @Query("SELECT p FROM StudyDailyPlan p JOIN FETCH p.study WHERE p.study.studyId IN :studyIds AND p.planDate = :planDate")
+    List<StudyDailyPlan> findAllByStudyIdInAndPlanDate(@Param("studyIds") List<Long> studyIds, @Param("planDate") LocalDate planDate);
+
+    List<StudyDailyPlan> findAllByStudy_StudyIdOrderByDayNumberAsc(Long studyId);
+
+    long countByStudy_StudyId(Long studyId);
+}

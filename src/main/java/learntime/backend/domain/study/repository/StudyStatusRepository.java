@@ -3,6 +3,7 @@ package learntime.backend.domain.study.repository;
 import learntime.backend.domain.study.dto.StudyDailyPlanStatsDTO;
 import learntime.backend.domain.study.enums.ProgressStatus;
 import learntime.backend.domain.study.model.StudyStatus;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -46,6 +47,17 @@ public interface StudyStatusRepository extends JpaRepository<StudyStatus, Long> 
                                                        @Param("startDate") LocalDate startDate,
                                                        @Param("endDate") LocalDate endDate);
 
+    // 기간 내 여러 멤버들의 상태를 날짜 순으로 조회함 (N+1 방지)
+    @Query("SELECT s FROM StudyStatus s " +
+           "JOIN FETCH s.studyDailyPlan " +
+           "JOIN FETCH s.studyMember sm " +
+           "WHERE sm.studyMemberId IN :studyMemberIds " +
+           "AND s.studyDailyPlan.planDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY s.studyDailyPlan.planDate ASC")
+    List<StudyStatus> findByStudyMemberIdInAndPlanDateBetween(@Param("studyMemberIds") List<Long> studyMemberIds,
+                                                              @Param("startDate") LocalDate startDate,
+                                                              @Param("endDate") LocalDate endDate);
+
     // 멤버 ID와 일일 계획 ID로 특정 상태를 찾음
     Optional<StudyStatus> findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(Long studyMemberId, Long studyDailyPlanId);
 
@@ -60,8 +72,9 @@ public interface StudyStatusRepository extends JpaRepository<StudyStatus, Long> 
                    "      SELECT 1 FROM study_status s " +
                    "      WHERE s.study_member_id = m.study_member_id " +
                    "        AND s.study_daily_plan_id = p.study_daily_plan_id " +
+                   "        AND m.status = :status" +
                    ")", nativeQuery = true)
-    int insertMissingStatusesAsFailure(@Param("targetDate") LocalDate targetDate);
+    int insertMissingStatusesAsFailure(@Param("targetDate") LocalDate targetDate, @Param("status") StudyMemberStatus status);
 
     // 기존 미완료 과거 상태를 실패로 업데이트함
     @Modifying(clearAutomatically = true)
@@ -70,4 +83,12 @@ public interface StudyStatusRepository extends JpaRepository<StudyStatus, Long> 
            "WHERE s.progressStatus <> 'COMPLETED' " +
            "AND s.studyDailyPlan.studyDailyPlanId IN (SELECT p.studyDailyPlanId FROM StudyDailyPlan p WHERE p.planDate < :targetDate)")
     int bulkFailIncompleteStatuses(@Param("targetDate") LocalDate targetDate);
+
+    @Query("SELECT s FROM StudyStatus s " +
+           "JOIN FETCH s.studyDailyPlan p " +
+           "JOIN FETCH s.studyMember sm " +
+           "WHERE sm.studyMemberId IN :studyMemberIds " +
+           "AND p.planDate = :planDate")
+    List<StudyStatus> findByStudyMemberIdInAndPlanDate(@Param("studyMemberIds") List<Long> studyMemberIds, @Param("planDate") LocalDate planDate);
 }
+

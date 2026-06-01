@@ -1,7 +1,7 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
-import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyMember;
 import lombok.*;
 
 @Entity

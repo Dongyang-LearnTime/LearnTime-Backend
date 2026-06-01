@@ -4,9 +4,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
-import learntime.backend.domain.community.service.core.PostService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.domain.community.enums.PostSearchType;
+import learntime.backend.domain.community.service.PostQueryService;
+import learntime.backend.domain.community.service.PostService;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +17,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import learntime.backend.domain.community.dto.response.PostResponseDTO;
-import learntime.backend.domain.community.service.facade.CommunityFacade;
 import jakarta.servlet.http.HttpServletRequest;
 import learntime.backend.global.utils.IpUtil;
 
@@ -37,14 +39,57 @@ import learntime.backend.global.dto.PageResponse;
 public class PostController {
 
     private final PostService postService;
-    private final CommunityFacade communityFacade;
+    private final PostQueryService postQueryService;
 
     @GetMapping
     @Operation(summary = "게시글 목록 조회", description = "오프셋 기반 페이징으로 게시글 목록을 조회합니다.")
     public ResponseEntity<PageResponse<PostListResponseDTO>> getPostList(
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<PostListResponseDTO> response = postService.getPostList(pageable);
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails != null ? userDetails.getUserId() : null;
+        Page<PostListResponseDTO> response = postQueryService.getPostList(pageable, userId);
         return ResponseEntity.ok(PageResponse.of(response));
+    }
+
+    @GetMapping("/search")
+    @Operation(
+            summary = "게시글 검색",
+            description = "제목/내용 또는 작성자 이름으로 게시글을 검색합니다."
+    )
+    public ResponseEntity<PageResponse<PostListResponseDTO>> searchPosts(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "CONTENT") PostSearchType type,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails != null ? userDetails.getUserId() : null;
+        Page<PostListResponseDTO> response =
+                postQueryService.searchPosts(keyword, type, pageable, userId);
+
+        return ResponseEntity.ok(PageResponse.of(response));
+    }
+
+    @GetMapping("/popular/weekly")
+    @Operation(summary = "주간 인기글 조회", description = "최근 일주일 내 작성된 게시글 중 좋아요가 많은 상위 3개를 반환합니다.")
+    public ResponseEntity<List<PostListResponseDTO>> getWeeklyPopularPosts(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails != null ? userDetails.getUserId() : null;
+        List<PostListResponseDTO> response =
+                postQueryService.getWeeklyPopularPosts(PageRequest.of(0, 3), userId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/notices")
+    @Operation(summary = "공지사항 목록 조회", description = "최신순으로 공지사항 게시글 목록을 조회합니다.")
+    public ResponseEntity<List<PostListResponseDTO>> getNoticePosts(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails != null ? userDetails.getUserId() : null;
+        List<PostListResponseDTO> response = postQueryService.getNoticePosts(userId);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{postId}")
@@ -57,10 +102,10 @@ public class PostController {
             @RequestParam(required = false) Long lastCommentId,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
-
-        Long userId = userDetails != null ? userDetails.userId() : null;
         String clientIp = IpUtil.getClientIp(request);
-        PostResponseDTO response = communityFacade.getPostDetails(postId, userId, clientIp, lastCommentId, size);
+        Long userId = userDetails != null ? userDetails.getUserId() : null;
+
+        PostResponseDTO response = postQueryService.getPostDetails(postId, userId, clientIp, lastCommentId, size);
         return ResponseEntity.ok(response);
     }
 
@@ -69,7 +114,7 @@ public class PostController {
     public ResponseEntity<PostUpdateDetailDTO> getPostForUpdate(
             @PathVariable Long postId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        PostUpdateDetailDTO response = postService.getPostForUpdate(postId, userDetails.userId());
+        PostUpdateDetailDTO response = postQueryService.getPostForUpdate(postId, userDetails.userId());
         return ResponseEntity.ok(response);
     }
 
@@ -95,6 +140,20 @@ public class PostController {
         postService.updatePost(postId, request, newImages, userDetails.userId());
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{postId}/like")
+    @Operation(
+            summary = "게시글 좋아요 토글",
+            description = "사용자가 이미 좋아요를 눌렀으면 취소하고, 누르지 않았으면 좋아요를 추가한다."
+    )
+    public ResponseEntity<Integer> togglePostLike(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Integer likeCount = postService.togglePostLike(postId, userDetails.userId());
+        return ResponseEntity.ok(likeCount);
+    }
+
 
     @DeleteMapping("/{postId}")
     @Operation(summary = "게시글 단건 삭제", description = "게시글과 하위 테이블을 soft delete합니다.")

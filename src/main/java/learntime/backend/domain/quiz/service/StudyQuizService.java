@@ -4,8 +4,8 @@ import learntime.backend.domain.point.dto.PointEventDTO;
 import learntime.backend.domain.point.enums.PointPolicy;
 import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.domain.quiz.dto.request.QuizSolveRequestDTO;
-import learntime.backend.domain.quiz.dto.response.QuizHistoryListResponseDTO;
-import learntime.backend.domain.quiz.dto.response.StudyQuizListResponseDTO;
+import learntime.backend.domain.quiz.dto.response.QuizHistoryInfoResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizInfoResponseDTO;
 import learntime.backend.domain.quiz.dto.response.QuizQuestionResponseDTO;
 import learntime.backend.domain.quiz.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
@@ -15,17 +15,22 @@ import learntime.backend.domain.quiz.model.QuizQuestion;
 import learntime.backend.domain.quiz.converter.StudyQuizConverter;
 import learntime.backend.domain.quiz.repository.QuizQuestionRepository;
 import learntime.backend.domain.quiz.repository.StudyQuizRepository;
-import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import learntime.backend.domain.badge.event.QuizCompletedEvent;
 import learntime.backend.domain.quiz.model.QuizAnswer;
 import learntime.backend.domain.quiz.model.QuizHistory;
 import learntime.backend.domain.quiz.repository.QuizHistoryRepository;
@@ -42,15 +47,21 @@ public class StudyQuizService {
     private static final int CORRECT_ANSWER_BONUS = 5; // 정답 하나 당 추가 포인트
 
     @Transactional(readOnly = true)
-    public StudyQuizListResponseDTO getStudyQuizList(Long studyMemberId) {
-        List<StudyQuiz> quizzes = studyQuizRepository.findAllByStudyMember_StudyMemberIdOrderByCreatedAtDesc(studyMemberId);
-        return StudyQuizConverter.toStudyQuizListResponseDTO(quizzes);
+    public PageResponse<StudyQuizInfoResponseDTO> getStudyQuizList(Long studyMemberId, Pageable pageable) {
+        Page<StudyQuiz> quizzes = studyQuizRepository.findAllByStudyMember_StudyMemberId(studyMemberId, pageable);
+        Page<StudyQuizInfoResponseDTO> dtoList = quizzes.map(
+                StudyQuizConverter::toStudyQuizInfoResponseDTO
+        );
+        return PageResponse.of(dtoList);
     }
-
+ 
     @Transactional(readOnly = true)
-    public QuizHistoryListResponseDTO getQuizHistoryList(Long studyQuizId) {
-        List<QuizHistory> histories = quizHistoryRepository.findAllWithAnswersByStudyQuizId(studyQuizId);
-        return StudyQuizConverter.toQuizHistoryListResponseDTO(histories);
+    public PageResponse<QuizHistoryInfoResponseDTO> getQuizHistoryList(Long studyQuizId, Pageable pageable) {
+        Page<QuizHistory> histories = quizHistoryRepository.findAllWithAnswersByStudyQuizId(studyQuizId, pageable);
+        Page<QuizHistoryInfoResponseDTO> dtoList = histories.map(
+                StudyQuizConverter::toQuizHistoryInfoResponseDTO
+        );
+        return PageResponse.of(dtoList);
     }
 
     @Transactional(readOnly = true)
@@ -90,7 +101,9 @@ public class StudyQuizService {
             throw new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND);
         }
 
-        StudyQuiz studyQuiz = questions.getFirst().getStudyQuiz(); // 공부 퀴즈 정보 가져옴
+        // 따닥으로 인한 첫 풀이 포인트 중복 지급을 방지하기 위해 락을 걸어 퀴즈 조회
+        StudyQuiz studyQuiz = studyQuizRepository.findByIdForUpdate(questions.getFirst().getStudyQuiz().getStudyQuizId())
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND)); 
         
         // 본인만 본인의 퀴즈를 풀 수 있음
         if (!studyQuiz.getStudyMember().getUser().getUserId().equals(userId)) {
@@ -145,9 +158,10 @@ public class StudyQuizService {
                     eventDescription // 포인트 이벤트 설명
             ));
         }
+        
+        boolean isPerfect = (correctCount == questions.size() && questions.size() > 0);
+        eventPublisher.publishEvent(new QuizCompletedEvent(userId, isPerfect, LocalDateTime.now()));
 
         return quizHistory.getQuizHistoryId();
     }
-
 }
-

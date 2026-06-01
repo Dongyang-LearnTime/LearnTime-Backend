@@ -36,6 +36,9 @@ public class Post extends CommunityBaseEntity {
     @Column(columnDefinition = "TEXT")
     private String studySnapshot;
 
+    @Column
+    private Long studyId;
+
     @Column(nullable = false, length = 100)
     private String title;
 
@@ -49,6 +52,10 @@ public class Post extends CommunityBaseEntity {
     @Builder.Default
     @Column(nullable = false)
     private Integer viewCount = 0; // 조회수
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean isNotice = false; // 공지사항 여부
 
     // 댓글
     @Builder.Default
@@ -78,6 +85,11 @@ public class Post extends CommunityBaseEntity {
         image.setPost(this);
     }
 
+    // 좋아요 증가
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
     // 좋아요 감소
     public void decrementLikeCount() {
         if (this.likeCount > 0) {
@@ -89,8 +101,10 @@ public class Post extends CommunityBaseEntity {
     public void incrementViewCount() { this.viewCount++; }
 
     // 게시글 수정
-    public void updatePost(String title, String content) {
+    public void updatePost(String title, String content, Long studyId, String studySnapshot) {
         this.title = title;
         this.content = content;
+        this.studyId = studyId;
+        this.studySnapshot = studySnapshot;
     }
 }

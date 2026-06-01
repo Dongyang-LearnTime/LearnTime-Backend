@@ -47,6 +47,11 @@ public enum ErrorCode implements BaseErrorCode {
             "COMMON-500",
             "데이터 암/복호화 중 오류가 발생했습니다."),
 
+    PROMPT_INIT_FAILED(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "COMMON-501",
+            "프롬프트 템플릿 초기화에 실패했습니다."),
+
     // 기타 공통 에러
     INVALID_INPUT_VALUE
             (HttpStatus.BAD_REQUEST,

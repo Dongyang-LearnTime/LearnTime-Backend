@@ -29,6 +29,7 @@ public class Reminder {
 
     // 리마인더 발송 상태
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @Builder.Default
     private ReminderStatus status = ReminderStatus.WAITING;
 

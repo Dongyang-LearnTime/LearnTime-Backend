@@ -2,6 +2,7 @@ package learntime.backend.domain.notification.service;
 
 import learntime.backend.domain.notification.converter.NotificationConverter;
 import learntime.backend.domain.notification.dto.response.NotificationResponseDTO;
+import learntime.backend.domain.notification.enums.NotificationReferenceType;
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.notification.error.code.NotificationErrorCode;
 import learntime.backend.domain.notification.error.exception.NotificationException;
@@ -32,6 +33,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final NotificationStoreService notificationStoreService;
 
     // 사용자별 여러 SSE 연결을 관리
     private final Map<Long, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
@@ -61,29 +63,20 @@ public class NotificationService {
         return emitter;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notify(
             Long receiverId, // 알림을 받을 사용자 ID
             NotificationType type, // 알림 종류 (친구 요청, 스터디 초대 등)
             String title, // 알림 제목
             String message, // 사용자에게 보여줄 알림 내용
             Long referenceId, // 관련 리소스 PK (친구 요청 ID, 스터디 초대 ID 등)
-            String referenceType // 관련 리소스 타입명
+            NotificationReferenceType referenceType // 관련 리소스 타입
     ) {
-        User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+        // DB 저장 로직 (별도의 REQUIRES_NEW 트랜잭션에서 처리)
+        NotificationResponseDTO response = notificationStoreService.saveNotification(
+                receiverId, type, title, message, referenceId, referenceType
+        );
 
-        // 오프라인 사용자도 나중에 확인할 수 있도록 알림을 먼저 저장합니다.
-        Notification notification = notificationRepository.save(Notification.builder()
-                .receiver(receiver)
-                .type(type)
-                .title(title)
-                .message(message)
-                .referenceId(referenceId)
-                .referenceType(referenceType)
-                .build());
-
-        NotificationResponseDTO response = NotificationConverter.toNotificationResponseDTO(notification);
+        // SSE 발송 로직 (트랜잭션 없이 별도 수행)
         send(receiverId, response, type.getEventName());
     }
 
@@ -138,23 +131,18 @@ public class NotificationService {
                 emitter.send(SseEmitter.event()
                         .name(eventName)
                         .data(data));
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
                 removeEmitter(userId, emitter);
-                log.error("알림 발송 실패", e);
+                log.warn("종료된 SSE 커넥션 감지 및 제거 완료: userId={}", userId);
             }
         }
     }
 
     private void removeEmitter(Long userId, SseEmitter emitter) {
-        List<SseEmitter> userEmitters = emitters.get(userId);
-        if (userEmitters == null) {
-            return;
-        }
-
-        userEmitters.remove(emitter);
-        if (userEmitters.isEmpty()) {
-            emitters.remove(userId);
-        }
+        emitters.computeIfPresent(userId, (key, userEmitters) -> {
+            userEmitters.remove(emitter);
+            return userEmitters.isEmpty() ? null : userEmitters;
+        });
     }
 
     @Transactional

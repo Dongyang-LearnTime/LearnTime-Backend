@@ -19,6 +19,12 @@ public record PostResponseDTO(
         @Schema(description = "작성자 이름 또는 닉네임. 탈퇴한 경우 '탈퇴한 사용자'", example = "홍길동")
         String userName,
         
+        @Schema(description = "작성자 프로필 이미지 URL", example = "https://s3.ap-northeast-2.amazonaws.com/...")
+        String userProfileImageUrl,
+
+        @Schema(description = "현재 로그인한 사용자가 작성자 차단했는지 여부. 로그아웃 상태면 NULL'", example = "false")
+        Boolean hasBlocked,
+        
         @Schema(description = "게시글 제목", example = "오늘 공부 인증합니다!")
         String title,
         
@@ -50,6 +56,12 @@ public record PostResponseDTO(
         List<CommentResponseDTO> comments,
         
         @Schema(description = "연관된 스터디의 핵심 지표(달성률, 정답률 등). 스냅샷 정보가 없으면 null")
-        StudyTotalInfoResponseDTO studyTotalIndicator
+        StudyTotalInfoResponseDTO studyTotalIndicator,
+        
+        @Schema(description = "연동된 스터디 ID", example = "1")
+        Long studyId,
+
+        @Schema(description = "공지사항 여부", example = "false")
+        Boolean isNotice
 ) {
 }

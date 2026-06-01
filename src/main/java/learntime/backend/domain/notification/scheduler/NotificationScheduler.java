@@ -1,6 +1,7 @@
 package learntime.backend.domain.notification.scheduler;
 
 import learntime.backend.domain.calendar.model.CalendarRecord;
+import learntime.backend.domain.notification.enums.NotificationReferenceType;
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.notification.enums.ReminderStatus;
 import learntime.backend.domain.notification.model.Reminder;
@@ -60,9 +61,9 @@ public class NotificationScheduler {
                         userId,
                         NotificationType.CALENDAR_REMINDER,
                         "일정 알림",
-                        record.getTitle() + " 일정 시간이 다가왔습니다.",
+                        record.getContent() != null ? record.getContent() : "일정 알림",
                         record.getCalendarRecordId(),
-                        "CALENDAR_RECORD"
+                        NotificationReferenceType.CALENDAR_RECORD
                 );
 
                 // 발송 완료 상태로 변경
@@ -92,4 +93,5 @@ public class NotificationScheduler {
         } catch (Exception e) {
             log.error("[알림 정리 실패] 삭제 작업 중 오류 발생", e);
         }
-    }}
+    }
+}

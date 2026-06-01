@@ -1,5 +1,6 @@
 package learntime.backend.domain.notification.service;
 
+import learntime.backend.domain.notification.enums.NotificationReferenceType;
 import learntime.backend.domain.notification.enums.NotificationType;
 import learntime.backend.domain.notification.model.Notification;
 import learntime.backend.domain.notification.repository.NotificationRepository;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,7 +63,7 @@ class NotificationServiceTest {
                 "친구 요청",
                 "테스트 알림 메시지",
                 2L,
-                "FRIEND_REQUEST"
+                NotificationReferenceType.FRIEND_REQUEST
         );
 
         // then
@@ -72,7 +74,7 @@ class NotificationServiceTest {
                 notification.getReceiver().getUserId().equals(receiverId) &&
                 notification.getType() == NotificationType.FRIEND_REQUEST_RECEIVED &&
                 notification.getReferenceId().equals(2L) &&
-                notification.getReferenceType().equals("FRIEND_REQUEST")
+                notification.getReferenceType() == NotificationReferenceType.FRIEND_REQUEST
         ));
     }
 
@@ -81,7 +83,7 @@ class NotificationServiceTest {
     void deleteNotifications_CallsRepository() {
         // given
         Long userId = 1L;
-        java.util.List<Long> ids = java.util.List.of(100L, 101L, 102L);
+        List<Long> ids = List.of(100L, 101L, 102L);
 
         // when
         notificationService.deleteNotifications(userId, ids);

@@ -6,14 +6,18 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.quiz.dto.request.QuizCreateRequestDTO;
 import learntime.backend.domain.quiz.dto.request.QuizSolveRequestDTO;
 import learntime.backend.domain.quiz.dto.request.UpdateQuizTitleRequestDTO;
-import learntime.backend.domain.quiz.dto.response.QuizHistoryListResponseDTO;
-import learntime.backend.domain.quiz.dto.response.StudyQuizListResponseDTO;
+import learntime.backend.domain.quiz.dto.response.QuizHistoryInfoResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizInfoResponseDTO;
 import learntime.backend.domain.quiz.dto.response.StudyQuizResponseDTO;
 import learntime.backend.domain.quiz.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.quiz.service.StudyQuizFacade;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
+import learntime.backend.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,20 +44,23 @@ public class StudyQuizController {
         return ResponseEntity.ok(result);
     }
 
-
     @GetMapping("/list/{studyId}")
-    @Operation(summary = "퀴즈 목록 조회", description = "특정 스터디의 퀴즈 목록을 조회함.")
-    public ResponseEntity<StudyQuizListResponseDTO> getStudyQuizList(@PathVariable Long studyId,
-                                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
-        StudyQuizListResponseDTO result = studyQuizFacade.getStudyQuizList(studyId, userDetails.userId());
+    @Operation(summary = "퀴즈 목록 조회", description = "특정 스터디의 퀴즈 목록을 조회함. (오프셋 페이징)")
+    public ResponseEntity<PageResponse<StudyQuizInfoResponseDTO>> getStudyQuizList(
+            @PathVariable Long studyId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PageResponse<StudyQuizInfoResponseDTO> result = studyQuizFacade.getStudyQuizList(studyId, pageable, userDetails.userId());
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{studyQuizId}/history/list")
     @Operation(summary = "퀴즈 풀이 이력 목록 조회", description = "특정 퀴즈의 풀이 이력 목록을 조회함.")
-    public ResponseEntity<QuizHistoryListResponseDTO> getQuizHistoryList(@PathVariable Long studyQuizId,
-                                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
-        QuizHistoryListResponseDTO result = studyQuizFacade.getQuizHistoryList(studyQuizId, userDetails.userId());
+    public ResponseEntity<PageResponse<QuizHistoryInfoResponseDTO>> getQuizHistoryList(
+            @PathVariable Long studyQuizId,
+            @PageableDefault(size = 10, sort = "quizHistoryId", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PageResponse<QuizHistoryInfoResponseDTO> result = studyQuizFacade.getQuizHistoryList(studyQuizId, pageable, userDetails.userId());
         return ResponseEntity.ok(result);
     }
 

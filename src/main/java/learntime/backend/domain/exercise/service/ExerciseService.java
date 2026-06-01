@@ -2,8 +2,14 @@ package learntime.backend.domain.exercise.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import learntime.backend.domain.badge.event.ExerciseCompletedEvent;
+import learntime.backend.domain.exercise.converter.ExerciseConverter;
 import learntime.backend.domain.exercise.dto.request.ExerciseRequestDTO;
 import learntime.backend.domain.exercise.dto.response.ExerciseCalorieResponseDTO;
+import learntime.backend.domain.exercise.event.ExerciseCalorieRequestEvent;
+import learntime.backend.domain.exercise.dto.response.ExerciseCalorieResponseDTO;
+import learntime.backend.domain.exercise.dto.response.ExerciseResponseDTO;
+import learntime.backend.domain.exercise.dto.response.WeeklyWeightStatsResponseDTO;
 import learntime.backend.domain.exercise.error.code.ExerciseErrorCode;
 import learntime.backend.domain.exercise.error.exception.ExerciseException;
 import learntime.backend.domain.exercise.model.ExerciseRecord;
@@ -20,9 +26,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,77 +43,130 @@ public class ExerciseService {
     private final GeminiClient geminiClient;
     private final ObjectMapper objectMapper;
     private final YoutubeClient youtubeClient;
+    private final ApplicationEventPublisher eventPublisher;
+    private final ExercisePromptProvider promptProvider;
 
     public List<YoutubeVideoResponseDTO> getRecommendedVideos(List<String> bodyParts) {
         if (bodyParts == null || bodyParts.isEmpty()) {
             return youtubeClient.searchVideos("전신 홈 트레이닝");
         }
 
-        String mainPart = String.join(" ", bodyParts) + "운동";
-        return youtubeClient.searchVideos(mainPart);
+        List<YoutubeVideoResponseDTO> allVideos = new ArrayList<>();
+        for (String part : bodyParts) {
+            allVideos.addAll(youtubeClient.searchVideos(part));
+        }
+        return allVideos;
+    }
+
+    @Transactional(readOnly = true)
+    public List<WeeklyWeightStatsResponseDTO> getRecentWeeklyWeightStats(Long userId) {
+        User user = findUserByIdOrThrow(userId);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime sevenDaysAgo = now.minusDays(7);
+
+        // 최근 일주일 동안의 운동 정보 가져옴
+        List<ExerciseRecord> exercises = exerciseRecordRepository.
+                        findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(user, sevenDaysAgo, now);
+
+        // 날짜별 총 운동 무게 계산 (LinkedHashMap로 순서 유지, null이면 0.0이 들어감)
+        Map<LocalDate, Double> dailyWeightMap = exercises.stream()
+                        .collect(Collectors.groupingBy(exercise -> exercise.getCreatedAt().toLocalDate(),
+                                LinkedHashMap::new, Collectors.summingDouble(exercise ->
+                                        Optional.ofNullable(exercise.getWeight())
+                                                .orElse(0.0)
+                                )
+                        ));
+
+        // DTO 리스트에 넣어서 반환함
+        return dailyWeightMap.entrySet()
+                .stream()
+                .map(entry ->
+                        ExerciseConverter.toWeeklyWeightStatsResponseDTO(
+                                entry.getValue(),
+                                entry.getKey()
+                        )
+                )
+                .toList();
     }
 
     @Transactional
-    public ExerciseRecord saveExercise(Long userId, ExerciseRequestDTO request) {
+    public ExerciseResponseDTO saveExercise(Long userId, ExerciseRequestDTO request) {
+        User user = findUserByIdOrThrow(userId);
 
-        User user = userRepository.findById(userId).
-                orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+        // 칼로리 계산을 비동기로 미루기 위해 일단 null 처리하여 초기 저장
+        ExerciseCalorieResponseDTO emptyCalories = new ExerciseCalorieResponseDTO(null);
+        ExerciseRecord record = ExerciseConverter.toExerciseRecord(user, request, emptyCalories);
+        ExerciseRecord savedRecord = exerciseRecordRepository.save(record);
 
-        Map<String, Object> requestBody = createGeminiRequest(request);
-        try {
-            String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
-            ExerciseCalorieResponseDTO response = parseCaloriesResponse(rawJson);
+        // 비동기 칼로리 계산 이벤트 발행
+        eventPublisher.publishEvent(new ExerciseCalorieRequestEvent(savedRecord.getExerciseRecordId(), request));
 
-            ExerciseRecord record = ExerciseRecord.builder()
-                    .user(user) // 찾은 유저 세팅
-                    .bodyParts(request.getBodyParts())
-                    .duration(request.getDuration())
-                    .content(request.getContent())
-                    .calories(response.getCalories())
-                    .build();
+        ExerciseResponseDTO result =
+                ExerciseConverter.toExerciseResponseDTO(savedRecord);
 
-            return exerciseRecordRepository.save(record);
-
-        } catch (Exception e) {
-            log.error("칼로리 계산 실패: {}", e.getMessage());
-            throw new ExerciseException(ExerciseErrorCode.AI_GENERATION_FAILED_EX);
-        }
+        eventPublisher.publishEvent(new ExerciseCompletedEvent(userId, LocalDateTime.now()));
+        return result;
     }
 
-    private Map<String, Object> createGeminiRequest(ExerciseRequestDTO request) {
-        String userPrompt = """
-                다음의 운동 내역을 바탕으로 소모 칼로리를 계산해줘.
-                
-                1. 운동 부위: %s
-                2. 소요 시간: %d분
-                3. 상세 운동 내용: %s
-                
-                응답은 반드시 아래의 JSON 구조를 지켜서 답해줘.
-                {
-                  "calories": 숫자
-                }
-                
-                예를 들어 예상 소모 칼로리가 약 400kcal 일 때, 숫자 400만 위의 JSON 구조에 맞춰서 답해주면 돼.
-                """.formatted(request.getBodyParts(), request.getDuration(), request.getContent());
+    @Transactional(readOnly = true)
+    public List<ExerciseResponseDTO> getExercises(Long userId) {
+        User user = findUserByIdOrThrow(userId);
 
-        return Map.of(
-                "contents", List.of(Map.of("parts", List.of(Map.of("text", userPrompt)))),
-                "generationConfig", Map.of("response_mime_type", "application/json")
-        );
+        return exerciseRecordRepository.findAllByUserOrderByCreatedAtDesc(user).stream()
+                .map(ExerciseConverter::toExerciseResponseDTO)
+                .toList();
     }
 
-    private ExerciseCalorieResponseDTO parseCaloriesResponse(String rawJson) throws Exception {
-        JsonNode root = objectMapper.readTree(rawJson);
-        if (root.has("error")) {
-            throw new ExerciseException(ExerciseErrorCode.AI_GENERATION_FAILED_EX);
-        }
+    @Transactional(readOnly = true)
+    public ExerciseResponseDTO getExercise(Long userId, Long exerciseRecordId) {
+        ExerciseRecord record = exerciseRecordRepository.findById(exerciseRecordId)
+                .orElseThrow(() -> new ExerciseException(ExerciseErrorCode.EXERCISE_RECORD_NOT_FOUND));
 
-        JsonNode candidates = root.path("candidates");
-        if (candidates.isMissingNode() || candidates.isEmpty()) {
-            throw new ExerciseException(ExerciseErrorCode.AI_RESPONSE_BLOCKED_EX);
+        if (!record.getUser().getUserId().equals(userId)) {
+            throw new ExerciseException(ExerciseErrorCode.ACCESS_DENIED_EXERCISE);
         }
-
-        String jsonContent = candidates.get(0).path("content").path("parts").get(0).path("text").asText();
-        return objectMapper.readValue(jsonContent, ExerciseCalorieResponseDTO.class);
+        return ExerciseConverter.toExerciseResponseDTO(record);
     }
+
+    @Transactional
+    public ExerciseResponseDTO updateExercise(Long userId, Long exerciseRecordId, ExerciseRequestDTO request) {
+        ExerciseRecord record = exerciseRecordRepository.findById(exerciseRecordId)
+                .orElseThrow(() -> new ExerciseException(ExerciseErrorCode.EXERCISE_RECORD_NOT_FOUND));
+
+        if (!record.getUser().getUserId().equals(userId)) {
+            throw new ExerciseException(ExerciseErrorCode.ACCESS_DENIED_EXERCISE);
+        }
+
+        boolean requireRecalculation = !record.getBodyParts().equals(request.getBodyParts()) ||
+                !record.getDuration().equals(request.getDuration()) ||
+                !record.getContent().equals(request.getContent());
+
+        if (requireRecalculation) {
+            record.updateRecord(request.getBodyParts(), request.getDuration(), request.getContent(), request.getWeight(), null);
+            eventPublisher.publishEvent(new ExerciseCalorieRequestEvent(record.getExerciseRecordId(), request));
+        } else {
+            record.updateRecord(request.getBodyParts(), request.getDuration(), request.getContent(), request.getWeight(), record.getCalories());
+        }
+
+        return ExerciseConverter.toExerciseResponseDTO(record);
+    }
+
+    @Transactional
+    public void deleteExercise(Long userId, Long exerciseRecordId) {
+        ExerciseRecord record = exerciseRecordRepository.findById(exerciseRecordId)
+                .orElseThrow(() -> new ExerciseException(ExerciseErrorCode.EXERCISE_RECORD_NOT_FOUND));
+
+        if (!record.getUser().getUserId().equals(userId)) {
+            throw new ExerciseException(ExerciseErrorCode.ACCESS_DENIED_EXERCISE);
+        }
+
+        exerciseRecordRepository.delete(record);
+    }
+
+    private User findUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+    }
+
+
 }

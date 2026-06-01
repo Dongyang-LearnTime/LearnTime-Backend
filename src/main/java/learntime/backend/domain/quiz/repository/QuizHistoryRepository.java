@@ -1,21 +1,22 @@
 package learntime.backend.domain.quiz.repository;
 
 import learntime.backend.domain.quiz.model.QuizHistory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface QuizHistoryRepository extends JpaRepository<QuizHistory, Long> {
 
-    @Query("SELECT qh " +
+    @Query(value = "SELECT qh " +
             "FROM QuizHistory qh " +
             "LEFT JOIN FETCH qh.answers " +
-            "WHERE qh.studyQuiz.studyQuizId = :studyQuizId " +
-            "ORDER BY qh.attemptNumber DESC")
-    List<QuizHistory> findAllWithAnswersByStudyQuizId(@Param("studyQuizId") Long studyQuizId);
+            "WHERE qh.studyQuiz.studyQuizId = :studyQuizId",
+            countQuery = "SELECT count(qh) FROM QuizHistory qh WHERE qh.studyQuiz.studyQuizId = :studyQuizId")
+    Page<QuizHistory> findAllWithAnswersByStudyQuizId(@Param("studyQuizId") Long studyQuizId, Pageable pageable);
 
 
     @Query("SELECT COUNT(qa.quizAnswerId), SUM(CASE WHEN qa.isCorrect = true THEN 1 ELSE 0 END) " +
@@ -30,4 +31,11 @@ public interface QuizHistoryRepository extends JpaRepository<QuizHistory, Long> 
             "WHERE qh.studyQuiz.studyMember.study.studyId = :studyId")
     List<Object[]> findQuizStatsByStudyId(@Param("studyId") Long studyId);
 
+    @Query("SELECT qh FROM QuizHistory qh " +
+           "JOIN FETCH qh.studyQuiz sq " +
+           "JOIN FETCH sq.studyMember sm " +
+           "JOIN FETCH sm.study s " +
+           "WHERE sm.user.userId = :userId " +
+           "ORDER BY qh.submittedAt DESC")
+    List<QuizHistory> findTop3ByUserId(@Param("userId") Long userId, Pageable pageable);
 }

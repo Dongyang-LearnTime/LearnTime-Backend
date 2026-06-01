@@ -1,15 +1,15 @@
 package learntime.backend.domain.quiz.converter;
 
 import learntime.backend.domain.quiz.dto.response.QuizQuestionResponseDTO;
-import learntime.backend.domain.quiz.dto.response.QuizHistoryListResponseDTO;
-import learntime.backend.domain.quiz.dto.response.StudyQuizListResponseDTO;
+import learntime.backend.domain.quiz.dto.response.QuizHistoryInfoResponseDTO;
+import learntime.backend.domain.quiz.dto.response.StudyQuizInfoResponseDTO;
 import learntime.backend.domain.quiz.dto.response.StudyQuizResponseDTO;
 import learntime.backend.domain.quiz.dto.response.StudyQuizResultResponseDTO;
 import learntime.backend.domain.quiz.model.QuizAnswer;
 import learntime.backend.domain.quiz.model.QuizHistory;
 import learntime.backend.domain.quiz.model.QuizQuestion;
 import learntime.backend.domain.quiz.model.StudyQuiz;
-import learntime.backend.domain.studymember.model.StudyMember;
+import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
 
@@ -105,36 +105,24 @@ public class StudyQuizConverter {
                 .build();
     }
 
-    public static StudyQuizListResponseDTO toStudyQuizListResponseDTO(List<StudyQuiz> studyQuizzes) {
-        List<StudyQuizListResponseDTO.StudyQuizInfoDTO> quizDTOs = studyQuizzes.stream()
-                .map(quiz -> StudyQuizListResponseDTO.StudyQuizInfoDTO.builder()
-                        .studyQuizId(quiz.getStudyQuizId())
-                        .quizTitle(quiz.getQuizTitle())
-                        .quizStatus(quiz.getQuizStatus())
-                        .completedCount(quiz.getCompletedCount())
-                        .createdAt(quiz.getCreatedAt())
-                        .build())
-                .toList();
-
-        return StudyQuizListResponseDTO.builder()
-                .quizzes(quizDTOs)
+    public static StudyQuizInfoResponseDTO toStudyQuizInfoResponseDTO(StudyQuiz studyQuiz) {
+        return StudyQuizInfoResponseDTO.builder()
+                .studyQuizId(studyQuiz.getStudyQuizId())
+                .quizTitle(studyQuiz.getQuizTitle())
+                .quizStatus(studyQuiz.getQuizStatus())
+                .completedCount(studyQuiz.getCompletedCount())
+                .createdAt(studyQuiz.getCreatedAt())
                 .build();
     }
 
-    public static QuizHistoryListResponseDTO toQuizHistoryListResponseDTO(List<QuizHistory> quizHistories) {
-        List<QuizHistoryListResponseDTO.QuizHistoryInfoDTO> historyDTOs = quizHistories.stream()
-                .map(history -> QuizHistoryListResponseDTO.QuizHistoryInfoDTO.builder()
-                        .quizHistoryId(history.getQuizHistoryId())
-                        .attemptNumber(history.getAttemptNumber())
-                        .correctCount(history.getCorrectCount())
-                        .totalQuestionCount(history.getAnswers().size())
-                        .earnedPoints(history.getEarnedPoints())
-                        .submittedAt(history.getSubmittedAt())
-                        .build())
-                .toList();
-
-        return QuizHistoryListResponseDTO.builder()
-                .histories(historyDTOs)
+    public static QuizHistoryInfoResponseDTO toQuizHistoryInfoResponseDTO(QuizHistory quizHistories) {
+        return QuizHistoryInfoResponseDTO.builder()
+                .quizHistoryId(quizHistories.getQuizHistoryId())
+                .attemptNumber(quizHistories.getAttemptNumber())
+                .correctCount(quizHistories.getCorrectCount())
+                .totalQuestionCount(quizHistories.getAnswers().size())
+                .earnedPoints(quizHistories.getEarnedPoints())
+                .submittedAt(quizHistories.getSubmittedAt())
                 .build();
     }
 }

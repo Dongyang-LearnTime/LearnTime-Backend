@@ -3,14 +3,22 @@ package learntime.backend.domain.study.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import learntime.backend.domain.study.enums.CompletionStatus;
 import learntime.backend.domain.study.enums.ProgressStatus;
+import lombok.Builder;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+@Builder
 @Schema(description = "일일 학습 계획 상세 및 스터디 전반 휴무 정보 응답 DTO")
 public record StudyDailyPlanInfoResponseDTO(
+        @Schema(description = "진도 제목")
+        String studyTitle,
+
+        @Schema(description = "책 제목")
+        String bookTitle,
+
         @Schema(description = "조회 기준일")
         LocalDate planDate,
 
@@ -31,6 +39,7 @@ public record StudyDailyPlanInfoResponseDTO(
 
         @Schema(description = "학습 일차 (계획이 없으면 null)")
         Integer dayNumber,
+
         @Schema(description = "학습 계획 내용 (계획이 없으면 null)")
         String planContent,
 

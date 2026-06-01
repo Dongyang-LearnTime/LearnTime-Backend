@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.calendar.dto.request.CalendarRequestDTO;
 import learntime.backend.domain.calendar.dto.response.CalendarResponseDTO;
 import learntime.backend.domain.calendar.service.CalendarService;
-import learntime.backend.global.dto.CustomUserDetails;
+import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,10 +27,10 @@ public class CalendarController {
     @PostMapping
     @Operation(summary = "일정 등록", description = "제목, 내용, 목표시간을 설정 후 일정을 등록합니다.")
     public ResponseEntity<CalendarResponseDTO> createSchedule(
-            @AuthenticationPrincipal CustomUserDetails user,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CalendarRequestDTO request) {
 
-        CalendarResponseDTO response = calendarService.saveSchedule(user.userId(), request);
+        CalendarResponseDTO response = calendarService.saveSchedule(userDetails.userId(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -38,30 +38,32 @@ public class CalendarController {
     @GetMapping
     @Operation(summary = "일정 조회", description = "등록한 일정 정보를 조회합니다.")
     public ResponseEntity<List<CalendarResponseDTO>> getMonthlySchedules(
-            @AuthenticationPrincipal CustomUserDetails user,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(name = "year") int year,
             @RequestParam(name = "month") int month) {
 
-        List<CalendarResponseDTO> response = calendarService.getMonthlySchedules(user.userId(), year, month);
+        List<CalendarResponseDTO> response = calendarService.getMonthlySchedules(userDetails.userId(), year, month);
         return ResponseEntity.ok(response);
     }
 
     // 일정 수정
-    @PutMapping("/{id}")
+    @PutMapping("/{calendarRecordId}")
     @Operation(summary = "일정 수정", description = "사용자가 등록한 일정 정보를 수정합니다.")
     public ResponseEntity<CalendarResponseDTO> updateSchedule(
-            @PathVariable(name = "id") Long calendarRecordId,
-            @Valid @RequestBody CalendarRequestDTO request) {
+            @PathVariable Long calendarRecordId,
+            @Valid @RequestBody CalendarRequestDTO request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        CalendarResponseDTO response = calendarService.updateSchedule(calendarRecordId, request);
+        CalendarResponseDTO response = calendarService.updateSchedule(calendarRecordId, request, userDetails.getUserId());
         return ResponseEntity.ok(response);
     }
 
     // 일정 삭제
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{calendarRecordId}")
     @Operation(summary = "일정 삭제", description = "사용자가 등록한 일정을 삭제합니다.")
-    public ResponseEntity<Void> deleteSchedule(@PathVariable(name = "id") Long calendarRecordId) {
-        calendarService.deleteSchedule(calendarRecordId);
+    public ResponseEntity<Void> deleteSchedule(@PathVariable Long calendarRecordId,
+                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
+        calendarService.deleteSchedule(calendarRecordId, userDetails.getUserId());
         return ResponseEntity.noContent().build(); // 204 No Content 반환
     }
 }

@@ -2,6 +2,8 @@ package learntime.backend.domain.study.scheduler;
 
 import learntime.backend.domain.study.service.core.StudyDailyService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class StudyDailyPlanScheduler {
 
     private final StudyDailyService studyDailyPlanService;
@@ -19,7 +22,7 @@ public class StudyDailyPlanScheduler {
         try {
             studyDailyPlanService.markIncompletePlansAsFailure();
         } catch (Exception e) {
-            org.slf4j.LoggerFactory.getLogger(StudyDailyPlanScheduler.class).error("[스케줄러 실패] 서버 시작 시 미완료 진도 정리 실패", e);
+            LoggerFactory.getLogger(StudyDailyPlanScheduler.class).error("[스케줄러 실패] 서버 시작 시 미완료 진도 정리 실패", e);
         }
     }
 
@@ -28,7 +31,7 @@ public class StudyDailyPlanScheduler {
         try {
             studyDailyPlanService.markIncompletePlansAsFailure();
         } catch (Exception e) {
-            org.slf4j.LoggerFactory.getLogger(StudyDailyPlanScheduler.class).error("[스케줄러 실패] 정기 스케줄러 진도 정리 실패", e);
+            LoggerFactory.getLogger(StudyDailyPlanScheduler.class).error("[스케줄러 실패] 정기 스케줄러 진도 정리 실패", e);
         }
     }
 
