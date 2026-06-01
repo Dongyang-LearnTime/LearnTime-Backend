@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: backend
+
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 5000
+      validation-timeout: 3000
+      max-lifetime: 1800000
+      idle-timeout: 600000
+      keepalive-time: 300000
+      data-source-properties:
+        zeroDateTimeBehavior: CONVERT_TO_NULL
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+    show-sql: false
+
+    properties:
+      hibernate:
+        format_sql: false
+        highlight_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  output:
+    ansi:
+      enabled: always
+
+  threads:
+    virtual:
+      enabled: true
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 15MB
+
+logging:
+  level:
+    software:
+      amazon:
+        awssdk: WARN
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
+    max-quota: 15
+
+youtube:
+  key: ${YOUTUBE_KEY}
+
+food:
+  api:
+    key: ${FOOD_API_KEY}
+
+aws:
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME}
+    access-key: ${AWS_S3_ACCESS_KEY}
+    secret-key: ${AWS_S3_SECRET_KEY}
+  region: ap-northeast-2
+
+jwt:
+  key: ${JWT_KEY}
+  issuer: ${JWT_ISSUER}
+  access-expiration: ${JWT_ACCESS_EXPIRATION}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+
+security:
+  pepper: ${PEPPER}
+  encryption:
+    key: ${ENCRYPTION_KEY}
