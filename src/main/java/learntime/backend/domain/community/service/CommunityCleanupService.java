@@ -3,8 +3,10 @@ package learntime.backend.domain.community.service;
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostRepository;
 import learntime.backend.global.infra.s3.S3Service;
+import learntime.backend.global.infra.s3.event.ImageDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +20,7 @@ public class CommunityCleanupService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
-    private final S3Service s3Service;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void hardDeleteOldPostsAndComments() {
@@ -44,17 +46,12 @@ public class CommunityCleanupService {
         int deletedCommentCount = commentRepository.hardDeleteCommentByThreshold(threshold);
         log.info("Hard deleted {} standalone comments.", deletedCommentCount);
 
-        // 5. S3에 저장된 실제 이미지 파일 삭제
-        // S3 삭제 실패가 DB 삭제 롤백을 발생시키지 않도록 여기서 예외를 캐치합니다.
+        // 5. S3에 저장된 실제 이미지 파일 비동기 삭제를 위한 이벤트 발행
         for (String url : imageUrlsToDelete) {
-            try {
-                s3Service.deleteFile(url);
-            } catch (Exception e) {
-                log.error("Failed to delete S3 file during cleanup: {}", url, e);
-            }
+            eventPublisher.publishEvent(new ImageDeletedEvent(url));
         }
         if (!imageUrlsToDelete.isEmpty()) {
-            log.info("Requested deletion of {} images from S3.", imageUrlsToDelete.size());
+            log.info("Published ImageDeletedEvent for {} images from S3.", imageUrlsToDelete.size());
         }
     }
 }

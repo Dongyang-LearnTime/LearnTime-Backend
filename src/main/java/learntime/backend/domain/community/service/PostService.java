@@ -22,10 +22,14 @@ import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.infra.s3.S3Service;
 import learntime.backend.global.utils.AuthorizationUtil;
 import learntime.backend.global.utils.FileValidatorUtil;
+import learntime.backend.global.infra.s3.event.ImageDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -44,6 +48,7 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final PostImageRepository postImageRepository;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final int IMAGE_LIMIT_COUNT = 3;
 
@@ -80,7 +85,7 @@ public class PostService {
                     .toList();
             
             for (PostImage imageToRemove : imagesToRemove) {
-                s3Service.deleteFile(imageToRemove.getFileUrl());
+                eventPublisher.publishEvent(new ImageDeletedEvent(imageToRemove.getFileUrl()));
                 post.getImages().remove(imageToRemove);
             }
         }
@@ -145,7 +150,7 @@ public class PostService {
     // 좋아요 수정 로직
     @Transactional
     public Integer togglePostLike(Long postId, Long userId) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findByIdForUpdate(postId)
                 .orElseThrow(() -> new CommunityException(CommunityErrorCode.POST_NOT_FOUND));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
@@ -169,7 +174,7 @@ public class PostService {
     /** 특정 게시글을 삭제합니다 (Soft Delete). */
     @Transactional
     public void deletePost(Long postId, Long userId) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findByIdWithDetails(postId)
                 .orElseThrow(() -> new CommunityException(CommunityErrorCode.POST_NOT_FOUND));
 
         User currentUser = userRepository.findById(userId)
@@ -177,6 +182,14 @@ public class PostService {
 
         // 삭제 권한 확인
         AuthorizationUtil.validateOwnerOrAdmin(currentUser, post.getUser().getUserId());
+
+        // 게시글 삭제 시 S3 이미지도 즉시 삭제 처리되도록 이벤트 발행
+        if (post.getImages() != null) {
+            for (PostImage image : post.getImages()) {
+                eventPublisher.publishEvent(new ImageDeletedEvent(image.getFileUrl()));
+            }
+        }
+
         postRepository.delete(post);
     }
 
@@ -192,6 +205,20 @@ public class PostService {
                 if (!image.isEmpty()) {
                     fileValidatorUtil.validateImage(image);
                     String fileUrl = s3Service.uploadFile(image, "posts");
+
+                    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+                        @Override
+                        public void afterCompletion(int status) {
+                            if (status == STATUS_ROLLED_BACK) {
+                                try {
+                                    s3Service.deleteFile(fileUrl);
+                                    log.info("DB 트랜잭션 롤백으로 인해 S3 파일 회수 완료: {}", fileUrl);
+                                } catch (Exception e) {
+                                    log.error("롤백 후 S3 파일 회수 실패: {}", fileUrl, e);
+                                }
+                            }
+                        }
+                    });
 
                     String originalFileName = image.getOriginalFilename();
                     if (originalFileName == null || "blob".equalsIgnoreCase(originalFileName)) {

@@ -139,7 +139,7 @@ public class BadgeEventListener {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return;
 
-        List<UserActivityStat> statList = statRepository.findAllByUser_UserId(userId);
+        List<UserActivityStat> statList = statRepository.findAllByUser_UserIdForUpdate(userId);
         UserStats userStats = new UserStats(user, statList);
 
         // 각각의 이벤트별 통계 갱신 로직 실행

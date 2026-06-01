@@ -3,7 +3,9 @@ package learntime.backend.domain.study.repository;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +15,10 @@ import java.util.Optional;
 
 @Repository
 public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM StudyDailyPlan p WHERE p.studyDailyPlanId = :id")
+    Optional<StudyDailyPlan> findByIdForUpdate(@Param("id") Long id);
 
     @Query("SELECT p FROM StudyDailyPlan p WHERE p.study = :study")
     List<StudyDailyPlan> findAllByStudy(@Param("study") Study study);
@@ -57,5 +63,3 @@ public interface StudyDailyPlanRepository extends JpaRepository<StudyDailyPlan, 
 
     long countByStudy_StudyId(Long studyId);
 }
-
-

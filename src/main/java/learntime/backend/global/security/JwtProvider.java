@@ -26,10 +26,6 @@ public class JwtProvider {
 
     private SecretKey secretKey;
 
-//    // Access Token: 30분, Refresh Token: 14일 (실무 기준)
-//    private final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30;
-//    private final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 14;
-
     @PostConstruct
     protected void init() {
         // 보안을 위해 SecretKey 객체로 변환 (HMAC-SHA 알고리즘용)

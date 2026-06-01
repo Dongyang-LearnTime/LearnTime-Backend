@@ -2,8 +2,10 @@ package learntime.backend.domain.community.repository;
 
 import learntime.backend.domain.community.model.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -128,6 +130,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "LEFT JOIN FETCH p.user " +
             "WHERE p.postId = :postId")
     Optional<Post> findByIdWithDetails(@Param("postId") Long postId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Post p WHERE p.postId = :postId")
+    Optional<Post> findByIdForUpdate(@Param("postId") Long postId);
 
 
     /** hard delete 벌크 삭제 용 */

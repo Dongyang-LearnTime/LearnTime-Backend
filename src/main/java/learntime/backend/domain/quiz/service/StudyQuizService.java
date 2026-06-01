@@ -103,7 +103,9 @@ public class StudyQuizService {
             throw new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND);
         }
 
-        StudyQuiz studyQuiz = questions.getFirst().getStudyQuiz(); // 공부 퀴즈 정보 가져옴
+        // 따닥으로 인한 첫 풀이 포인트 중복 지급을 방지하기 위해 락을 걸어 퀴즈 조회
+        StudyQuiz studyQuiz = studyQuizRepository.findByIdForUpdate(questions.getFirst().getStudyQuiz().getStudyQuizId())
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND)); 
         
         // 본인만 본인의 퀴즈를 풀 수 있음
         if (!studyQuiz.getStudyMember().getUser().getUserId().equals(userId)) {

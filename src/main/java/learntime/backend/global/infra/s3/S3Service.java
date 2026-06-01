@@ -30,8 +30,15 @@ public class S3Service {
     private String bucketName;
 
     public String uploadFile(MultipartFile file, String dirName) {
-        String extension = getExtension(file);
-        String uniqueFileName = dirName + "/" + UUID.randomUUID() + extension;
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null || originalFileName.isBlank() || "blob".equalsIgnoreCase(originalFileName)) {
+            originalFileName = "file" + getExtension(file);
+        } else {
+            // S3 URL에서 문제될 수 있는 공백이나 특수문자 일부 치환
+            originalFileName = originalFileName.replaceAll("\\s+", "_");
+        }
+
+        String uniqueFileName = dirName + "/" + UUID.randomUUID() + "_" + originalFileName;
 
         try {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()

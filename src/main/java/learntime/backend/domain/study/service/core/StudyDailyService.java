@@ -133,7 +133,7 @@ public class StudyDailyService {
     @Transactional
     @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public void startStudyDailyPlan(Long studyDailyPlanId, Long userId) {
-        StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(studyDailyPlanId);
+        StudyDailyPlan studyDailyPlan = validateAndGetDailyPlanForUpdate(studyDailyPlanId);
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
 
         StudyStatus studyStatus = getOrCreateStudyStatus(studyMember, studyDailyPlan);
@@ -150,7 +150,7 @@ public class StudyDailyService {
     @Transactional
     @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
-        StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(request.studyDailyPlanId());
+        StudyDailyPlan studyDailyPlan = validateAndGetDailyPlanForUpdate(request.studyDailyPlanId());
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
 
         StudyStatus studyStatus = getOrCreateStudyStatus(studyMember, studyDailyPlan);
@@ -190,7 +190,7 @@ public class StudyDailyService {
     @Transactional
     @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public void registerFocusTime(FocusTimeRequestDTO request, Long userId) {
-        StudyDailyPlan studyDailyPlan = validateAndGetDailyPlan(request.studyDailyPlanId());
+        StudyDailyPlan studyDailyPlan = validateAndGetDailyPlanForUpdate(request.studyDailyPlanId());
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
 
         StudyStatus studyStatus = getOrCreateStudyStatus(studyMember, studyDailyPlan);
@@ -265,6 +265,18 @@ public class StudyDailyService {
     // 특정 일일 학습 계획을 검증하고 조회합니다.
     private StudyDailyPlan validateAndGetDailyPlan(Long studyDailyPlanId) {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findById(studyDailyPlanId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
+
+        LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
+        if (studyDailyPlan.getPlanDate().isAfter(today)) {
+            throw new StudyException(StudyErrorCode.STUDY_DAILY_NOT_YET_STARTED);
+        }
+        return studyDailyPlan;
+    }
+
+    // 특정 일일 학습 계획을 검증하고 쓰기 락을 걸어 조회합니다. (따닥 방지)
+    private StudyDailyPlan validateAndGetDailyPlanForUpdate(Long studyDailyPlanId) {
+        StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findByIdForUpdate(studyDailyPlanId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
 
         LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
