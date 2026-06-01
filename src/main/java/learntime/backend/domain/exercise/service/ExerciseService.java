@@ -58,6 +58,7 @@ public class ExerciseService {
         return allVideos;
     }
 
+    @Transactional(readOnly = true)
     public List<WeeklyWeightStatsResponseDTO> getRecentWeeklyWeightStats(Long userId) {
         User user = findUserByIdOrThrow(userId);
         LocalDateTime now = LocalDateTime.now();

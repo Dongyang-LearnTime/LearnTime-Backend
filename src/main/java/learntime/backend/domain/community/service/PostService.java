@@ -58,7 +58,8 @@ public class PostService {
         Post post = postRepository.findByIdWithDetails(postId)
                 .orElseThrow(() -> new CommunityException(CommunityErrorCode.POST_NOT_FOUND));
 
-        AuthorizationUtil.verifyOwnership(userId, post.getUser().getUserId());
+        Long postAuthorId = post.getUser() != null ? post.getUser().getUserId() : null;
+        AuthorizationUtil.verifyOwnership(userId, postAuthorId);
 
         // 스터디 스냅샷 업데이트 로직
         String studySnapshot = post.getStudySnapshot();
@@ -181,7 +182,8 @@ public class PostService {
                         .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         // 삭제 권한 확인
-        AuthorizationUtil.validateOwnerOrAdmin(currentUser, post.getUser().getUserId());
+        Long postAuthorId = post.getUser() != null ? post.getUser().getUserId() : null;
+        AuthorizationUtil.validateOwnerOrAdmin(currentUser, postAuthorId);
 
         // 게시글 삭제 시 S3 이미지도 즉시 삭제 처리되도록 이벤트 발행
         if (post.getImages() != null) {

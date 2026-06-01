@@ -74,7 +74,6 @@ public class GeminiStudyService {
     }
 
     /** 제공된 도서 정보와 목차를 바탕으로 AI 학습 계획을 생성한다. */
-    @Transactional
     public StudyPlanResponseDTO generateSmartStudyPlan(GeminiStudyRequestDTO request, Long userId) {
         int periodDays = request.getValidatedStudyDays();
 
@@ -130,7 +129,6 @@ public class GeminiStudyService {
     }
 
     /** 남은 학습 내용과 기간을 바탕으로 AI 재계획을 생성한다. */
-    @Transactional
     public StudyPlanResponseDTO generateReplan(GeminiReplanRequestDTO request, String remainingContent, int remainingDays, Long userId) {
         long contentCount = Arrays.stream(remainingContent.split("\n"))
                 .map(String::trim)

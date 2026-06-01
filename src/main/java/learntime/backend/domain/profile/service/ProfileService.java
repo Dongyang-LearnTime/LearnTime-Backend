@@ -50,6 +50,7 @@ public class ProfileService {
     private final CommentRepository commentRepository;
     private final S3Service s3Service;
     private final FileValidatorUtil fileValidatorUtil;
+    private final ProfileStoreService profileStoreService;
 
     @Transactional(readOnly = true)
     public ProfileResponseDTO getProfile(Long targetUserId, Long currentUserId) {
@@ -122,27 +123,22 @@ public class ProfileService {
         );
     }
 
-    @Transactional
     public void updateProfile(Long currentUserId, ProfileUpdateRequestDTO request, MultipartFile image) {
-        Profile profile = profileRepository.findByUser_UserId(currentUserId)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
-
-        String newImageUrl = profile.getProfileImageUrl();
+        String oldImageUrl = profileStoreService.getProfileImageUrl(currentUserId);
+        String newImageUrl = null;
+        boolean isImageChanged = false;
 
         if (Boolean.TRUE.equals(request.isImageDeleted())) {
-            if (newImageUrl != null) {
-                s3Service.deleteFile(newImageUrl);
-                newImageUrl = null;
-            }
-            profile.clearProfileImage();
+            isImageChanged = true;
+            newImageUrl = null;
         } else if (image != null && !image.isEmpty()) {
             fileValidatorUtil.validateImage(image);
-            if (newImageUrl != null) {
-                s3Service.deleteFile(newImageUrl);
-            }
+            // S3 업로드 (수 초 소요, 트랜잭션 외부)
             newImageUrl = s3Service.uploadFile(image, "profiles");
+            isImageChanged = true;
         }
 
-        profile.updateProfile(request.description(), request.profileVisibility(), newImageUrl);
+        // DB 업데이트 및 이전 이미지 비동기 삭제 이벤트 발행
+        profileStoreService.updateProfile(currentUserId, request, newImageUrl, isImageChanged);
     }
 }

@@ -27,23 +27,20 @@ import java.util.Map;
 @Slf4j
 public class ExerciseAsyncService {
 
-    private final ExerciseRecordRepository exerciseRecordRepository;
     private final GeminiClient geminiClient;
     private final ObjectMapper objectMapper;
     private final ExercisePromptProvider promptProvider;
+    private final ExerciseStoreService exerciseStoreService;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleCalorieRequest(ExerciseCalorieRequestEvent event) {
         try {
             Map<String, Object> requestBody = createGeminiRequest(event.request());
             String rawJson = geminiClient.sendRequest(requestBody, GeminiModel.GEMINI_3_1);
             ExerciseCalorieResponseDTO response = parseCaloriesResponse(rawJson);
 
-            exerciseRecordRepository.findById(event.exerciseRecordId()).ifPresent(record -> {
-                record.updateCalories(response.getCalories());
-            });
+            exerciseStoreService.updateCalories(event.exerciseRecordId(), response.getCalories());
 
             log.info("비동기 칼로리 계산 완료. recordId={}, calories={}", event.exerciseRecordId(), response.getCalories());
         } catch (Exception e) {

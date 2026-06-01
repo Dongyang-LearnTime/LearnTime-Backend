@@ -7,13 +7,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-import org.springframework.cache.annotation.EnableCaching;
-
 @EnableAsync
 @EnableRetry
 @EnableJpaAuditing
 @EnableScheduling
-@EnableCaching
 @SpringBootApplication
 public class BackendApplication {
 

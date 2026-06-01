@@ -86,17 +86,27 @@ public class StudyInvitationService {
         StudyInvitation invitation = validateInvitation(invitationId);
         validateInvitedUser(invitation, userId);
         
+        // Study row lock 획득
+        Study study = studyRepository
+                .findByIdWithPessimisticLock(invitation.getStudy().getStudyId())
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+
+        long memberCount = studyMemberRepository.countByStudyAndStatus(study, StudyMemberStatus.ACTIVE);
+        if (memberCount >= STUDY_MEMBER_LIMIT_COUNT) {
+            throw new StudyException(StudyErrorCode.STUDY_MEMBER_LIMIT_EXCEEDED);
+        }
+
         invitation.accept();
         studyMemberRepository.save(StudyMember.builder()
-                .study(invitation.getStudy())
+                .study(study)
                 .user(invitation.getInvitedUser())
                 .studyMemberRole(StudyMemberRole.MEMBER)
                 .build());
 
         eventPublisher.publishEvent(new StudyInvitationAcceptedEvent(
                 invitation.getStudyInvitationId(),
-                invitation.getStudy().getStudyId(),
-                invitation.getStudy().getStudyTitle(),
+                study.getStudyId(),
+                study.getStudyTitle(),
                 invitation.getInvitedUser().getName(),
                 invitation.getInviterUser().getUserId()
         ));

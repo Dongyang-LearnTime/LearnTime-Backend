@@ -34,30 +34,18 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AnalysisService {
 
-    private final UserRepository userRepository;
-    private final ExerciseRecordRepository exerciseRepository;
-    private final WeightRecordRepository weightRepository;
-    private final MealRecordRepository mealRepository;
     private final PromptQuotaUtil promptQuotaUtil;
     private final GeminiClient geminiClient;
     private final ObjectMapper objectMapper;
     private final ExercisePromptProvider promptProvider;
+    private final AnalysisQueryService analysisQueryService;
 
-    @Transactional
     public AnalysisResponseDTO getWeeklyAnalysis(Long userId) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sevenDaysAgo = now.minusDays(7);
 
-        User user = userRepository.findById(userId).
-                orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
-
-        // 1. 최근 7일간의 데이터 수집 (운동, 체중, 식단)
-        List<ExerciseRecord> exercises = exerciseRepository.findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(user, sevenDaysAgo, now);
-        List<WeightRecord> weights = weightRepository.findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(user, sevenDaysAgo, now);
-        List<MealRecord> meals = mealRepository.findAllByUserAndCreatedAtBetweenOrderByCreatedAtAsc(user, sevenDaysAgo, now);
-
-        // 2. AI에게 전달할 데이터 요약 생성
-        String dataSummary = buildDataSummary(exercises, weights, meals);
+        // 1. 최근 7일간의 데이터 수집 (운동, 체중, 식단) 및 요약 텍스트 생성 (Read-Only 트랜잭션 내부 수행)
+        String dataSummary = analysisQueryService.getWeeklyDataSummary(userId, now, sevenDaysAgo);
 
         promptQuotaUtil.decreasePromptQuota(userId); // Gemini 이용량 차감
 
@@ -78,34 +66,7 @@ public class AnalysisService {
         }
     }
 
-    private String buildDataSummary(List<ExerciseRecord> exercises, List<WeightRecord> weights, List<MealRecord> meals) {
-        String exerciseInfo = exercises.stream()
-                .map(e -> String.format("- %s: %d분 소모(%d kcal)", e.getBodyParts(), e.getDuration(), e.getCalories()))
-                .collect(Collectors.joining("\n"));
 
-        String weightInfo = weights.stream()
-                .map(w -> String.format("- %s: %.1fkg(체지방 %.1f%%)", w.getCreatedAt().toLocalDate(), w.getWeight(), w.getBodyFat()))
-                .collect(Collectors.joining("\n"));
-
-        String mealInfo = meals.stream()
-                .map(m -> String.format("- %s: %d kcal, 단백질 %.1fg", m.getFoodName(), m.getCalories(), m.getProtein()))
-                .collect(Collectors.joining("\n"));
-
-        return """
-                [최근 7일 운동 기록]
-                %s
-                
-                [최근 7일 체중 변화]
-                %s
-                
-                [최근 7일 식단 기록]
-                %s
-                """.formatted(
-                exerciseInfo.isEmpty() ? "기록 없음" : exerciseInfo,
-                weightInfo.isEmpty() ? "기록 없음" : weightInfo,
-                mealInfo.isEmpty() ? "기록 없음" : mealInfo
-        );
-    }
 
     private Map<String, Object> createAnalysisRequest(String dataSummary) {
         String prompt = promptProvider.getWeeklyAnalysisPrompt().formatted(dataSummary);

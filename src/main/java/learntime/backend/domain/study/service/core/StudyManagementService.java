@@ -69,6 +69,7 @@ public class StudyManagementService {
 
         // 1. 가장 하위 계층(1계층) 벌크 삭제
         studyRepository.deleteStudyMemberContentsByStudyId(studyId);
+        studyRepository.deleteQuizAnswersByStudyId(studyId);
         studyRepository.deleteStudyStatusesByStudyId(studyId);
         studyRepository.deleteStudyFeedbacksByStudyId(studyId);
         studyRepository.deleteQuizHistoriesByStudyId(studyId);

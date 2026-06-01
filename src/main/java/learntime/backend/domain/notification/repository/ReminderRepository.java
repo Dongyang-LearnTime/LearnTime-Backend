@@ -22,5 +22,9 @@ public interface ReminderRepository extends JpaRepository<Reminder, Long> {
     @Query("DELETE FROM Reminder r WHERE r.calendarRecord.user.userId = :userId")
     void deleteAllByCalendarUserId(@Param("userId") Long userId);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM Reminder r WHERE r.calendarRecord.routine = :routine AND r.calendarRecord.targetDate > :after")
+    void deleteByRoutineAndTargetDateAfter(@Param("routine") learntime.backend.domain.calendar.model.Routine routine, @Param("after") LocalDateTime after);
+
     List<Reminder> findAllByRemindAtLessThanEqualAndStatus(LocalDateTime remindAt, ReminderStatus status);
 }

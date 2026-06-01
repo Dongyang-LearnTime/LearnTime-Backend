@@ -72,7 +72,9 @@ public class CommentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        userBlockUtil.validateNotBlockedByUser(userId, post.getUser().getUserId()); // 차단 당했는지 확인
+        if (post.getUser() != null) {
+            userBlockUtil.validateNotBlockedByUser(userId, post.getUser().getUserId()); // 차단 당했는지 확인
+        }
 
         Comment comment = Comment.builder()
                 .content(request.content())
@@ -90,7 +92,8 @@ public class CommentService {
                 .orElseThrow(() -> new CommunityException(CommunityErrorCode.COMMENT_NOT_FOUND));
 
         // 본인 확인
-        AuthorizationUtil.verifyOwnership(userId, comment.getUser().getUserId());
+        Long commentAuthorId = comment.getUser() != null ? comment.getUser().getUserId() : null;
+        AuthorizationUtil.verifyOwnership(userId, commentAuthorId);
 
         comment.updateContent(request.content());
     }
@@ -104,7 +107,8 @@ public class CommentService {
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         // 삭제 권한 확인
-        AuthorizationUtil.validateOwnerOrAdmin(currentUser, comment.getUser().getUserId());
+        Long commentAuthorId = comment.getUser() != null ? comment.getUser().getUserId() : null;
+        AuthorizationUtil.validateOwnerOrAdmin(currentUser, commentAuthorId);
         commentRepository.delete(comment);
     }
 

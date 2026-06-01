@@ -46,7 +46,7 @@ public class StudyAuthUtil {
 
     // 현재 사용자가 해당 스터디 멤버 본인인지 검증함 (수정/삭제 권한 등)
     public static void verifyOwnership(StudyMember studyMember, Long userId) {
-        if (!studyMember.getUser().getUserId().equals(userId)) {
+        if (studyMember == null || studyMember.getUser() == null || !studyMember.getUser().getUserId().equals(userId)) {
             throw new StudyException(StudyErrorCode.STUDY_UNAUTHORIZED_ACCESS);
         }
     }

@@ -72,7 +72,7 @@ public class PostQueryService {
                 isImageLoadSuccessful,
                 comments,
                 isLiked,
-                isGuest ? null : blockedIds.contains(post.getUser().getUserId())
+                isGuest || post.getUser() == null ? null : blockedIds.contains(post.getUser().getUserId())
         );
     }
 
@@ -137,7 +137,8 @@ public class PostQueryService {
         Post post = postRepository.findByIdWithDetails(postId)
                 .orElseThrow(() -> new CommunityException(CommunityErrorCode.POST_NOT_FOUND));
 
-        AuthorizationUtil.verifyOwnership(userId, post.getUser().getUserId());
+        Long postAuthorId = post.getUser() != null ? post.getUser().getUserId() : null;
+        AuthorizationUtil.verifyOwnership(userId, postAuthorId);
 
         List<String> imageUrls = getSafeImageUrls(postId);
 
@@ -184,7 +185,7 @@ public class PostQueryService {
         return posts.map(post -> PostConverter.toPostListResponseDTO(
                 post,
                 commentCountMap.getOrDefault(post.getPostId(), 0L),
-                getHasBlocked(userId, blockedIds, post.getUser().getUserId())
+                getHasBlocked(userId, blockedIds, post.getUser() != null ? post.getUser().getUserId() : null)
         ));
     }
 
@@ -196,7 +197,7 @@ public class PostQueryService {
                 .map(post -> PostConverter.toPostListResponseDTO(
                         post,
                         commentCountMap.getOrDefault(post.getPostId(), 0L),
-                        getHasBlocked(userId, blockedIds, post.getUser().getUserId())
+                        getHasBlocked(userId, blockedIds, post.getUser() != null ? post.getUser().getUserId() : null)
                 ))
                 .toList();
     }

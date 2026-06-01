@@ -48,6 +48,10 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     void deleteStudyFeedbacksByStudyId(@Param("studyId") Long studyId);
 
     @Modifying
+    @Query("DELETE FROM QuizAnswer qa WHERE qa.quizHistory.studyQuiz.studyMember.study.studyId = :studyId")
+    void deleteQuizAnswersByStudyId(@Param("studyId") Long studyId);
+
+    @Modifying
     @Query("DELETE FROM QuizHistory qh WHERE qh.studyQuiz.studyMember.study.studyId = :studyId")
     void deleteQuizHistoriesByStudyId(@Param("studyId") Long studyId);
 

@@ -31,6 +31,8 @@ import learntime.backend.domain.badge.repository.UserActivityStatRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
+import learntime.backend.global.infra.s3.event.ImageDeletedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageRequest;
@@ -88,6 +90,7 @@ public class UserService {
     private final ProfileRepository profileRepository;
     private final RoutineRepository routineRepository;
     private final UserBlockRepository userBlockRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final DateTimeFormatter DELETED_USER_TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -215,6 +218,13 @@ public class UserService {
         userTermsRepository.deleteAllByUserId(userId);
         userBadgeRepository.deleteAllByUserId(userId);
         userActivityStatRepository.deleteAllByUserId(userId);
+
+        // 삭제 전 프로필 이미지를 S3에서 지우도록 이벤트 발행 (비용 누수 방지)
+        profileRepository.findByUser_UserId(userId).ifPresent(profile -> {
+            if (profile.getProfileImageUrl() != null) {
+                eventPublisher.publishEvent(new ImageDeletedEvent(profile.getProfileImageUrl()));
+            }
+        });
         profileRepository.deleteByUser_UserId(userId);
 
         userRepository.anonymizeAndSoftDelete(

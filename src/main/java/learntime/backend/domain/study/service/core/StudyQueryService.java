@@ -16,8 +16,6 @@ import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.cache.annotation.Cacheable;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
@@ -78,7 +76,6 @@ public class StudyQueryService {
 
     // 특정 유저의 전체 통계 지표를 조회합니다.
     @Transactional(readOnly = true)
-    @Cacheable(value = "studyTotalIndicator", key = "#studyId + '_' + #userId")
     public StudyTotalInfoResponseDTO getStudyMemberTotalIndicatorByUserId(Long studyId, Long userId) {
         Long studyMemberId = studyMemberRepository.findActiveStudyMemberIdByStudyIdAndUserId(studyId, userId)
                 .orElseThrow(() -> {
@@ -122,7 +119,6 @@ public class StudyQueryService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "recentWeekStudyIndicator", key = "#studyId")
     public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId) {
         Study study = studyRepository.findByIdWithStudyMembersAndUser(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));

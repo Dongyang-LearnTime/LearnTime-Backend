@@ -84,4 +84,4 @@ security:
     key: ${ENCRYPTION_KEY}
 
 cors:
-  allowed-origins: "http://localhost:5173"
+  allowed-origins: ${CORS_LOCAL_ORIGIN:http://localhost:5173},${CORS_PROD_ORIGIN:http://localhost:5173}

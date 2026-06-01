@@ -14,7 +14,8 @@ import java.util.List;
 @Repository
 public interface RoutineRepository extends JpaRepository<Routine, Long> {
 
-    List<Routine> findAllByUser(User user);
+    @Query("SELECT DISTINCT r FROM Routine r LEFT JOIN FETCH r.daysOfWeek WHERE r.user = :user")
+    List<Routine> findAllByUser(@Param("user") User user);
 
     @Query("SELECT r FROM Routine r LEFT JOIN FETCH r.daysOfWeek WHERE r.endDate IS NULL OR r.endDate >= :today")
     List<Routine> findAllActiveRoutines(@Param("today") LocalDate today);

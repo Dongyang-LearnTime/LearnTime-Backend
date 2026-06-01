@@ -34,4 +34,9 @@ public class ReminderService {
     public void deleteReminder(CalendarRecord record) {
         reminderRepository.deleteByCalendarRecord(record);
     }
+
+    @Transactional
+    public void deleteRemindersByRoutineAndAfter(learntime.backend.domain.calendar.model.Routine routine, LocalDateTime after) {
+        reminderRepository.deleteByRoutineAndTargetDateAfter(routine, after);
+    }
 }

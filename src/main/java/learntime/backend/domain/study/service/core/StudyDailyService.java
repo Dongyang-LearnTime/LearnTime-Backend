@@ -22,8 +22,6 @@ import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,7 +110,6 @@ public class StudyDailyService {
     }
 
     // study id를 기준으로 모든 StudyDailyPlan의 정보를 가져옵니다.
-    @Cacheable(value = "studyDailyPlans", key = "#studyId + '_' + #userId")
     public List<StudyDailyPlanResponseDTO> findAllByStudyId(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
@@ -131,7 +128,6 @@ public class StudyDailyService {
 
     // 일일 학습 계획을 시작(진행 중) 상태로 변경합니다.
     @Transactional
-    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public void startStudyDailyPlan(Long studyDailyPlanId, Long userId) {
         StudyDailyPlan studyDailyPlan = validateAndGetDailyPlanForUpdate(studyDailyPlanId);
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
@@ -148,7 +144,6 @@ public class StudyDailyService {
 
     // 일일 학습 계획을 완료 처리하고 포인트를 지급합니다.
     @Transactional
-    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public int completeStudyDailyPlan(PlanCompleteRequestDTO request, Long userId) {
         StudyDailyPlan studyDailyPlan = validateAndGetDailyPlanForUpdate(request.studyDailyPlanId());
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);
@@ -188,7 +183,6 @@ public class StudyDailyService {
 
     // 일일 학습 계획의 집중 시간을 등록합니다.
     @Transactional
-    @CacheEvict(value = "studyTotalIndicator", allEntries = true)
     public void registerFocusTime(FocusTimeRequestDTO request, Long userId) {
         StudyDailyPlan studyDailyPlan = validateAndGetDailyPlanForUpdate(request.studyDailyPlanId());
         StudyMember studyMember = validateAndGetStudyMember(studyDailyPlan.getStudy(), userId);

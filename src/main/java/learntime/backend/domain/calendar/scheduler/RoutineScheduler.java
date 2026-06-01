@@ -29,7 +29,6 @@ public class RoutineScheduler {
 
     // 매일 새벽 4시에 루틴 추가 생산 스케줄러 실행 (서울 시간대 기준)
     @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
-    @Transactional
     public void topUpRoutineSchedules() {
         log.info("[루틴 스케줄러] 루틴 추가 생산 작업 시작");
         try {
@@ -39,25 +38,13 @@ public class RoutineScheduler {
 
             int updatedCount = 0;
             for (Routine routine : activeRoutines) {
-                // 이 루틴으로 생성된 가장 마지막 일정을 조회
-                Optional<CalendarRecord> latestRecordOpt = calendarRecordRepository
-                        .findFirstByRoutineOrderByTargetDateDesc(routine);
-
-                if (latestRecordOpt.isPresent()) {
-                    LocalDate latestDate = latestRecordOpt.get().getTargetDate().toLocalDate();
-                    LocalDate thresholdDate = today.plusDays(THRESHOLD_DAYS);
-
-                    // 마지막 일정이 임계일(14일 뒤)보다 이전이거나 같으면 추가로 60일치 생성
-                    if (!latestDate.isAfter(thresholdDate)) {
-                        LocalDate startFrom = latestDate.plusDays(1);
-                        routineService.generateCalendarRecordsForRoutine(routine, startFrom, GENERATION_DAYS);
+                try {
+                    boolean isUpdated = routineService.processRoutineForScheduler(routine.getRoutineId(), today);
+                    if (isUpdated) {
                         updatedCount++;
                     }
-                } else {
-                    // 혹시 생성된 일정이 하나도 없는 상태라면 오늘(또는 시작일)부터 60일치 생성
-                    LocalDate startFrom = routine.getStartDate().isAfter(today) ? routine.getStartDate() : today;
-                    routineService.generateCalendarRecordsForRoutine(routine, startFrom, GENERATION_DAYS);
-                    updatedCount++;
+                } catch (Exception e) {
+                    log.error("[루틴 스케줄러 실패] 루틴 ID: {} 처리 중 오류 발생", routine.getRoutineId(), e);
                 }
             }
             log.info("[루틴 스케줄러] {}개의 루틴에 대해 일정을 추가 생성 완료했습니다.", updatedCount);
