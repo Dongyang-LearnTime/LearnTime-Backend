@@ -1,0 +1,13 @@
+.git
+.github
+
+.gradle
+.idea
+
+.env
+
+README.md
+GEMINI.md
+
+Dockerfile
+docker-compose.yml
