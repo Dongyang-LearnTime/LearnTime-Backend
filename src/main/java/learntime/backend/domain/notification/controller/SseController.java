@@ -28,8 +28,12 @@ public class SseController {
     // 실시간 알림 연결 SSE
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "알림 구독 연결", description = "SSE를 사용하여 새로고침 없이 실시간 알림 발송")
-    public SseEmitter subscribe(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return notificationService.subscribe(userDetails.getUserId());
+    public ResponseEntity<SseEmitter> subscribe(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        SseEmitter emitter = notificationService.subscribe(userDetails.getUserId());
+        return ResponseEntity.ok()
+                .header("X-Accel-Buffering", "no")
+                .header("Cache-Control", "no-cache")
+                .body(emitter);
     }
 
     @GetMapping

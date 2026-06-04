@@ -11,6 +11,7 @@ public record SignUpRequestDTO (
 
     @NotBlank(message = "이름은 필수 입력 항목입니다.")
     @Size(min = 2, max = 25, message = "이름은 2~25자 사이여야 합니다.")
+    @Pattern(regexp = "^[a-zA-Z0-9가-힣_\\\\-\\\\s]+$", message = "이름에 특수문자(JS 태그, SQL 등)는 사용할 수 없습니다.")
     String userName,
 
     @NotBlank(message = "이메일은 필수 입력 항목입니다.")

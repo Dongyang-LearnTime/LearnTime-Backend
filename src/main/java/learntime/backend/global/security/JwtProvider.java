@@ -49,6 +49,24 @@ public class JwtProvider {
                 .compact();
     }
 
+    // Access Token 생성 (sessionKey 포함)
+    public String createAccessToken(User user, long expirationMs, String sessionKey) {
+        return Jwts.builder()
+                .header()
+                .add("typ","JWT")
+                .and()
+                .subject(user.getEmail())
+                .issuer(jwtIssuer)        // 발급자
+                .issuedAt(new Date())   // 발급 시간
+                .expiration(new Date(System.currentTimeMillis() + expirationMs)) // 만료 시간 설정
+                .claim("userId", user.getUserId()) // 발급 유저의 id
+                .claim("role", user.getRole()) // 발급 유저의 권한
+                .claim("name", user.getName()) // 발급 유저의 이름
+                .claim("sessionKey", sessionKey) // 현재 세션 식별자
+                .signWith(secretKey)          // 서명
+                .compact();
+    }
+
     // claim 추출 및 유효성 검증
     public Claims getClaims(String token) {
         try {

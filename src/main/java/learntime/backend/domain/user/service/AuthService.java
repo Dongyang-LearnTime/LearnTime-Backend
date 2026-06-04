@@ -97,9 +97,10 @@ public class AuthService {
 
     // 토큰 검증
     @Transactional
-    public TokenPair refresh(String refreshToken) {
+    public TokenPair refresh(String rawRefreshToken) {
+        String hashedRefresh = hashToken(rawRefreshToken);
 
-        RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
+        RefreshToken storedToken = refreshTokenRepository.findByToken(hashedRefresh)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN));
 
         if (storedToken.getExpiryDate().isBefore(LocalDateTime.now())) {
@@ -112,7 +113,8 @@ public class AuthService {
 
     @Transactional
     public void logout(String refreshToken) {
-        refreshTokenRepository.findByToken(refreshToken) // 리프레쉬 토큰 db에서 삭제
+        String hashedRefresh = hashToken(refreshToken);
+        refreshTokenRepository.findByToken(hashedRefresh) // 리프레쉬 토큰 db에서 삭제
                 .ifPresent(refreshTokenRepository::delete);
     }
 
@@ -161,13 +163,29 @@ public class AuthService {
 
     // 토큰 DB에 저장 및 return
     public TokenPair generateTokenPair(User user) {
-        String newAccess = jwtProvider.createToken(user, accessTime);
-        String newRefresh = jwtProvider.createToken(user, refreshTime);
+        String rawRefresh = jwtProvider.createToken(user, refreshTime);
+        
+        String hashedRefresh = hashToken(rawRefresh);
+        
+        String newAccess = jwtProvider.createAccessToken(user, accessTime, hashedRefresh);
+        
         LocalDateTime newExpiry = LocalDateTime.now().plusSeconds(refreshTime / 1000);
 
-        refreshTokenRepository.upsertToken(user.getUserId(), newRefresh, newExpiry);
+        refreshTokenRepository.upsertToken(user.getUserId(), hashedRefresh, newExpiry);
 
-        return new TokenPair(newAccess, newRefresh);
+        return new TokenPair(newAccess, rawRefresh);
+    }
+
+    // SHA-256 해시 함수
+    private String hashToken(String token) {
+        if (token == null) return null;
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return java.util.Base64.getEncoder().encodeToString(hash);
+        } catch (Exception e) {
+            throw new RuntimeException("SHA-256 algorithm not found", e);
+        }
     }
 
 }

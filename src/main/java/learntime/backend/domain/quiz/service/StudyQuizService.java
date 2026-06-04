@@ -101,8 +101,16 @@ public class StudyQuizService {
             throw new StudyException(StudyErrorCode.QUIZ_QUESTION_NOT_FOUND);
         }
 
+        Long expectedQuizId = questions.getFirst().getStudyQuiz().getStudyQuizId();
+        boolean allSameQuiz = questions.stream()
+                .allMatch(q -> q.getStudyQuiz().getStudyQuizId().equals(expectedQuizId));
+
+        if (!allSameQuiz) {
+            throw new StudyException(StudyErrorCode.STUDY_UNAUTHORIZED_ACCESS);
+        }
+
         // 따닥으로 인한 첫 풀이 포인트 중복 지급을 방지하기 위해 락을 걸어 퀴즈 조회
-        StudyQuiz studyQuiz = studyQuizRepository.findByIdForUpdate(questions.getFirst().getStudyQuiz().getStudyQuizId())
+        StudyQuiz studyQuiz = studyQuizRepository.findByIdForUpdate(expectedQuizId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND)); 
         
         // 본인만 본인의 퀴즈를 풀 수 있음

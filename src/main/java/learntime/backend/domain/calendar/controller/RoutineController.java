@@ -46,9 +46,10 @@ public class RoutineController {
     // 루틴 단건 조회
     @GetMapping("/{routineId}")
     @Operation(summary = "루틴 상세 조회", description = "특정 루틴의 정보를 조회합니다.")
-    public ResponseEntity<RoutineResponseDTO> getRoutine(@PathVariable Long routineId) {
+    public ResponseEntity<RoutineResponseDTO> getRoutine(@PathVariable Long routineId,
+                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        RoutineResponseDTO response = routineService.getRoutine(routineId);
+        RoutineResponseDTO response = routineService.getRoutine(routineId, userDetails.userId());
         return ResponseEntity.ok(response);
     }
 

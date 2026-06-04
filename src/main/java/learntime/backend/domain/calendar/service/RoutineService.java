@@ -75,8 +75,10 @@ public class RoutineService {
 
     // 루틴 상세 조회
     @Transactional(readOnly = true)
-    public RoutineResponseDTO getRoutine(Long routineId) {
+    public RoutineResponseDTO getRoutine(Long routineId, Long userId) {
         Routine routine = getRoutineOrThrow(routineId);
+
+        AuthorizationUtil.verifyOwnership(userId, routine.getUser().getUserId());
 
         return CalenderConverter.toRoutineResponseDTO(routine);
     }

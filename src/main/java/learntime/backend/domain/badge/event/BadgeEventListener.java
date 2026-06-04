@@ -47,8 +47,9 @@ public class BadgeEventListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleStudyCompleted(StudyCompletedEvent event) {
         // 완료 시간 KST 기준 파악
-        LocalDate todayKST = event.completedAt().toLocalDate();
-        LocalTime timeKST = event.completedAt().toLocalTime();
+        ZonedDateTime completedAtKst = event.completedAt().atZone(ZoneId.systemDefault()).withZoneSameInstant(KST_ZONE);
+        LocalDate todayKST = completedAtKst.toLocalDate();
+        LocalTime timeKST = completedAtKst.toLocalTime();
 
         // 헬퍼 메서드로 유저 로드 후 통계 갱신 로직 수행
         processBadgeEvent(event.userId(), userStats -> {
@@ -98,8 +99,9 @@ public class BadgeEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleExerciseCompleted(ExerciseCompletedEvent event) {
-        LocalDate todayKST = event.completedAt().toLocalDate();
-        LocalTime timeKST = event.completedAt().toLocalTime();
+        ZonedDateTime completedAtKst = event.completedAt().atZone(ZoneId.systemDefault()).withZoneSameInstant(KST_ZONE);
+        LocalDate todayKST = completedAtKst.toLocalDate();
+        LocalTime timeKST = completedAtKst.toLocalTime();
         
         processBadgeEvent(event.userId(), userStats -> {
             // 1. 연속 운동 달성 통계 갱신 및 포인트 지급 검증

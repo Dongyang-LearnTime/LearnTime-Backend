@@ -34,7 +34,13 @@ public class StudyQueryService {
     private final QuizHistoryRepository quizHistoryRepository;
     private final StudyMemberRepository studyMemberRepository;
 
-    public StudyStatusResponseDTO getStudyStatus(Long studyId) {
+    public StudyStatusResponseDTO getStudyStatus(Long studyId, Long userId) {
+        boolean isStudyMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatus(
+                studyId, userId, StudyMemberStatus.ACTIVE);
+        if (!isStudyMember) {
+            throw new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND);
+        }
+
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
         return StudyStatusResponseDTO.builder()
@@ -119,7 +125,13 @@ public class StudyQueryService {
     }
 
     @Transactional(readOnly = true)
-    public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId) {
+    public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId, Long userId) {
+        boolean isStudyMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatus(
+                studyId, userId, StudyMemberStatus.ACTIVE);
+        if (!isStudyMember) {
+            throw new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND);
+        }
+
         Study study = studyRepository.findByIdWithStudyMembersAndUser(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 

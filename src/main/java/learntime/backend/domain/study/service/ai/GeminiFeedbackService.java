@@ -77,10 +77,20 @@ public class GeminiFeedbackService {
                 topicStatsStr
         );
 
+        Map<String, Object> responseSchema = Map.of(
+                "type", "object",
+                "properties", Map.of(
+                        "feedbackTitle", Map.of("type", "string"),
+                        "feedbackContent", Map.of("type", "string")
+                ),
+                "required", List.of("feedbackTitle", "feedbackContent")
+        );
+
         Map<String, Object> requestBody = promptParser.createRequestBody(
                 userPrompt,
                 FEEDBACK_INSTRUCTION,
-                FEEDBACK_AI_TEMPERATURE
+                FEEDBACK_AI_TEMPERATURE,
+                responseSchema
         );
 
         try {

@@ -69,7 +69,7 @@ public class StudyController {
             description = "오늘을 제외한 최근 7일의 날짜별 집중 시간, 진행 상태, 완료 상태, 이해도 점수를 조회합니다.")
     public ResponseEntity<List<StudyMemberRecentWeekInfoResponseDTO>> recentWeekStudyIndicator(@PathVariable Long studyId,
                                                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<StudyMemberRecentWeekInfoResponseDTO> result = studyQueryService.getRecentWeekStudyInfos(studyId);
+        List<StudyMemberRecentWeekInfoResponseDTO> result = studyQueryService.getRecentWeekStudyInfos(studyId, userDetails.userId());
         return ResponseEntity.ok(result);
     }
 
@@ -86,7 +86,7 @@ public class StudyController {
                 .todayPlan(studyDailyService.getStudyPlanInfoByDate(studyId, planDate, userDetails.userId()))
                 .todayContent(studyUserContentService.getUserContents(studyId, userDetails.userId(), planDate))
                 .totalIndicator(studyQueryService.getStudyMemberTotalIndicatorByUserId(studyId, userDetails.userId()))
-                .recentWeekIndicator(studyQueryService.getRecentWeekStudyInfos(studyId))
+                .recentWeekIndicator(studyQueryService.getRecentWeekStudyInfos(studyId, userDetails.userId()))
                 .build();
 
         return ResponseEntity.ok(result);
@@ -94,8 +94,9 @@ public class StudyController {
 
     @GetMapping("/{studyId}/status")
     @Operation(summary = "공부 진도 생성 상태 확인", description = "스터디의 현재 생성 상태(PLANNING/READY/FAILED)를 확인합니다.")
-    public ResponseEntity<StudyStatusResponseDTO> getStudyStatus(@PathVariable Long studyId) {
-        return ResponseEntity.ok(studyQueryService.getStudyStatus(studyId));
+    public ResponseEntity<StudyStatusResponseDTO> getStudyStatus(@PathVariable Long studyId,
+                                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(studyQueryService.getStudyStatus(studyId, userDetails.userId()));
     }
 
     @PostMapping(

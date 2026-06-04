@@ -121,6 +121,16 @@ public class GeminiPromptParser {
             throw new BusinessException(ErrorCode.AI_RESPONSE_BLOCKED);
         }
 
-        return candidates.get(0).path("content").path("parts").get(0).path("text").asText();
+        String text = candidates.get(0).path("content").path("parts").get(0).path("text").asText();
+        text = text.trim();
+        if (text.startsWith("```json")) {
+            text = text.substring(7);
+        } else if (text.startsWith("```")) {
+            text = text.substring(3);
+        }
+        if (text.endsWith("```")) {
+            text = text.substring(0, text.length() - 3);
+        }
+        return text.trim();
     }
 }

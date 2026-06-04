@@ -90,7 +90,7 @@ public class StudyDailyService {
                         studyId, userId,
                         List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)
                 )
-                .orElse(null);
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         List<Long> allStudyMemberIds = studyMemberRepository
                 .findAllActiveByStudyIdFetchUser(studyId)
@@ -99,7 +99,7 @@ public class StudyDailyService {
                 .toList();
 
         StudyStatus studyStatus = null;
-        if (studyDailyPlan != null && studyMemberId != null) {
+        if (studyDailyPlan != null) {
             studyStatus = studyStatusRepository.
                     findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMemberId, studyDailyPlan.getStudyDailyPlanId())
                     .orElse(null);

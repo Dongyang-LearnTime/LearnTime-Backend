@@ -54,8 +54,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 토큰에서 데이터 추출
                 String email = claims.getSubject();
                 String name = claims.get("name", String.class); // 이름 추출
-                String role = claims.get("role", String.class);
                 Long userId = claims.get("userId", Long.class); // PK 추출
+                String sessionKey = claims.get("sessionKey", String.class); // 세션 키 추출
 
                 // DB를 통한 추가 검증 (Redis 없이 토큰 무효화 제어)
                 User user = userRepository.findById(userId)
@@ -66,10 +66,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     throw new AuthException(AuthErrorCode.DELETED_USER);
                 }
 
-                // 로그아웃된 토큰 차단 (RefreshToken이 없다면 로그아웃된 것으로 간주)
-                if (!refreshTokenRepository.existsByUser_UserId(userId)) {
+                // DB에 저장된 현재 Refresh Token 가져오기
+                learntime.backend.domain.user.model.RefreshToken rt = 
+                        refreshTokenRepository.findByUserId(userId).orElse(null);
+
+                // Refresh Token이 없거나(로그아웃), 해시값(세션키)이 다르면(다른 기기 로그인) 접근 차단
+                if (rt == null || sessionKey == null || !rt.getToken().equals(sessionKey)) {
                     throw new AuthException(AuthErrorCode.INVALID_TOKEN);
                 }
+
+                // 권한(Role)은 JWT 클레임이 아닌 DB의 최신 정보를 직접 사용
+                String role = user.getRole().name();
 
                 // CustomUserDetails 객체 생성
                 CustomUserDetails principal = new CustomUserDetails(userId, email, name, "", role, false);
