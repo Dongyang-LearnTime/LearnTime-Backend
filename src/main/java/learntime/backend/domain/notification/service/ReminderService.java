@@ -24,10 +24,13 @@ public class ReminderService {
         // 캘린더 일정의 목표 시각 정시에 알림이 발송되도록 분 단위로 정규화
         LocalDateTime remindAt = record.getTargetDate().withSecond(0).withNano(0);
 
-        reminderRepository.save(Reminder.builder()
+        Reminder reminder = Reminder.builder()
                 .calendarRecord(record)
                 .remindAt(remindAt)
-                .build());
+                .build();
+        record.addReminder(reminder);
+
+        reminderRepository.save(reminder);
     }
 
     @Transactional
