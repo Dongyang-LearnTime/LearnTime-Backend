@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode implements BaseErrorCode {
     // 할당량 관령 에러
     PROMPT_QUOTA_EXCEEDED(
-            HttpStatus.FORBIDDEN,
+            HttpStatus.TOO_MANY_REQUESTS,
             "QUOTA-001",
             "프롬프트 사용 가능 횟수를 모두 소진했습니다."),
 
