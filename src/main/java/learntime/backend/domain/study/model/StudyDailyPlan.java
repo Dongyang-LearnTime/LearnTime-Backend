@@ -29,7 +29,7 @@ public class StudyDailyPlan {
     @Column(nullable = false)
     private LocalDate planDate;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String planContent;
 
     @ManyToOne(fetch = FetchType.LAZY)

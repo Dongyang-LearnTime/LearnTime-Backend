@@ -18,11 +18,13 @@ public class ReminderService {
 
     @Transactional
     public void upsertReminder(CalendarRecord record) {
-        // 기존 리마인더 삭제
-        reminderRepository.deleteByCalendarRecord(record);
-
-        // 캘린더 일정의 목표 시각 정시에 알림이 발송되도록 분 단위로 정규화
         LocalDateTime remindAt = record.getTargetDate().withSecond(0).withNano(0);
+
+        if (record.getReminders() != null && !record.getReminders().isEmpty()) {
+            Reminder existing = record.getReminders().get(0);
+            existing.updateRemindAt(remindAt);
+            return;
+        }
 
         Reminder reminder = Reminder.builder()
                 .calendarRecord(record)
