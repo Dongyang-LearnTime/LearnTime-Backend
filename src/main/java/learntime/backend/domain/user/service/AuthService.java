@@ -64,7 +64,7 @@ public class AuthService {
 
     @Transactional(noRollbackFor = {BadCredentialsException.class, LockedException.class, AuthException.class})
     public TokenPair login(LoginRequestDTO request) {
-        User user = userRepository.findByEmail(request.email())
+        User user = userRepository.findByEmailForUpdate(request.email())
                 .orElseThrow(() -> new AuthException(AuthErrorCode.PASSWORD_NOT_MATCH));
 
         // 계정 잠금 확인
