@@ -19,6 +19,12 @@ import java.time.LocalTime;
         indexes = {
                 @Index(name = "idx_study_status_member_plan", columnList = "study_member_id, study_daily_plan_id"),
                 @Index(name = "idx_study_status_member_progress", columnList = "study_member_id, progress_status")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_study_status_member_plan",
+                        columnNames = {"study_member_id", "study_daily_plan_id"}
+                )
         }
 )
 @Getter
