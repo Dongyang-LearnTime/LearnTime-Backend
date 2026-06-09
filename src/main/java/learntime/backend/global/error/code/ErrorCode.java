@@ -20,6 +20,10 @@ public enum ErrorCode implements BaseErrorCode {
             HttpStatus.BAD_REQUEST,
             "AI-002",
             "AI 답변이 차단되었습니다. 다시 시도해주세요."),
+    AI_API_QUOTA_EXCEEDED(
+            HttpStatus.TOO_MANY_REQUESTS,
+            "AI-003",
+            "AI 서비스 할당량이 초과되어 요청을 처리할 수 없습니다."),
 
     // Youtube 관련 에러
     YOUTUBE_API_ERROR(

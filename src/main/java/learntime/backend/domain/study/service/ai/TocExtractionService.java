@@ -93,6 +93,8 @@ public class TocExtractionService {
         } catch (IOException e) {
             log.error("OCR 이미지 파일 리사이징/읽기 실패", e);
             throw new FileException(FileErrorCode.FILE_READ_ERROR);
+        } catch (learntime.backend.global.error.exception.BaseException e) {
+            throw e;
         } catch (Exception e) {
             log.error("AI 목차 추출 실패", e);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED);

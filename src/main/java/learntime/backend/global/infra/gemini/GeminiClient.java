@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import learntime.backend.global.common.GeminiModel;
+import learntime.backend.global.error.code.ErrorCode;
+import learntime.backend.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,7 +39,8 @@ public class GeminiClient {
             backoff = @Backoff(
                     delay = 300,
                     multiplier = 2
-            )
+            ),
+            exclude = BusinessException.class
     )
     public String sendRequest(
             Map<String, Object> requestBody,
@@ -68,6 +71,11 @@ public class GeminiClient {
                                 StandardCharsets.UTF_8
                         );
 
+                        if (response.getStatusCode().value() == 429) {
+                            log.error("Gemini API Quota Exceeded: {}", errorBody);
+                            throw new BusinessException(ErrorCode.AI_API_QUOTA_EXCEEDED);
+                        }
+
                         throw new RuntimeException(
                                 "Gemini API Error [%s] | Body: %s"
                                         .formatted(
@@ -89,7 +97,8 @@ public class GeminiClient {
 
     @Retryable(
             maxAttempts = 3,
-            backoff = @Backoff(delay = 300, multiplier = 2)
+            backoff = @Backoff(delay = 300, multiplier = 2),
+            exclude = BusinessException.class
     )
     public String uploadFile(byte[] fileBytes, String mimeType, String displayName) {
         long startTime = System.nanoTime();
@@ -106,6 +115,12 @@ public class GeminiClient {
                     
                     if (response.getStatusCode().isError()) {
                         String errorBody = new String(responseBytes, StandardCharsets.UTF_8);
+
+                        if (response.getStatusCode().value() == 429) {
+                            log.error("Gemini API Quota Exceeded: {}", errorBody);
+                            throw new BusinessException(ErrorCode.AI_API_QUOTA_EXCEEDED);
+                        }
+
                         throw new RuntimeException("Gemini Upload Error [%s] | Body: %s".formatted(response.getStatusCode(), errorBody));
                     }
                     
