@@ -93,34 +93,34 @@
 <h3 style="font-size: 1.6em;">3-3. 팀원 소개 및 GitHub</h3>
 
 <table width="100%">
-  <tr style="text-align: center;">
-    <td width="33%">
+  <tr>
+    <td width="33%" align="center">
       <a href="https://github.com/heesik03">
         <img src="https://avatars.githubusercontent.com/u/193853205?v=4" width="160"/><br/>
         <strong>김희식</strong>
       </a>
     </td>
-    <td width="33%">
+    <td width="33%" align="center">
       <a href="https://github.com/zlkdjkdj">
         <img src="https://avatars.githubusercontent.com/u/163649114?v=4" width="160"/><br/>
         <strong>길재현</strong>
       </a>
     </td>
-    <td width="33%">
+    <td width="33%" align="center">
       <a href="https://github.com/Jinpiter">
         <img src="https://avatars.githubusercontent.com/u/202902928?v=4" width="160"/><br/>
         <strong>정진우</strong>
       </a>
     </td>
   </tr>
-  <tr style="text-align: center;">
-    <td>팀장</td>
-    <td>팀원</td>
-    <td>팀원</td>
+  <tr>
+    <td align="center">팀장</td>
+    <td align="center">팀원</td>
+    <td align="center">팀원</td>
   </tr>
-  <tr style="text-align: center;">
-    <td>PM & Full Stack</td>
-    <td>Frontend</td>
-    <td>Backend</td>
+  <tr>
+    <td align="center">PM &amp; Full Stack</td>
+    <td align="center">Frontend</td>
+    <td align="center">Backend</td>
   </tr>
 </table>
