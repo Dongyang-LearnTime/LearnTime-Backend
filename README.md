@@ -7,16 +7,18 @@
 
 # 1. 프로젝트 소개
 
-<h3 style="font-size: 1.4em;">1-1. 프로젝트 개요</h3>
+<h3 style="font-size: 1.6em;">1-1. 프로젝트 개요</h3>
 
-**LearnTime**은 AI를 활용하여 사용자의 공부, 운동와 같은 자기개발을 돕는 **종합 성장 플랫폼**입니다.
+**LearnTime**은 AI를 활용하여 사용자의 공부, 운동과 같은 자기개발을 돕는 **종합 성장 플랫폼**입니다.
 
 - **AI 맞춤 지원**: 공부 노트 분석, 퀴즈 생성, 운동 및 식단 피드백 등 AI 기반 맞춤형 기능을 통해 효율적인 성장을 돕습니다.
 - **게이미피케이션 도입**: 단순히 기록하는 것에 그치지 않고, 포인트, 티어, 배지 시스템을 통해 지속적인 동기 부여를 제공합니다. 성장에 대한 심리적 장벽을 낮추고 재미있게 목표를 달성할 수 있도록 유도합니다.
 
 ![Key Features](./docs/key-features.jpg)
 
-<h3 style="font-size: 1.4em;">1-2. 주요 기능 및 엔드포인트</h3>
+<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+
+<h3 style="font-size: 1.6em;">1-2. 주요 기능 및 엔드포인트</h3>
 
 프로젝트의 핵심 도메인별 제공하는 주요 기능은 다음과 같습니다.
 
@@ -29,7 +31,9 @@
 | **Social** | 다른 유저와의 친구 맺기, 원치 않는 유저 차단, 1:1 쪽지(Message) 기능, 실시간 알림(SSE) 수신 |
 | **Calendar** | 캘린더 기반의 월간/주간 학습 및 운동 일정 통합 관리, 개인 맞춤형 루틴 설정 및 조회 |
 
-<h3 style="font-size: 1.4em;">1-3. 외부 API</h3>
+<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+
+<h3 style="font-size: 1.6em;">1-3. 외부 API</h3>
 
 - **Google Gemini API**: 사용자의 공부 노트를 기반으로 내용을 분석하고 퀴즈를 자동 생성하며, 운동 및 식단에 대한 AI 피드백 등 맞춤형 분석 정보를 제공합니다.
 - **YouTube Data API v3**: 사용자의 관심사와 필요에 맞는 학습 및 운동 관련 추천 동영상을 검색하고 제공하는 데 활용됩니다.
@@ -39,7 +43,7 @@
 
 # 2. 기술 스택 및 아키텍처
 
-<h3 style="font-size: 1.4em;">2-1. 기술 스택</h3>
+<h3 style="font-size: 1.6em;">2-1. 기술 스택</h3>
 
 ### Backend
 <img src="https://img.shields.io/badge/Spring_Boot_4.0.3-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white"> <img src="https://img.shields.io/badge/Java_21-007396?style=for-the-badge&logo=openjdk&logoColor=white">
@@ -53,11 +57,15 @@
 ### Infra & DevOps
 <img src="https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=amazon-ec2&logoColor=white"> <img src="https://img.shields.io/badge/AWS_S3-569A31?style=for-the-badge&logo=amazon-s3&logoColor=white"> <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"> <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white"> <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white"> <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white">
 
-<h3 style="font-size: 1.4em;">2-2. 시스템 아키텍처</h3>
+<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+
+<h3 style="font-size: 1.6em;">2-2. 시스템 아키텍처</h3>
 
 ![System Architecture](./docs/architecture.jpg)
 
-<h3 style="font-size: 1.4em;">2-3. ERD</h3>
+<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+
+<h3 style="font-size: 1.6em;">2-3. ERD</h3>
 
 ![ERD](./docs/erd.png)
 
@@ -67,34 +75,37 @@
 
 # 3. 결과물 및 팀원 정보
 
-<h3 style="font-size: 1.4em;">3-1. 시연 영상</h3>
+<h3 style="font-size: 1.6em;">3-1. 시연 영상</h3>
 
 [![시연 영상](https://img.youtube.com/vi/6YJXfUVAnl0/0.jpg)](https://youtu.be/6YJXfUVAnl0)
 
+<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
 
-<h3 style="font-size: 1.4em;">3-2. 발표 자료</h3>
+<h3 style="font-size: 1.6em;">3-2. 발표 자료</h3>
 
 [ 발표 자료 보기](./docs/learn-time%20팀%20프로토타입%20발표%20자료.pdf)
 
-<h3 style="font-size: 1.4em;">3-3. 팀원 소개 및 GitHub</h3>
+<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
 
-<table>
+<h3 style="font-size: 1.6em;">3-3. 팀원 소개 및 GitHub</h3>
+
+<table width="100%">
   <tr style="text-align: center;">
-    <td>
+    <td width="33%">
       <a href="https://github.com/heesik03">
-        <img src="https://avatars.githubusercontent.com/u/193853205?v=4" width="100px"/><br/>
+        <img src="https://avatars.githubusercontent.com/u/193853205?v=4" width="160"/><br/>
         <strong>김희식</strong>
       </a>
     </td>
-    <td>
+    <td width="33%">
       <a href="https://github.com/zlkdjkdj">
-        <img src="https://avatars.githubusercontent.com/u/163649114?v=4" width="100px"/><br/>
+        <img src="https://avatars.githubusercontent.com/u/163649114?v=4" width="160"/><br/>
         <strong>길재현</strong>
       </a>
     </td>
-    <td>
+    <td width="33%">
       <a href="https://github.com/Jinpiter">
-        <img src="https://avatars.githubusercontent.com/u/202902928?v=4" width="100px"/><br/>
+        <img src="https://avatars.githubusercontent.com/u/202902928?v=4" width="160"/><br/>
         <strong>정진우</strong>
       </a>
     </td>
