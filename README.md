@@ -1,14 +1,14 @@
 <div style="text-align: center;">
+  <h2>AI를 활용한 종합 자기개발 & 성장 플랫폼, Learn-Time</h2>
+
   <img src="./docs/banner.png" alt="LearnTime Banner" width="100%">
   
   <br/>
-  
-  <h1>AI를 활용한 종합 자기개발 & 성장 플랫폼, LearnTime</h1>
 </div>
 
 # 1. 프로젝트 소개
 
-## 1-1. 프로젝트 개요
+<h3 style="font-size: 1.4em;">1-1. 프로젝트 개요</h3>
 
 **LearnTime**은 AI를 활용하여 사용자의 공부, 운동와 같은 자기개발을 돕는 **종합 성장 플랫폼**입니다.
 
@@ -17,7 +17,7 @@
 
 ![Key Features](./docs/key-features.jpg)
 
-## 1-2. 주요 기능 및 엔드포인트
+<h3 style="font-size: 1.4em;">1-2. 주요 기능 및 엔드포인트</h3>
 
 프로젝트의 핵심 도메인별 제공하는 주요 기능은 다음과 같습니다.
 
@@ -30,7 +30,7 @@
 | **Social** | 다른 유저와의 친구 맺기, 원치 않는 유저 차단, 1:1 쪽지(Message) 기능, 실시간 알림(SSE) 수신 |
 | **Calendar** | 캘린더 기반의 월간/주간 학습 및 운동 일정 통합 관리, 개인 맞춤형 루틴 설정 및 조회 |
 
-## 1-3. 외부 API
+<h3 style="font-size: 1.4em;">1-3. 외부 API</h3>
 
 - **Google Gemini API**: 사용자의 공부 노트를 기반으로 내용을 분석하고 퀴즈를 자동 생성하며, 운동 및 식단에 대한 AI 피드백 등 맞춤형 분석 정보를 제공합니다.
 - **YouTube Data API v3**: 사용자의 관심사와 필요에 맞는 학습 및 운동 관련 추천 동영상을 검색하고 제공하는 데 활용됩니다.
@@ -38,7 +38,7 @@
 
 # 2. 기술 스택 및 아키텍처
 
-## 2-1. 기술 스택
+<h3 style="font-size: 1.4em;">2-1. 기술 스택</h3>
 
 ### Backend
 <img src="https://img.shields.io/badge/Spring_Boot_4.0.3-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white"> <img src="https://img.shields.io/badge/Java_21-007396?style=for-the-badge&logo=openjdk&logoColor=white">
@@ -52,11 +52,11 @@
 ### Infra & DevOps
 <img src="https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=amazon-ec2&logoColor=white"> <img src="https://img.shields.io/badge/AWS_S3-569A31?style=for-the-badge&logo=amazon-s3&logoColor=white"> <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"> <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white"> <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white"> <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white">
 
-## 2-2. 시스템 아키텍처
+<h3 style="font-size: 1.4em;">2-2. 시스템 아키텍처</h3>
 
 ![System Architecture](./docs/architecture.jpg)
 
-## 2-3. ERD
+<h3 style="font-size: 1.4em;">2-3. ERD</h3>
 
 ![ERD](./docs/erd.png)
 
@@ -64,16 +64,16 @@
 
 # 3. 결과물 및 팀원 정보
 
-## 3-1. 시연 영상
+<h3 style="font-size: 1.4em;">3-1. 시연 영상</h3>
 
 [![시연 영상](https://img.youtube.com/vi/6YJXfUVAnl0/0.jpg)](https://youtu.be/6YJXfUVAnl0)
 
 
-## 3-2. 발표 자료
+<h3 style="font-size: 1.4em;">3-2. 발표 자료</h3>
 
 [ 발표 자료 보기](./docs/learn-time%20팀%20프로토타입%20발표%20자료.pdf)
 
-## 3-3. 팀원 소개 및 GitHub
+<h3 style="font-size: 1.4em;">3-3. 팀원 소개 및 GitHub</h3>
 
 <table>
   <tr style="text-align: center;">
