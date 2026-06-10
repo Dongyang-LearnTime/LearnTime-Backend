@@ -1,9 +1,8 @@
 <div style="text-align: center;">
-  <h2>AI를 활용한 종합 자기개발 & 성장 플랫폼, Learn-Time</h2>
+  <h2 style="margin-top: 10px; text-align: center;">AI를 활용한 종합 자기개발 & 성장 플랫폼, Learn-Time</h2>
 
   <img src="./docs/banner.png" alt="LearnTime Banner" width="100%">
   
-  <br/>
 </div>
 
 # 1. 프로젝트 소개
@@ -36,6 +35,8 @@
 - **YouTube Data API v3**: 사용자의 관심사와 필요에 맞는 학습 및 운동 관련 추천 동영상을 검색하고 제공하는 데 활용됩니다.
 - **식품의약품안전처 식품영양성분 데이터베이스 API**: 사용자가 식단(Meal) 기록 시 섭취한 음식의 칼로리 및 세부 영양소 데이터를 정확하게 조회하기 위해 사용됩니다.
 
+<br/>
+
 # 2. 기술 스택 및 아키텍처
 
 <h3 style="font-size: 1.4em;">2-1. 기술 스택</h3>
@@ -61,6 +62,8 @@
 ![ERD](./docs/erd.png)
 
 [ERD Cloud](https://www.erdcloud.com/d/mWyQh3cSBiSeABfgz)
+
+<br/>
 
 # 3. 결과물 및 팀원 정보
 
