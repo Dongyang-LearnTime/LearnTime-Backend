@@ -31,6 +31,12 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final String[] PUBLIC_GET_URLS = {
+            "/api/community/**",
+            "/api/profile/**",
+            "/api/user/search"
+    };
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
@@ -88,8 +94,7 @@ public class SecurityConfig {
                         })
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()       // 인증 예외 처리
-                        .requestMatchers(HttpMethod.GET, "/api/community/**").permitAll() // 커뮤니티 조회 제외
-                        .requestMatchers(HttpMethod.GET, "/api/profile/**").permitAll() // 커뮤니티 조회 제외
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_URLS).permitAll() // GET 요청 허용 API 모음
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한 검증
                         .anyRequest().authenticated()                      // 나머지 모든 요청은 인증(JWT) 필수
                 )
