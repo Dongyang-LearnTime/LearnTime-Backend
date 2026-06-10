@@ -16,7 +16,7 @@
 
 ![Key Features](./docs/key-features.jpg)
 
-<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
+---
 
 <h3 style="font-size: 1.6em;">1-2. 주요 기능 및 엔드포인트</h3>
 
@@ -31,13 +31,14 @@
 | **Social** | 다른 유저와의 친구 맺기, 원치 않는 유저 차단, 1:1 쪽지(Message) 기능, 실시간 알림(SSE) 수신 |
 | **Calendar** | 캘린더 기반의 월간/주간 학습 및 운동 일정 통합 관리, 개인 맞춤형 루틴 설정 및 조회 |
 
-<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
+---
 
 <h3 style="font-size: 1.6em;">1-3. 외부 API</h3>
 
 - **Google Gemini API**: 사용자의 공부 노트를 기반으로 내용을 분석하고 퀴즈를 자동 생성하며, 운동 및 식단에 대한 AI 피드백 등 맞춤형 분석 정보를 제공합니다.
 - **YouTube Data API v3**: 사용자의 관심사와 필요에 맞는 학습 및 운동 관련 추천 동영상을 검색하고 제공하는 데 활용됩니다.
 - **식품의약품안전처 식품영양성분 데이터베이스 API**: 사용자가 식단(Meal) 기록 시 섭취한 음식의 칼로리 및 세부 영양소 데이터를 정확하게 조회하기 위해 사용됩니다.
+---
 
 <br/>
 
@@ -57,19 +58,21 @@
 ### Infra & DevOps
 <img src="https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=amazon-ec2&logoColor=white"> <img src="https://img.shields.io/badge/AWS_S3-569A31?style=for-the-badge&logo=amazon-s3&logoColor=white"> <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"> <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white"> <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white"> <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white">
 
-<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
+---
 
 <h3 style="font-size: 1.6em;">2-2. 시스템 아키텍처</h3>
 
 ![System Architecture](./docs/architecture.jpg)
 
-<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
+---
 
 <h3 style="font-size: 1.6em;">2-3. ERD</h3>
 
 ![ERD](./docs/erd.png)
 
 [ERD Cloud](https://www.erdcloud.com/d/mWyQh3cSBiSeABfgz)
+
+---
 
 <br/>
 
@@ -79,13 +82,13 @@
 
 [![시연 영상](https://img.youtube.com/vi/6YJXfUVAnl0/0.jpg)](https://youtu.be/6YJXfUVAnl0)
 
-<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
+---
 
 <h3 style="font-size: 1.6em;">3-2. 발표 자료</h3>
 
 [ 발표 자료 보기](./docs/learn-time%20팀%20프로토타입%20발표%20자료.pdf)
 
-<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
+---
 
 <h3 style="font-size: 1.6em;">3-3. 팀원 소개 및 GitHub</h3>
 
