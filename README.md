@@ -16,7 +16,7 @@
 
 ![Key Features](./docs/key-features.jpg)
 
-<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
 
 <h3 style="font-size: 1.6em;">1-2. 주요 기능 및 엔드포인트</h3>
 
@@ -31,7 +31,7 @@
 | **Social** | 다른 유저와의 친구 맺기, 원치 않는 유저 차단, 1:1 쪽지(Message) 기능, 실시간 알림(SSE) 수신 |
 | **Calendar** | 캘린더 기반의 월간/주간 학습 및 운동 일정 통합 관리, 개인 맞춤형 루틴 설정 및 조회 |
 
-<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
 
 <h3 style="font-size: 1.6em;">1-3. 외부 API</h3>
 
@@ -57,13 +57,13 @@
 ### Infra & DevOps
 <img src="https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=amazon-ec2&logoColor=white"> <img src="https://img.shields.io/badge/AWS_S3-569A31?style=for-the-badge&logo=amazon-s3&logoColor=white"> <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"> <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white"> <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white"> <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white">
 
-<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
 
 <h3 style="font-size: 1.6em;">2-2. 시스템 아키텍처</h3>
 
 ![System Architecture](./docs/architecture.jpg)
 
-<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
 
 <h3 style="font-size: 1.6em;">2-3. ERD</h3>
 
@@ -79,13 +79,13 @@
 
 [![시연 영상](https://img.youtube.com/vi/6YJXfUVAnl0/0.jpg)](https://youtu.be/6YJXfUVAnl0)
 
-<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
 
 <h3 style="font-size: 1.6em;">3-2. 발표 자료</h3>
 
 [ 발표 자료 보기](./docs/learn-time%20팀%20프로토타입%20발표%20자료.pdf)
 
-<div style="border-top: 1px solid #30363d; margin: 15px 0;"></div>
+<div style="border-top: 1px solid #555555; margin: 24px 0;"></div>
 
 <h3 style="font-size: 1.6em;">3-3. 팀원 소개 및 GitHub</h3>
 
