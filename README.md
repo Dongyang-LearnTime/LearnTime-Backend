@@ -1,4 +1,4 @@
-<div style="text-align: center;">
+<div align="center">
   <h2 style="margin-top: 10px; text-align: center;">AI를 활용한 종합 자기개발 & 성장 플랫폼, Learn-Time</h2>
 
   <img src="./docs/banner.png" alt="LearnTime Banner" width="100%">
