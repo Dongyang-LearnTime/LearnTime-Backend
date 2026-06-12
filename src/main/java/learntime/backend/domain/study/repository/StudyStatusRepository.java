@@ -68,13 +68,13 @@ public interface StudyStatusRepository extends JpaRepository<StudyStatus, Long> 
                    "FROM study_daily_plan p " +
                    "JOIN study_member m ON p.study_id = m.study_id " +
                    "WHERE p.plan_date < :targetDate " +
+                   "  AND m.status = :status " +
                    "  AND NOT EXISTS ( " +
                    "      SELECT 1 FROM study_status s " +
                    "      WHERE s.study_member_id = m.study_member_id " +
                    "        AND s.study_daily_plan_id = p.study_daily_plan_id " +
-                   "        AND m.status = :status" +
-                   ")", nativeQuery = true)
-    int insertMissingStatusesAsFailure(@Param("targetDate") LocalDate targetDate, @Param("status") StudyMemberStatus status);
+                   "  )", nativeQuery = true)
+    int insertMissingStatusesAsFailure(@Param("targetDate") LocalDate targetDate, @Param("status") String status);
 
     // 기존 미완료 과거 상태를 실패로 업데이트함
     @Modifying(clearAutomatically = true)

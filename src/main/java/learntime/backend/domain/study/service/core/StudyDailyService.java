@@ -232,7 +232,7 @@ public class StudyDailyService {
         long startTime = System.currentTimeMillis();
 
         // 미생성된 상태를 FAILURE로 일괄 생성함
-        int insertedCount = studyStatusRepository.insertMissingStatusesAsFailure(today, StudyMemberStatus.ACTIVE);
+        int insertedCount = studyStatusRepository.insertMissingStatusesAsFailure(today, StudyMemberStatus.ACTIVE.name());
         
         // 미완료된 상태를 FAILURE로 업데이트함
         int updatedCount = studyStatusRepository.bulkFailIncompleteStatuses(today);
