@@ -96,19 +96,19 @@
   <tr>
     <td width="33%" align="center">
       <a href="https://github.com/heesik03">
-        <img src="https://avatars.githubusercontent.com/u/193853205?v=4" width="160"/><br/>
+        <img src="https://github.com/heesik03.png" width="160"/><br/>
         <strong>김희식</strong>
       </a>
     </td>
     <td width="33%" align="center">
       <a href="https://github.com/zlkdjkdj">
-        <img src="https://avatars.githubusercontent.com/u/163649114?v=4" width="160"/><br/>
+        <img src="https://github.com/zlkdjkdj.png" width="160"/><br/>
         <strong>길재현</strong>
       </a>
     </td>
     <td width="33%" align="center">
       <a href="https://github.com/Jinpiter">
-        <img src="https://avatars.githubusercontent.com/u/202902928?v=4" width="160"/><br/>
+        <img src="https://github.com/Jinpiter.png" width="160"/><br/>
         <strong>정진우</strong>
       </a>
     </td>
