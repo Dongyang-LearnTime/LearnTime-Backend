@@ -1,14 +1,14 @@
 package learntime.backend.domain.study.service.facade;
 
-import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
-import learntime.backend.domain.study.dto.request.UpdateStudyRestScheduleRequestDTO;
+import learntime.backend.domain.study_plan.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study_plan.dto.request.UpdateStudyRestScheduleRequestDTO;
 import learntime.backend.domain.study.dto.request.UpdateStudyTitleRequestDTO;
-import learntime.backend.domain.study.dto.response.TocListResponseDTO;
-import learntime.backend.domain.study.service.ai.TocExtractionService;
+import learntime.backend.domain.study_plan.dto.response.TocListResponseDTO;
+import learntime.backend.domain.study_plan.service.ai.TocExtractionService;
 import learntime.backend.domain.study.service.core.StudyInitializationService;
 import learntime.backend.domain.study.service.core.StudyManagementService;
-import learntime.backend.domain.study.service.core.StudyPlanGenerationService;
-import learntime.backend.domain.study.service.core.StudyRestService;
+import learntime.backend.domain.study_plan.service.core.StudyPlanGenerationService;
+import learntime.backend.domain.study_plan.service.core.StudyRestService;
 import learntime.backend.global.utils.FileValidatorUtil;
 import learntime.backend.global.utils.PromptQuotaUtil;
 import lombok.RequiredArgsConstructor;

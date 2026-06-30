@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 // 스터디 생성, 재생성, 초기화 등 상태를 변경하는 로직 담당 서비스
 @Slf4j
 @Service
@@ -28,12 +30,16 @@ public class StudyManagementService {
         Study study = studyRepository.findById(request.studyId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
-        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                         request.studyId(),
                         userId,
-                        StudyMemberStatus.ACTIVE
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        if (studyMember.getStatus() == StudyMemberStatus.COMPLETED) {
+            throw new StudyException(StudyErrorCode.STUDY_MEMBER_ALREADY_COMPLETED);
+        }
 
         // 방장 권한 검증
         StudyAuthUtil.checkOwnerRole(studyMember);
@@ -57,10 +63,10 @@ public class StudyManagementService {
             throw new StudyException(StudyErrorCode.STUDY_NOT_FOUND);
         }
 
-        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                         studyId,
                         userId,
-                        StudyMemberStatus.ACTIVE
+                        java.util.List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 

@@ -41,7 +41,8 @@ public enum StudyErrorCode implements BaseErrorCode {
     TODAY_REST_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-031", "오늘을 새 휴무일로 변경할 수 없습니다."),
     WITHDRAWN_MEMBER_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "STUDY-032", "탈퇴한 스터디에서는 해당 작업을 수행할 수 없습니다."),
     OWNER_LEAVE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-033", "방장은 스터디를 탈퇴할 수 없습니다. 방장을 위임한 후 탈퇴해주세요."),
-    CANNOT_KICK_OWNER(HttpStatus.BAD_REQUEST, "STUDY-034", "방장은 강퇴할 수 없습니다.");
+    CANNOT_KICK_OWNER(HttpStatus.BAD_REQUEST, "STUDY-034", "방장은 강퇴할 수 없습니다."),
+    STUDY_MEMBER_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "STUDY-035", "진도를 모두 완료한 스터디는 수정할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

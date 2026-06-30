@@ -7,11 +7,10 @@ import learntime.backend.domain.community.dto.response.PostListResponseDTO;
 import learntime.backend.domain.community.dto.response.PostResponseDTO;
 import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.model.PostLike;
-import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
+import learntime.backend.domain.study_progress.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 

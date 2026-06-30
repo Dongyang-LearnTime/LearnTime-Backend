@@ -10,16 +10,16 @@ import learntime.backend.global.error.exception.BusinessException;
 
 import learntime.backend.domain.badge.model.UserBadge;
 import learntime.backend.domain.point.enums.PointMilestone;
-import learntime.backend.domain.study.enums.ProgressStatus;
+import learntime.backend.domain.study_progress.enums.ProgressStatus;
 import learntime.backend.domain.study.model.StudyDailyPlan;
-import learntime.backend.domain.study.model.StudyFeedback;
-import learntime.backend.domain.study.model.StudyStatus;
+import learntime.backend.domain.study_feedback.model.StudyFeedback;
+import learntime.backend.domain.study_progress.model.StudyStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.notes.model.StudyNotes;
 import learntime.backend.domain.quiz.model.QuizHistory;
 import learntime.backend.domain.user.dto.response.UserBadgeResponseDTO;
 import learntime.backend.domain.user.dto.response.UserSummaryResponseDTO;
-import learntime.backend.domain.study.dto.response.TodayStudyPlanResponseDTO;
+import learntime.backend.domain.study_progress.dto.response.TodayStudyPlanResponseDTO;
 import learntime.backend.domain.user.dto.response.RecentActivityResponseDTO;
 import learntime.backend.domain.user.enums.RecentActivityType;
 

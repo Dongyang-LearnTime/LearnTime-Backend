@@ -37,7 +37,7 @@ public class StudyAuthUtil {
      */
     public static void verifyStudyMemberAllowWithdrawn(Long studyId, Long userId, StudyMemberRepository studyMemberRepository) {
         boolean isMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatusIn(
-                studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)
+                studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)
         );
         if (!isMember) {
             throw new StudyException(StudyErrorCode.STUDY_UNAUTHORIZED_ACCESS);

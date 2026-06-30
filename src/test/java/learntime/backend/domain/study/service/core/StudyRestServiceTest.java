@@ -1,20 +1,22 @@
 package learntime.backend.domain.study.service.core;
 
-import learntime.backend.domain.study.dto.request.UpdateStudyRestScheduleRequestDTO;
+import learntime.backend.domain.study_plan.dto.request.UpdateStudyRestScheduleRequestDTO;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
 import learntime.backend.domain.study.repository.StudyDailyPlanRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
-import learntime.backend.domain.study.repository.StudyRestDateRepository;
-import learntime.backend.domain.study.repository.StudyRestDayRepository;
-import learntime.backend.domain.study.service.util.StudyDateCalculator;
+import learntime.backend.domain.study_plan.repository.StudyRestDateRepository;
+import learntime.backend.domain.study_plan.repository.StudyRestDayRepository;
+import learntime.backend.domain.study_plan.service.util.StudyDateCalculator;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.enums.StudyPlanStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
+import learntime.backend.domain.study_plan.service.core.StudyRestManager;
+import learntime.backend.domain.study_plan.service.core.StudyRestService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

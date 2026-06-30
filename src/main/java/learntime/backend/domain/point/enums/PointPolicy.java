@@ -15,7 +15,8 @@ public enum PointPolicy {
     EXERCISE_DAILY_COMPLETED(10, "일일 운동 기록 완료"),
     EXERCISE_CONSECUTIVE_3_DAYS(50, "운동 3일 연속 달성 보너스"),
     EXERCISE_CONSECUTIVE_7_DAYS(100, "운동 7일 연속 달성 보너스"),
-    EXERCISE_CONSECUTIVE_30_DAYS(500, "운동 30일 연속 달성 보너스");
+    EXERCISE_CONSECUTIVE_30_DAYS(200, "운동 30일 연속 달성 보너스"),
+    STUDY_TOTAL_COMPLETED(100, "스터디 전체 진도 완료 보너스");
 
     private final int amount;
     private final String description;

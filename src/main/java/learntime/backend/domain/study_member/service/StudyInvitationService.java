@@ -91,7 +91,7 @@ public class StudyInvitationService {
                 .findByIdWithPessimisticLock(invitation.getStudy().getStudyId())
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
-        long memberCount = studyMemberRepository.countByStudyAndStatus(study, StudyMemberStatus.ACTIVE);
+        long memberCount = studyMemberRepository.countByStudyAndStatusIn(study, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED));
         if (memberCount >= STUDY_MEMBER_LIMIT_COUNT) {
             throw new StudyException(StudyErrorCode.STUDY_MEMBER_LIMIT_EXCEEDED);
         }
@@ -171,7 +171,7 @@ public class StudyInvitationService {
                         new StudyException(StudyErrorCode.STUDY_NOT_FOUND)
                 );
 
-        long memberCount = studyMemberRepository.countByStudyAndStatus(study, StudyMemberStatus.ACTIVE);
+        long memberCount = studyMemberRepository.countByStudyAndStatusIn(study, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED));
         if (memberCount >= STUDY_MEMBER_LIMIT_COUNT) {
             throw new StudyException(StudyErrorCode.STUDY_MEMBER_LIMIT_EXCEEDED);
         }

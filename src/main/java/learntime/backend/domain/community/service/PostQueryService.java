@@ -13,7 +13,7 @@ import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostRepository;
 import learntime.backend.domain.relationship.repository.UserBlockRepository;
-import learntime.backend.domain.study.service.core.StudyQueryService;
+import learntime.backend.domain.study_progress.service.StudyQueryService;
 import learntime.backend.global.utils.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
