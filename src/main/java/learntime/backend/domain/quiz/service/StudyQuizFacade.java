@@ -165,7 +165,7 @@ public class StudyQuizFacade {
         return studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                         studyId,
                         userId,
-                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
     }

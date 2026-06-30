@@ -62,6 +62,7 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
 
 
     long countByStudyAndStatus(Study study, StudyMemberStatus status);
+    long countByStudyAndStatusIn(Study study, List<StudyMemberStatus> statuses);
 
 
     @Query("""
