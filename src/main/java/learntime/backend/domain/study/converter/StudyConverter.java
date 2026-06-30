@@ -1,11 +1,21 @@
 package learntime.backend.domain.study.converter;
 
-import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
-import learntime.backend.domain.study.dto.response.*;
-import learntime.backend.domain.study.enums.ProgressStatus;
+import learntime.backend.domain.study_feedback.model.StudyFeedback;
+import learntime.backend.domain.study_feedback.service.core.StudyFeedbackResponseDTO;
+import learntime.backend.domain.study_plan.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study_progress.dto.response.StudyMemberContentResponseDTO;
+import learntime.backend.domain.study_progress.dto.response.StudyMemberRecentWeekInfoResponseDTO;
+import learntime.backend.domain.study_progress.dto.response.StudyProgressIndicatorResponseDTO;
+import learntime.backend.domain.study_progress.dto.response.StudyRecentWeekInfoResponseDTO;
+import learntime.backend.domain.study_progress.enums.ProgressStatus;
 import learntime.backend.domain.study_member.enums.StudyPlanStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study.model.*;
+import learntime.backend.domain.study.model.StudyDailyPlan;
+import learntime.backend.domain.study_plan.model.StudyRestDate;
+import learntime.backend.domain.study_plan.model.StudyRestDay;
+import learntime.backend.domain.study_progress.model.StudyMemberContent;
+import learntime.backend.domain.study_progress.model.StudyStatus;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;

@@ -1,6 +1,7 @@
 package learntime.backend.domain.study.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.study_progress.model.StudyStatus;
 import lombok.*;
 
 import java.time.LocalDate;

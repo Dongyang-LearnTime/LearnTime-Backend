@@ -3,6 +3,8 @@ package learntime.backend.domain.study.model;
 import jakarta.persistence.*;
 import learntime.backend.domain.study_member.enums.StudyPlanStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.domain.study_plan.model.StudyRestDate;
+import learntime.backend.domain.study_plan.model.StudyRestDay;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

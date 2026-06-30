@@ -1,14 +1,15 @@
 package learntime.backend.domain.study.repository;
 
-import learntime.backend.domain.study.enums.CompletionStatus;
-import learntime.backend.domain.study.enums.ProgressStatus;
+import learntime.backend.domain.study_progress.enums.CompletionStatus;
+import learntime.backend.domain.study_progress.enums.ProgressStatus;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.model.StudyDailyPlan;
-import learntime.backend.domain.study.model.StudyStatus;
+import learntime.backend.domain.study_progress.model.StudyStatus;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
+import learntime.backend.domain.study_progress.repository.StudyStatusRepository;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;

@@ -1,15 +1,15 @@
 package learntime.backend.domain.study.service.core;
 
-import learntime.backend.domain.study.converter.StudyConverter;
-import learntime.backend.domain.study.dto.response.StudyFeedbackResponseDTO;
+import learntime.backend.domain.study_feedback.service.core.StudyFeedbackResponseDTO;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
-import learntime.backend.domain.study.model.StudyFeedback;
-import learntime.backend.domain.study.repository.StudyFeedbackRepository;
-import learntime.backend.domain.study.service.ai.GeminiFeedbackService;
+import learntime.backend.domain.study_feedback.repository.StudyFeedbackRepository;
+import learntime.backend.domain.study_feedback.service.ai.GeminiFeedbackService;
+import learntime.backend.domain.study_feedback.service.core.StudyFeedbackService;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
+import learntime.backend.domain.study_progress.service.StudyQueryService;
 import learntime.backend.global.dto.PageResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

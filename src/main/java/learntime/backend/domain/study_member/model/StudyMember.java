@@ -4,9 +4,9 @@ import jakarta.persistence.*;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study.model.Study;
-import learntime.backend.domain.study.model.StudyFeedback;
-import learntime.backend.domain.study.model.StudyMemberContent;
-import learntime.backend.domain.study.model.StudyStatus;
+import learntime.backend.domain.study_feedback.model.StudyFeedback;
+import learntime.backend.domain.study_progress.model.StudyMemberContent;
+import learntime.backend.domain.study_progress.model.StudyStatus;
 import learntime.backend.domain.user.model.User;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -74,6 +74,10 @@ public class StudyMember {
 
     public void withdraw() {
         this.status = StudyMemberStatus.WITHDRAWN;
+    }
+
+    public void complete() {
+        this.status = StudyMemberStatus.COMPLETED;
     }
 
     public boolean isActive() {

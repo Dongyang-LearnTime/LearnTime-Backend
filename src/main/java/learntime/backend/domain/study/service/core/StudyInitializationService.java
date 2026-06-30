@@ -1,7 +1,7 @@
 package learntime.backend.domain.study.service.core;
 
 import learntime.backend.domain.study.converter.StudyConverter;
-import learntime.backend.domain.study.dto.request.GeminiStudyRequestDTO;
+import learntime.backend.domain.study_plan.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
@@ -13,6 +13,7 @@ import learntime.backend.domain.study_member.model.StudyInvitation;
 import learntime.backend.domain.study_member.repository.StudyInvitationRepository;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study.repository.StudyRepository;
+import learntime.backend.domain.study_plan.service.core.StudyRestManager;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;

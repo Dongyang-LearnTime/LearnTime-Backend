@@ -95,6 +95,16 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     """)
     List<StudyMember> findAllActiveByUserIdFetchStudy(@Param("userId") Long userId);
 
+    @Query("""
+        SELECT sm
+        FROM StudyMember sm
+        JOIN FETCH sm.study s
+        JOIN FETCH sm.user u
+        WHERE s.endDate < :today
+          AND sm.status = StudyMemberStatus.ACTIVE
+    """)
+    List<StudyMember> findActiveMembersWithExpiredStudy(@Param("today") java.time.LocalDate today);
+
     // ──────────────────────────────────────────────────────────
     // WITHDRAWN 포함 조회 (아카이브 / 탈퇴 후 읽기 허용용)
     // ──────────────────────────────────────────────────────────

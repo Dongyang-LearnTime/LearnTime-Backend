@@ -12,8 +12,8 @@ import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostLikeRepository;
 import learntime.backend.domain.community.repository.PostRepository;
 
-import learntime.backend.domain.study.dto.response.StudyTotalInfoResponseDTO;
-import learntime.backend.domain.study.service.core.StudyQueryService;
+import learntime.backend.domain.study_progress.dto.response.StudyTotalInfoResponseDTO;
+import learntime.backend.domain.study_progress.service.StudyQueryService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.domain.user.enums.Role;
