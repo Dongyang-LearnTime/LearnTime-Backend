@@ -14,6 +14,7 @@ import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,7 @@ public class NotificationService {
     private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
 
     // 프록시(Nginx 등) 환경에서 idle timeout으로 인한 연결 종료를 방지하기 위해 45초마다 하트비트 전송
-    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 45000)
+    @Scheduled(fixedRate = 45000)
     public void sendHeartbeat() {
         emitters.forEach((userId, userEmitters) -> {
             for (SseEmitter emitter : userEmitters) {

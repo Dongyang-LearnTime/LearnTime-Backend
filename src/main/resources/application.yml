@@ -5,6 +5,18 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: cka8701@gmail.com
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
