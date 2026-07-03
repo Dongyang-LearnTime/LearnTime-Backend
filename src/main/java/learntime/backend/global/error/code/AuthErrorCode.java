@@ -19,7 +19,8 @@ public enum AuthErrorCode implements BaseErrorCode {
     USER_NAME_DUPLICATED(HttpStatus.CONFLICT, "AUTH-011", "이미 사용 중인 이름입니다."),
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "AUTH-012", "비밀번호가 일치하지 않습니다."),
     LOCKED_ACCOUNT(HttpStatus.FORBIDDEN, "AUTH-013", "계정이 잠겼습니다."),
-    DELETED_USER(HttpStatus.FORBIDDEN, "AUTH-014", "삭제된 계정입니다.");
+    DELETED_USER(HttpStatus.FORBIDDEN, "AUTH-014", "삭제된 계정입니다."),
+    USER_EMAIL_DUPLICATED(HttpStatus.CONFLICT, "AUTH-015", "이미 사용 중인 이메일입니다.");
 
     private final HttpStatus status;
     private final String code;

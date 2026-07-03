@@ -45,6 +45,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
     private final CustomPasswordEncoder customPasswordEncoder;
+    private final EmailVerificationService emailVerificationService;
 
     @Value("${jwt.access-expiration}")
     private long accessTime; // 엑세스 토큰 유효기간
@@ -121,6 +122,15 @@ public class AuthService {
     // 회원가입
     @Transactional
     public void createUser(SignUpRequestDTO signUpData) {
+        if (userRepository.existsByEmail(signUpData.email())) {
+            throw new AuthException(AuthErrorCode.USER_EMAIL_DUPLICATED);
+        }
+        if (userRepository.existsByName(signUpData.userName())) {
+            throw new AuthException(AuthErrorCode.USER_NAME_DUPLICATED);
+        }
+
+        emailVerificationService.verifySignupToken(signUpData.email(), signUpData.emailVerificationToken());
+
         // 필수 약관 동의 여부 확인
         for (Terms term : Terms.values()) {
             if (term.isRequired()) {

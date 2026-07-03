@@ -6,6 +6,7 @@ spring:
     import: optional:file:.env[.properties]
 
   mail:
+    verification-expiration-minutes: ${MAIL_VERIFICATION_EXPIRATION_MINUTES}
     host: smtp.gmail.com
     port: 587
     username: cka8701@gmail.com
