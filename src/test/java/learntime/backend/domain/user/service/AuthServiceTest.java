@@ -86,7 +86,7 @@ class AuthServiceTest {
                 );
 
         // 이메일 조회 mock
-        given(userRepository.findByEmail(loginRequest.email()))
+        given(userRepository.findByEmailForUpdate(loginRequest.email()))
                 .willReturn(Optional.of(user));
 
         // authenticate 성공 mock
@@ -96,7 +96,9 @@ class AuthServiceTest {
 
         // JWT 생성 mock
         given(jwtProvider.createToken(eq(user), any(Long.class)))
-                .willReturn("token");
+                .willReturn("refresh-token");
+        given(jwtProvider.createAccessToken(eq(user), any(Long.class), any()))
+                .willReturn("access-token");
 
         // when
         AuthService.TokenPair tokenPair =
@@ -122,7 +124,7 @@ class AuthServiceTest {
         // given
         given(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .willThrow(new BadCredentialsException("Bad credentials"));
-        given(userRepository.findByEmail(loginRequest.email())).willReturn(Optional.of(user));
+        given(userRepository.findByEmailForUpdate(loginRequest.email())).willReturn(Optional.of(user));
 
         // when & then
         assertThatThrownBy(() -> authService.login(loginRequest))
@@ -145,7 +147,7 @@ class AuthServiceTest {
 
         given(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .willThrow(new BadCredentialsException("Bad credentials"));
-        given(userRepository.findByEmail(loginRequest.email())).willReturn(Optional.of(user));
+        given(userRepository.findByEmailForUpdate(loginRequest.email())).willReturn(Optional.of(user));
 
         // when & then
         assertThatThrownBy(() -> authService.login(loginRequest))

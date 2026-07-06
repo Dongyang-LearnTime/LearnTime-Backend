@@ -29,6 +29,10 @@ public record SignUpRequestDTO (
     )
     String password,
 
+    @Schema(description = "이메일 인증 성공 후 발급받은 일회성 토큰")
+    @NotBlank(message = "이메일 인증은 필수입니다.")
+    String emailVerificationToken,
+
     @Schema(
             description = "약관 동의 여부 Map (key: Terms enum, value: 동의 여부)",
             example = """

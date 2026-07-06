@@ -4,10 +4,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import learntime.backend.domain.user.dto.request.EmailVerificationConfirmRequestDTO;
+import learntime.backend.domain.user.dto.request.EmailVerificationRequestDTO;
 import learntime.backend.domain.user.dto.request.LoginRequestDTO;
 import learntime.backend.domain.user.dto.request.SignUpRequestDTO;
+import learntime.backend.domain.user.dto.response.EmailVerificationResponseDTO;
 import learntime.backend.domain.user.dto.response.TokenResponseDTO;
 import learntime.backend.domain.user.service.AuthService;
+import learntime.backend.domain.user.service.EmailVerificationService;
 import learntime.backend.domain.user.service.UserService;
 import learntime.backend.global.error.exception.BusinessException;
 import learntime.backend.global.utils.CookieUtil;
@@ -29,6 +33,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final EmailVerificationService emailVerificationService;
 
     @Value("${jwt.refresh-expiration}")
     private long refreshTime; // 리프레쉬 토큰 유효기간
@@ -100,6 +105,21 @@ public class AuthController {
         authService.createUser(request);
         log.info("{} 회원가입 성공!", request.userName());
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/email-verifications")
+    @Operation(summary = "회원가입 이메일 인증 코드 발송", description = "회원가입 전 이메일로 6자리 인증 코드를 발송합니다.")
+    public ResponseEntity<Void> sendEmailVerificationCode(@Valid @RequestBody EmailVerificationRequestDTO request) {
+        emailVerificationService.sendVerificationCode(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/email-verifications/verify")
+    @Operation(summary = "회원가입 이메일 인증 코드 확인", description = "인증 코드를 확인하고 회원가입에 사용할 일회성 토큰을 발급합니다.")
+    public ResponseEntity<EmailVerificationResponseDTO> verifyEmailVerificationCode(
+            @Valid @RequestBody EmailVerificationConfirmRequestDTO request
+    ) {
+        return ResponseEntity.ok(emailVerificationService.verifyCode(request));
     }
 
     // 이름 중복 체크
