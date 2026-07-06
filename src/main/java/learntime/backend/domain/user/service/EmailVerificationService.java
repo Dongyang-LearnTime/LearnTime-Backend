@@ -21,13 +21,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileCopyUtils;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Slf4j
 @Service
@@ -41,8 +40,8 @@ public class EmailVerificationService {
 
     private final EmailVerificationRepository emailVerificationRepository;
     private final UserRepository userRepository;
-    private final EmailUtil emailUtil;
     private final SecureRandom secureRandom = new SecureRandom();
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${security.pepper}")
     private String pepper;
@@ -54,6 +53,14 @@ public class EmailVerificationService {
     @Transactional
     public void sendVerificationCode(EmailVerificationRequestDTO request) {
         String email = normalizeEmail(request.email());
+
+        // [Rate Limit 로직] 1분 이내에 동일 이메일로 3회 이상 요청 시 차단
+        LocalDateTime oneMinuteAgo = LocalDateTime.now().minusMinutes(1);
+        int recentRequestCount = emailVerificationRepository.countByEmailAndCreatedAtAfter(email, oneMinuteAgo);
+        
+        if (recentRequestCount >= 3) {
+            throw new AuthException(AuthErrorCode.TOO_MANY_REQUESTS);
+        }
 
         // 이미 가입된 이메일인지 확인
         if (userRepository.existsByEmail(email)) {
@@ -72,13 +79,12 @@ public class EmailVerificationService {
         );
         emailVerificationRepository.save(verification);
 
-        // HTML 템플릿 로드 후 이메일 전송
-        String htmlTemplate = loadSignupAuthHtmlTemplate().replace("{{AUTH_CODE}}", code);
-        emailUtil.sendHtmlEmail(email, SIGNUP_AUTH_SUBJECT, htmlTemplate);
+        // 이벤트 발행 후 비동기로 이메일 전송 (리스너에서 처리)
+        eventPublisher.publishEvent(new learntime.backend.domain.user.event.EmailSendEvent(email, code));
     }
 
     // 사용자가 입력한 인증 코드 검증
-    @Transactional
+    @Transactional(noRollbackFor = EmailException.class)
     public EmailVerificationResponseDTO verifyCode(EmailVerificationConfirmRequestDTO request) {
         String email = normalizeEmail(request.email());
         
@@ -180,16 +186,5 @@ public class EmailVerificationService {
     // 이메일 공백 제거
     private String normalizeEmail(String email) {
         return email.strip();
-    }
-
-    // 회원가입 인증용 HTML 템플릿 파일 읽어오기
-    private String loadSignupAuthHtmlTemplate() {
-        try {
-            ClassPathResource resource = new ClassPathResource(SIGNUP_AUTH_TEMPLATE_PATH);
-            return FileCopyUtils.copyToString(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            log.error("이메일 템플릿 로드 실패: {}", e.getMessage());
-            throw new FileException(FileErrorCode.FILE_READ_ERROR);
-        }
     }
 }

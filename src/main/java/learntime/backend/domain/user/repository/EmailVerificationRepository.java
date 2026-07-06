@@ -20,6 +20,8 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
             String verificationTokenHash
     );
 
+    int countByEmailAndCreatedAtAfter(String email, LocalDateTime createdAt);
+
     @Modifying
     @Query("DELETE FROM EmailVerification e WHERE e.createdAt < :cutoffDate")
     int deleteByCreatedAtBefore(@Param("cutoffDate") LocalDateTime cutoffDate);
