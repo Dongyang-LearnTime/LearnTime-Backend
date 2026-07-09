@@ -156,5 +156,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true)
     @Query(value = "DELETE FROM post WHERE deleted_at <= :threshold", nativeQuery = true)
     int hardDeletePostByThreshold(@Param("threshold") LocalDateTime threshold);
+
+    long countByCreatedAtAfter(LocalDateTime date);
 }
 
