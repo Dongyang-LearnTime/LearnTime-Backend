@@ -18,5 +18,6 @@ public record AdminUserDetailResponseDTO(
         @Schema(description = "로그인 실패 횟수") Integer failedAttempts,
         @Schema(description = "계정 잠금 상태") Boolean isLocked,
         @Schema(description = "계정 잠금 발생 시간") LocalDateTime lockedAt,
-        @Schema(description = "AI 할당량 남은 갯수") Integer aiRemainingCount
+        @Schema(description = "AI 할당량 남은 갯수") Integer aiRemainingCount,
+        @Schema(description = "프로필 사진 링크") String profileImageUrl
 ) {}

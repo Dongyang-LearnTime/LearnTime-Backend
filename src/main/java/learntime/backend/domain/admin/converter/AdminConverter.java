@@ -40,6 +40,7 @@ public class AdminConverter {
 
     public static AdminUserDetailResponseDTO toAdminUserDetailResponseDTO(User user, PromptQuotas quotas) {
         Integer remainingCount = (quotas != null) ? quotas.getRemainingCount() : 0;
+        String profileImageUrl = (user.getProfile() != null) ? user.getProfile().getProfileImageUrl() : null;
         
         return new AdminUserDetailResponseDTO(
                 user.getUserId(),
@@ -53,7 +54,8 @@ public class AdminConverter {
                 user.getFailedAttempts(),
                 user.isAccountLocked(),
                 user.getLockedAt(),
-                remainingCount
+                remainingCount,
+                profileImageUrl
         );
     }
 }
