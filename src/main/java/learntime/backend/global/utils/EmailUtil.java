@@ -38,4 +38,21 @@ public class EmailUtil {
             throw new EmailException(EmailErrorCode.EMAIL_SEND_FAILED);
         }
     }
+
+    public void sendEmail(String to, String subject, String text) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(text, false);
+
+            mailSender.send(message);
+            log.info("{} 에게 텍스트 이메일 전송 성공", to);
+        } catch (MessagingException e) {
+            log.error("텍스트 이메일 전송 실패: {}", e.getMessage(), e);
+            throw new EmailException(EmailErrorCode.EMAIL_SEND_FAILED);
+        }
+    }
 }

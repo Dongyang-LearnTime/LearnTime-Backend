@@ -57,4 +57,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u.userId FROM User u WHERE u.name LIKE %:keyword% AND u.userId < :lastUserId ORDER BY u.userId DESC")
     List<Long> findUserIdsByNameContainingWithCursor(@Param("keyword") String keyword, @Param("lastUserId") Long lastUserId, Pageable pageable);
+
+    @Query("SELECT u FROM User u WHERE (:keyword IS NULL OR u.name LIKE %:keyword% OR u.email LIKE %:keyword%) AND (:role IS NULL OR u.role = :role)")
+    Page<User> searchUsers(@Param("keyword") String keyword, @Param("role") learntime.backend.domain.user.enums.Role role, Pageable pageable);
+
+    long countByCreatedAtAfter(LocalDateTime date);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE User u SET u.role = :role WHERE u.userId = :userId")
+    void updateUserRole(@Param("userId") Long userId, @Param("role") learntime.backend.domain.user.enums.Role role);
 }

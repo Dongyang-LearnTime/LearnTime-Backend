@@ -47,4 +47,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     /** 내가 쓴 댓글 총 개수 */
     @Query("SELECT COUNT(c) FROM Comment c WHERE c.user.userId = :userId")
     long countByUserId(@Param("userId") Long userId);
+
+    long countByCreatedAtAfter(LocalDateTime date);
 }
