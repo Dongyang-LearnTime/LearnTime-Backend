@@ -12,11 +12,15 @@ import learntime.backend.domain.user.service.UserService;
 import learntime.backend.global.dto.PageResponse;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
+import learntime.backend.domain.admin.dto.request.AdminPointAwardRequest;
+import learntime.backend.domain.point.dto.PointEventDTO;
+import learntime.backend.domain.point.enums.PointType;
 import learntime.backend.global.error.code.FileErrorCode;
 import learntime.backend.global.error.exception.FileException;
 import learntime.backend.global.utils.EmailUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +41,7 @@ public class AdminUserService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final EmailUtil emailUtil;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 사용자 목록 페이징 조회
     public PageResponse<AdminUserListResponseDTO> searchUsers(String keyword, Role role, Pageable pageable) {
@@ -87,5 +92,20 @@ public class AdminUserService {
             log.error("관리자 이메일 템플릿 로드 실패: {}", e.getMessage());
             throw new FileException(FileErrorCode.FILE_READ_ERROR);
         }
+    }
+
+    // 사용자 포인트 지급 처리
+    @Transactional
+    public void awardPointToUser(Long userId, AdminPointAwardRequest request) {
+        if (!userRepository.existsById(userId)) {
+            throw new AuthException(AuthErrorCode.USER_NOT_FOUND);
+        }
+
+        eventPublisher.publishEvent(new PointEventDTO(
+                userId,
+                request.amount(),
+                PointType.EARN,
+                "[관리자 지급] " + request.description()
+        ));
     }
 }

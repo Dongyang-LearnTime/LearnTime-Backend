@@ -3,6 +3,7 @@ package learntime.backend.domain.admin.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import learntime.backend.domain.admin.dto.request.AdminPointAwardRequest;
 import learntime.backend.domain.admin.dto.request.AdminUserEmailRequest;
 import learntime.backend.domain.admin.dto.response.AdminUserDetailResponseDTO;
 import learntime.backend.domain.admin.dto.response.AdminUserListResponseDTO;
@@ -65,6 +66,16 @@ public class AdminUserController {
             @Valid @RequestBody AdminUserEmailRequest request) {
         
         adminUserService.sendEmailToUser(userId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{userId}/points")
+    @Operation(summary = "사용자 포인트 지급", description = "관리자 권한으로 특정 사용자에게 포인트를 수동으로 지급합니다.")
+    public ResponseEntity<Void> awardPointToUser(
+            @PathVariable Long userId,
+            @Valid @RequestBody AdminPointAwardRequest request) {
+        
+        adminUserService.awardPointToUser(userId, request);
         return ResponseEntity.ok().build();
     }
 }
