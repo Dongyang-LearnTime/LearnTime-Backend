@@ -89,7 +89,7 @@ public class MyPageController {
                                               HttpServletResponse response,
                                               @Valid @RequestBody DeleteAccountRequestDTO request) {
         
-        userService.deleteUser(userDetails.getUserId());
+        userService.deleteUser(userDetails.getUserId(), request.socialToken());
 
         if (refreshToken != null) {
             authService.logout(refreshToken);
