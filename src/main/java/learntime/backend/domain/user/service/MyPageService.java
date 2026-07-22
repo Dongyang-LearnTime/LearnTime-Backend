@@ -13,6 +13,8 @@ import learntime.backend.domain.relationship.converter.UserBlockConverter;
 import learntime.backend.domain.relationship.dto.response.MyBlockedUserListResponseDTO;
 import learntime.backend.domain.relationship.model.UserBlock;
 import learntime.backend.domain.relationship.repository.UserBlockRepository;
+import learntime.backend.domain.user.dto.request.UnlinkGoogleRequestDTO;
+import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.domain.user.converter.UserConverter;
 import learntime.backend.domain.user.dto.response.MyPageResponseDTO;
 import learntime.backend.domain.user.dto.response.MyPageSummaryResponseDTO;
@@ -39,10 +41,12 @@ public class MyPageService {
     private final UserRepository userRepository;
     private final CustomPasswordEncoder passwordEncoder;
     private final AuthService authService;
+    private final OAuth2Service oAuth2Service;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PostLikeRepository postLikeRepository;
     private final UserBlockRepository userBlockRepository;
+
 
     @Transactional(readOnly = true)
     public MyPageResponseDTO getMyInfo(Long userId) {
@@ -71,6 +75,20 @@ public class MyPageService {
         }
         user.updatePassword(passwordEncoder.encode(newPassword));
     }
+
+    @Transactional
+    public void unlinkGoogleAccount(Long userId, UnlinkGoogleRequestDTO request) {
+        User user = findByUserOrThrow(userId);
+
+        if (user.getSocialProvider() != AuthProvider.GOOGLE) {
+            throw new AuthException(AuthErrorCode.NOT_GOOGLE_USER);
+        }
+
+        oAuth2Service.revokeSocialToken(AuthProvider.GOOGLE, request.googleToken());
+
+        user.convertToLocalUser(passwordEncoder.encode(request.newPassword()));
+    }
+
 
     /** 마이페이지 요약 통계 조회 */
     @Transactional(readOnly = true)
