@@ -21,7 +21,8 @@ public enum AuthErrorCode implements BaseErrorCode {
     LOCKED_ACCOUNT(HttpStatus.FORBIDDEN, "AUTH-013", "계정이 잠겼습니다."),
     DELETED_USER(HttpStatus.FORBIDDEN, "AUTH-014", "삭제된 계정입니다."),
     USER_EMAIL_DUPLICATED(HttpStatus.CONFLICT, "AUTH-015", "이미 사용 중인 이메일입니다."),
-    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "AUTH-016", "요청 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.");
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "AUTH-016", "요청 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요."),
+    INVALID_SOCIAL_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH-017", "유효하지 않거나 만료된 소셜 토큰입니다.");
 
     private final HttpStatus status;
     private final String code;

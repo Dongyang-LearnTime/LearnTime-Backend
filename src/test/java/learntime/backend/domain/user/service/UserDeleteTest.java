@@ -113,7 +113,7 @@ class UserDeleteTest {
         em.clear();
 
         // when: 탈퇴 수행
-        userService.deleteUser(withdrawingUser.getUserId());
+        userService.deleteUser(withdrawingUser.getUserId(), null);
 
         // DB 반영
         em.flush();
@@ -175,7 +175,7 @@ class UserDeleteTest {
         em.clear();
 
         // 1. Soft delete 처리 수행
-        userService.deleteUser(oldUser.getUserId());
+        userService.deleteUser(oldUser.getUserId(), null);
 
         // 2. 190일 전으로 deletedAt 강제 업데이트 (Native Query)
         LocalDateTime pastDate = LocalDateTime.now().minusDays(190);

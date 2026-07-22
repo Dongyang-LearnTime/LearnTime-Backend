@@ -9,16 +9,15 @@ import learntime.backend.domain.user.dto.request.SocialLoginRequestDTO;
 import learntime.backend.domain.user.dto.request.SocialSignUpRequestDTO;
 import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.domain.user.enums.Role;
+import learntime.backend.domain.user.enums.Terms;
 import learntime.backend.domain.user.model.PromptQuotas;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.model.UserTerms;
 import learntime.backend.domain.user.repository.PromptQuotaRepository;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.domain.user.repository.UserTermsRepository;
-import learntime.backend.domain.user.enums.Terms;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -27,6 +26,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
@@ -37,11 +37,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class OAuth2Service {
 
     private final UserRepository userRepository;
@@ -49,11 +47,29 @@ public class OAuth2Service {
     private final PromptQuotaRepository promptQuotaRepository;
     private final UserTermsRepository userTermsRepository;
     private final AuthService authService;
-    
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     @Value("${gemini.api.max-quota}")
     private int maxQuota;
+
+    public OAuth2Service(
+            UserRepository userRepository,
+            ProfileRepository profileRepository,
+            PromptQuotaRepository promptQuotaRepository,
+            UserTermsRepository userTermsRepository,
+            AuthService authService
+    ) {
+        this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
+        this.promptQuotaRepository = promptQuotaRepository;
+        this.userTermsRepository = userTermsRepository;
+        this.authService = authService;
+
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(5000);
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     @Transactional
     public Optional<AuthService.TokenPair> socialLogin(SocialLoginRequestDTO request) {
@@ -73,7 +89,7 @@ public class OAuth2Service {
             throw new AuthException(AuthErrorCode.LOCKED_ACCOUNT);
         }
 
-        // 4. JWT 토큰 발급
+        // JWT 토큰 발급
         return Optional.of(authService.generateTokenPair(user));
     }
 
@@ -84,11 +100,10 @@ public class OAuth2Service {
         
         // 2. 이미 가입되어 있는지 확인
         if (userRepository.findBySocialIdAndSocialProvider(userInfo.getProviderId(), userInfo.getProvider()).isPresent()) {
-            // 이미 가입된 경우
-            throw new AuthException(AuthErrorCode.USER_EMAIL_DUPLICATED); // 소셜은 이메일 대신 고유ID를 쓰지만 범용 에러 사용
+            throw new AuthException(AuthErrorCode.USER_EMAIL_DUPLICATED);
         }
 
-        // 2-2. 이메일 중복 검사 (이미 다른 가입 수단으로 등록된 이메일인지 검사)
+        // 2-2. 이메일 중복 검사
         if (userRepository.existsByEmail(userInfo.getEmail())) {
             throw new AuthException(AuthErrorCode.USER_EMAIL_DUPLICATED);
         }
@@ -137,45 +152,78 @@ public class OAuth2Service {
     }
 
     private OAuth2UserInfo getOAuth2UserInfo(AuthProvider provider, String token) {
-        if (provider == AuthProvider.GOOGLE) {
-            String userInfoUrl = "https://www.googleapis.com/oauth2/v3/userinfo";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            HttpEntity<String> entity = new HttpEntity<>("", headers);
+        if (token == null || token.isBlank()) {
+            throw new AuthException(AuthErrorCode.INVALID_SOCIAL_TOKEN);
+        }
 
+        if (provider == AuthProvider.GOOGLE) {
+            Map<String, Object> attributes;
             try {
-                ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                        userInfoUrl,
-                        HttpMethod.GET,
-                        entity,
-                        new ParameterizedTypeReference<>() {}
-                );
-                return new GoogleOAuth2UserInfo(response.getBody());
+                // ID Token(JWT 형태) 인지 Access Token 인지 분기 검증
+                if (isIdToken(token)) {
+                    String tokenInfoUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + token;
+                    ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                            tokenInfoUrl,
+                            HttpMethod.GET,
+                            null,
+                            new ParameterizedTypeReference<>() {}
+                    );
+                    attributes = response.getBody();
+                } else {
+                    String userInfoUrl = "https://www.googleapis.com/oauth2/v3/userinfo";
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setBearerAuth(token);
+                    HttpEntity<String> entity = new HttpEntity<>("", headers);
+
+                    ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                            userInfoUrl,
+                            HttpMethod.GET,
+                            entity,
+                            new ParameterizedTypeReference<>() {}
+                    );
+                    attributes = response.getBody();
+                }
+
+                GoogleOAuth2UserInfo userInfo = new GoogleOAuth2UserInfo(attributes);
+
+                if (userInfo.getProviderId() == null || userInfo.getProviderId().isBlank() ||
+                    userInfo.getEmail() == null || userInfo.getEmail().isBlank()) {
+                    log.error("Google OAuth2 user info validation failed: missing sub or email");
+                    throw new AuthException(AuthErrorCode.INVALID_SOCIAL_TOKEN);
+                }
+
+                return userInfo;
             } catch (RestClientException e) {
-                log.error("Google API Error: {}", e.getMessage());
-                throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN); // 적절한 소셜 토큰 에러로 변환 가능
+                log.error("Google API Error during token verification: {}", e.getMessage());
+                throw new AuthException(AuthErrorCode.INVALID_SOCIAL_TOKEN);
             }
         } else if (provider == AuthProvider.NAVER) {
-            // 향후 네이버 구현
             throw new UnsupportedOperationException("네이버 로그인은 아직 지원하지 않습니다.");
         }
-        
+
         throw new IllegalArgumentException("지원하지 않는 소셜 로그인입니다.");
     }
 
-    
+    private boolean isIdToken(String token) {
+        return token.startsWith("eyJ") && token.contains(".");
+    }
+
     public void revokeSocialToken(AuthProvider provider, String token) {
+        if (token == null || token.isBlank()) {
+            log.info("Social token is empty. Skipping revoke.");
+            return;
+        }
+
         if (provider == AuthProvider.GOOGLE) {
             String revokeUrl = "https://oauth2.googleapis.com/revoke?token=" + token;
             try {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
                 HttpEntity<String> entity = new HttpEntity<>("", headers);
-                
+
                 restTemplate.postForEntity(revokeUrl, entity, String.class);
             } catch (RestClientException e) {
                 log.warn("Failed to revoke Google token. It might already be invalid: {}", e.getMessage());
-                // 연동 해제 실패(토큰 만료 등)하더라도 회원 탈퇴는 진행되도록 예외를 무시하거나 로깅만 합니다.
             }
         }
     }
