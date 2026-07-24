@@ -49,6 +49,7 @@ import learntime.backend.domain.user.converter.UserConverter;
 import learntime.backend.domain.user.dto.response.BadgeTierInfoResponseDTO;
 import learntime.backend.domain.user.dto.response.RecentActivityResponseDTO;
 import learntime.backend.domain.user.dto.response.UserSummaryResponseDTO;
+import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.global.dto.CursorResponse;
 
 import java.util.ArrayList;
@@ -91,6 +92,7 @@ public class UserService {
     private final RoutineRepository routineRepository;
     private final UserBlockRepository userBlockRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final OAuth2Service oAuth2Service;
 
     private static final DateTimeFormatter DELETED_USER_TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -179,11 +181,16 @@ public class UserService {
 
     // 회원 탈퇴 로직
     @Transactional
-    public void deleteUser(Long userId) {
+    public void deleteUser(Long userId, String socialToken) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         LocalDateTime deletedAt = LocalDateTime.now();
+
+        // 소셜 연동 해제
+        if (socialToken != null && !socialToken.isBlank() && user.getSocialProvider() != AuthProvider.LOCAL) {
+            oAuth2Service.revokeSocialToken(user.getSocialProvider(), socialToken);
+        }
 
         // 탈퇴 시 토큰/할당량/개인 기록을 먼저 정리한다.
         refreshTokenRepository.deleteByUser(user);

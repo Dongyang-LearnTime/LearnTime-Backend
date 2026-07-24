@@ -250,4 +250,14 @@ public class User {
         }
     }
 
+    // 소셜 로그인(구글) 연동 해제 및 일반 계정 전환
+    public void convertToLocalUser(String encodedPassword) {
+        if (encodedPassword != null && !encodedPassword.isBlank()) {
+            this.password = encodedPassword;
+            this.socialId = null;
+            this.socialProvider = AuthProvider.LOCAL;
+        }
+    }
+
 }
+

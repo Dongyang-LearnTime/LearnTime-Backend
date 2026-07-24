@@ -68,7 +68,7 @@ public class AdminUserService {
     @Transactional
     public void forceWithdrawUser(Long userId) {
         // 회원 탈퇴는 기존 UserService 로직 활용 (데이터 정리, soft delete, 익명화 등)
-        userService.deleteUser(userId);
+        userService.deleteUser(userId, null);
     }
 
     // 사용자 이메일 발송 처리

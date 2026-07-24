@@ -5,7 +5,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.user.dto.request.UpdateNameRequestDTO;
 import learntime.backend.domain.user.dto.request.UpdatePasswordRequestDTO;
+import learntime.backend.domain.user.dto.request.UnlinkGoogleRequestDTO;
 import learntime.backend.domain.relationship.dto.response.MyBlockedUserListResponseDTO;
+
 import learntime.backend.domain.user.dto.response.MyPageResponseDTO;
 import learntime.backend.domain.user.service.MyPageService;
 import learntime.backend.global.security.CustomUserDetails;
@@ -82,6 +84,15 @@ public class MyPageController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/unlink-google")
+    @Operation(summary = "구글 연동 해제 및 일반 계정 전환", description = "구글 소셜 연동을 해제하고 사용자에게 전달받은 비밀번호를 저장하여 일반 계정으로 전환합니다. (이메일은 유지)")
+    public ResponseEntity<Void> unlinkGoogle(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                             @Valid @RequestBody UnlinkGoogleRequestDTO request) {
+        myPageService.unlinkGoogleAccount(userDetails.getUserId(), request);
+        return ResponseEntity.ok().build();
+    }
+
+
     @DeleteMapping
     @Operation(summary = "회원 탈퇴", description = "'회원 탈퇴' 문구를 검증한 후 사용자의 정보를 Soft Delete 및 로그아웃 처리합니다.")
     public ResponseEntity<Void> deleteAccount(@AuthenticationPrincipal CustomUserDetails userDetails,
@@ -89,7 +100,7 @@ public class MyPageController {
                                               HttpServletResponse response,
                                               @Valid @RequestBody DeleteAccountRequestDTO request) {
         
-        userService.deleteUser(userDetails.getUserId());
+        userService.deleteUser(userDetails.getUserId(), request.socialToken());
 
         if (refreshToken != null) {
             authService.logout(refreshToken);
