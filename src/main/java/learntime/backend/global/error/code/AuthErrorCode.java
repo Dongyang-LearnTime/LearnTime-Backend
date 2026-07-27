@@ -23,7 +23,8 @@ public enum AuthErrorCode implements BaseErrorCode {
     USER_EMAIL_DUPLICATED(HttpStatus.CONFLICT, "AUTH-015", "이미 사용 중인 이메일입니다."),
     TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "AUTH-016", "요청 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요."),
     INVALID_SOCIAL_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH-017", "유효하지 않거나 만료된 소셜 토큰입니다."),
-    NOT_GOOGLE_USER(HttpStatus.BAD_REQUEST, "AUTH-018", "구글 소셜 로그인 계정이 아닙니다.");
+    NOT_GOOGLE_USER(HttpStatus.BAD_REQUEST, "AUTH-018", "구글 소셜 로그인 계정이 아닙니다."),
+    SOCIAL_USER_CANNOT_RESET_PASSWORD(HttpStatus.BAD_REQUEST, "AUTH-019", "소셜 로그인 계정은 비밀번호를 재설정할 수 없습니다.");
 
 
     private final HttpStatus status;
