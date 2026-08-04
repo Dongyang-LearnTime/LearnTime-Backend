@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.user.dto.request.UpdateNameRequestDTO;
 import learntime.backend.domain.user.dto.request.UpdatePasswordRequestDTO;
 import learntime.backend.domain.user.dto.request.UnlinkGoogleRequestDTO;
+import learntime.backend.domain.user.dto.request.UnlinkKakaoRequestDTO;
 import learntime.backend.domain.relationship.dto.response.MyBlockedUserListResponseDTO;
 
 import learntime.backend.domain.user.dto.response.MyPageResponseDTO;
@@ -89,6 +90,14 @@ public class MyPageController {
     public ResponseEntity<Void> unlinkGoogle(@AuthenticationPrincipal CustomUserDetails userDetails,
                                              @Valid @RequestBody UnlinkGoogleRequestDTO request) {
         myPageService.unlinkGoogleAccount(userDetails.getUserId(), request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/unlink-kakao")
+    @Operation(summary = "카카오 연동 해제 및 일반 계정 전환", description = "카카오 소셜 연동을 해제하고 사용자에게 전달받은 비밀번호를 저장하여 일반 계정으로 전환합니다. (이메일은 유지)")
+    public ResponseEntity<Void> unlinkKakao(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                            @Valid @RequestBody UnlinkKakaoRequestDTO request) {
+        myPageService.unlinkKakaoAccount(userDetails.getUserId(), request);
         return ResponseEntity.ok().build();
     }
 
