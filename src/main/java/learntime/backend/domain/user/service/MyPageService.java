@@ -14,6 +14,7 @@ import learntime.backend.domain.relationship.dto.response.MyBlockedUserListRespo
 import learntime.backend.domain.relationship.model.UserBlock;
 import learntime.backend.domain.relationship.repository.UserBlockRepository;
 import learntime.backend.domain.user.dto.request.UnlinkGoogleRequestDTO;
+import learntime.backend.domain.user.dto.request.UnlinkKakaoRequestDTO;
 import learntime.backend.domain.user.enums.AuthProvider;
 import learntime.backend.domain.user.converter.UserConverter;
 import learntime.backend.domain.user.dto.response.MyPageResponseDTO;
@@ -85,6 +86,19 @@ public class MyPageService {
         }
 
         oAuth2Service.revokeSocialToken(AuthProvider.GOOGLE, request.googleToken());
+
+        user.convertToLocalUser(passwordEncoder.encode(request.newPassword()));
+    }
+
+    @Transactional
+    public void unlinkKakaoAccount(Long userId, UnlinkKakaoRequestDTO request) {
+        User user = findByUserOrThrow(userId);
+
+        if (user.getSocialProvider() != AuthProvider.KAKAO) {
+            throw new AuthException(AuthErrorCode.NOT_KAKAO_USER);
+        }
+
+        oAuth2Service.unlinkSocialAccount(AuthProvider.KAKAO, request.kakaoToken());
 
         user.convertToLocalUser(passwordEncoder.encode(request.newPassword()));
     }

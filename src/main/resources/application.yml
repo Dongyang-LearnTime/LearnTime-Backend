@@ -9,6 +9,22 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+          kakao:
+            client-id: ${KAKAO_REST_API_KEY}
+            client-secret: ${KAKAO_REST_API_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: ${KAKAO_REDIRECT_URI}
+            scope:
+              - profile_nickname
+              - account_email
+        provider:
+          kakao:
+            authorization-uri: "https://kauth.kakao.com/oauth/authorize"
+            token-uri: "https://kauth.kakao.com/oauth/token"
+            user-info-uri: "https://kapi.kakao.com/v2/user/me"
+            logout-uri: "https://kapi.kakao.com/v1/user/logout"
+            unlink-uri: "https://kapi.kakao.com/v1/user/unlink"
+            userNameAttribute: id
 
   config:
     import: optional:file:.env[.properties]
