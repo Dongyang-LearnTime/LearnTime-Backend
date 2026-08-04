@@ -50,10 +50,10 @@ class EmailVerificationServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private EmailUtil emailUtil;
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @Test
-    @DisplayName("인증 코드 발송 시 코드를 해시로 저장하고 인증 메일을 발송한다.")
+    @DisplayName("인증 코드 발송 시 코드를 해시로 저장하고 인증 메일 이벤트를 발행한다.")
     void sendVerificationCode() {
         ReflectionTestUtils.setField(emailVerificationService, "pepper", PEPPER);
         given(userRepository.existsByEmail(EMAIL)).willReturn(false);
@@ -71,9 +71,7 @@ class EmailVerificationServiceTest {
         assertThat(savedVerification.getCodeHash()).isNotBlank();
         assertThat(savedVerification.getExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(4));
 
-        ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
-        verify(emailUtil).sendHtmlEmail(eq(EMAIL), eq("[Learn-Time] 회원가입 이메일 인증"), htmlCaptor.capture());
-        assertThat(htmlCaptor.getValue()).doesNotContain("{{AUTH_CODE}}");
+        verify(eventPublisher).publishEvent(any(learntime.backend.domain.user.event.EmailSendEvent.class));
     }
 
     @Test
@@ -86,7 +84,7 @@ class EmailVerificationServiceTest {
                 .isInstanceOf(AuthException.class)
                 .hasMessage(AuthErrorCode.USER_EMAIL_DUPLICATED.getMessage());
 
-        verifyNoInteractions(emailVerificationRepository, emailUtil);
+        verifyNoInteractions(emailVerificationRepository, eventPublisher);
     }
 
     @Test

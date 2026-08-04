@@ -7,8 +7,8 @@ import learntime.backend.domain.user.enums.AuthProvider;
 
 @Schema(description = "소셜 로그인 요청 DTO")
 public record SocialLoginRequestDTO(
-        @NotNull(message = "소셜 제공자(provider)는 필수입니다. (GOOGLE, NAVER 등)")
-        @Schema(description = "소셜 플랫폼 (GOOGLE, NAVER)", example = "GOOGLE")
+        @NotNull(message = "소셜 제공자(provider)는 필수입니다. (GOOGLE, KAKAO 등)")
+        @Schema(description = "소셜 플랫폼 (GOOGLE, KAKAO)", example = "GOOGLE")
         AuthProvider provider,
 
         @NotBlank(message = "소셜 토큰은 필수입니다.")
