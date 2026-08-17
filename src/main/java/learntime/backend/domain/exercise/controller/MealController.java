@@ -6,6 +6,8 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.exercise.dto.request.MealRequestDTO;
 import learntime.backend.domain.exercise.dto.response.MealResponseDTO;
 import learntime.backend.domain.exercise.service.MealService;
+import learntime.backend.domain.user.enums.Terms;
+import learntime.backend.global.annotation.RequireTerms;
 import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/exercise/meal")
 @RequiredArgsConstructor
+@RequireTerms(Terms.BODY_DATA_COLLECT)
 @Tag(name = "운동 식단 API",description = "운동 식단 저장을 담당 (JWT필요)")
 public class MealController {
 

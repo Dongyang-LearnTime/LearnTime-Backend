@@ -16,7 +16,8 @@ public enum ExerciseErrorCode implements BaseErrorCode  {
     WEIGHT_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "EX-004", "신체 데이터를 찾을 수 없습니다."),
     ACCESS_DENIED_WEIGHT(HttpStatus.FORBIDDEN, "EX-005", "해당 신체 데이터에 대한 접근 권한이 없습니다."),
     EXERCISE_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "EX-006", "운동 기록을 찾을 수 없습니다."),
-    ACCESS_DENIED_EXERCISE(HttpStatus.FORBIDDEN, "EX-007", "해당 운동 기록에 대한 접근 권한이 없습니다.");
+    ACCESS_DENIED_EXERCISE(HttpStatus.FORBIDDEN, "EX-007", "해당 운동 기록에 대한 접근 권한이 없습니다."),
+    TERMS_NOT_AGREED_EXERCISE(HttpStatus.FORBIDDEN, "EX-008", "신체 데이터 수집 및 이용 약관(선택)에 동의해야 이용할 수 있는 기능입니다.");
 
     private final HttpStatus status;
     private final String code;
