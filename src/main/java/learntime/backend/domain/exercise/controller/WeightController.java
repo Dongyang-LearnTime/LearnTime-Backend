@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import learntime.backend.domain.exercise.dto.request.WeightRequestDTO;
 import learntime.backend.domain.exercise.dto.response.WeightResponseDTO;
 import learntime.backend.domain.exercise.service.WeightService;
+import learntime.backend.domain.user.enums.Terms;
+import learntime.backend.global.annotation.RequireTerms;
 import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/exercise/weight")
 @RequiredArgsConstructor
+@RequireTerms(Terms.BODY_DATA_COLLECT)
 @Tag(name = "신체 데이터 API", description = "신체데이터에 해당하는 체지방량과 몸무게 저장을 담당 (JWT 필요)")
 public class WeightController {
     private final WeightService weightService;

@@ -31,6 +31,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import learntime.backend.domain.user.dto.request.UpdateTermsRequestDTO;
+import learntime.backend.domain.user.model.UserTerms;
+import learntime.backend.domain.user.repository.UserTermsRepository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,6 +45,7 @@ import java.util.stream.Collectors;
 public class MyPageService {
 
     private final UserRepository userRepository;
+    private final UserTermsRepository userTermsRepository;
     private final CustomPasswordEncoder passwordEncoder;
     private final AuthService authService;
     private final OAuth2Service oAuth2Service;
@@ -54,6 +60,30 @@ public class MyPageService {
         User user = findByUserOrThrow(userId);
 
         return UserConverter.toMyPageResponseDTO(user);
+    }
+
+    @Transactional
+    public void updateTermsAgreement(Long userId, UpdateTermsRequestDTO request) {
+        if (request.terms().isRequired() && Boolean.FALSE.equals(request.agreed())) {
+            throw new AuthException(AuthErrorCode.TERMS_NOT_AGREED);
+        }
+
+        UserTerms userTerms = userTermsRepository.findByUser_UserIdAndTerms(userId, request.terms())
+                .orElseGet(() -> {
+                    User user = findByUserOrThrow(userId);
+                    return UserTerms.builder()
+                            .user(user)
+                            .terms(request.terms())
+                            .agreed(request.agreed())
+                            .agreedAt(LocalDateTime.now())
+                            .build();
+                });
+
+        if (userTerms.getUserTermsId() == null) {
+            userTermsRepository.save(userTerms);
+        } else {
+            userTerms.updateAgreed(request.agreed());
+        }
     }
 
     @Transactional

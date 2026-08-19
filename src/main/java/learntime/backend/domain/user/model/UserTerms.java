@@ -41,4 +41,8 @@ public class UserTerms {
         this.agreedAt = agreedAt;
     }
 
+    public void updateAgreed(Boolean agreed) {
+        this.agreed = agreed;
+        this.agreedAt = LocalDateTime.now();
+    }
 }

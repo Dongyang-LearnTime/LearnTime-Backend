@@ -34,6 +34,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 
+import learntime.backend.domain.user.dto.request.UpdateTermsRequestDTO;
+
 @RestController
 @RequestMapping("/api/user/me")
 @RequiredArgsConstructor
@@ -52,6 +54,14 @@ public class MyPageController {
     public ResponseEntity<MyPageResponseDTO> getMyPage(@AuthenticationPrincipal CustomUserDetails userDetails) {
         MyPageResponseDTO result = myPageService.getMyInfo(userDetails.getUserId());
         return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping("/terms")
+    @Operation(summary = "약관 동의 여부 수정", description = "사용자의 약관(선택/필수) 동의 여부를 수정합니다. 필수 약관은 철회할 수 없습니다.")
+    public ResponseEntity<Void> updateTerms(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                            @Valid @RequestBody UpdateTermsRequestDTO request) {
+        myPageService.updateTermsAgreement(userDetails.getUserId(), request);
+        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/name")

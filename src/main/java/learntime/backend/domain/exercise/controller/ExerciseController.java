@@ -9,6 +9,8 @@ import learntime.backend.domain.exercise.dto.response.WeeklyWeightStatsResponseD
 import learntime.backend.domain.exercise.service.ExerciseService;
 import learntime.backend.global.security.CustomUserDetails;
 import learntime.backend.global.dto.YoutubeVideoResponseDTO;
+import learntime.backend.domain.user.enums.Terms;
+import learntime.backend.global.annotation.RequireTerms;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/exercise")
 @RequiredArgsConstructor
+@RequireTerms(Terms.BODY_DATA_COLLECT)
 @Tag(name = "운동 기능 API", description = "추천 유튜브 영상을 가져오고, 수행한 운동 저장을 담당 (JWT 필요)")
 public class ExerciseController {
 
