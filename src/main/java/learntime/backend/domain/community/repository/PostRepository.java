@@ -1,5 +1,6 @@
 package learntime.backend.domain.community.repository;
 
+import learntime.backend.domain.community.enums.PostCategory;
 import learntime.backend.domain.community.model.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -25,6 +26,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "WHERE p.isNotice = false",
            countQuery = "SELECT COUNT(p) FROM Post p WHERE p.isNotice = false")
     Page<Post> findAllPosts(Pageable pageable);
+
+    /** 카테고리별 게시글 목록 페이징 조회 */
+    @Query(value = "SELECT p FROM Post p " +
+            "LEFT JOIN FETCH p.user u " +
+            "WHERE p.category = :category AND p.isNotice = false",
+           countQuery = "SELECT COUNT(p) FROM Post p WHERE p.category = :category AND p.isNotice = false")
+    Page<Post> findAllByCategory(@Param("category") PostCategory category, Pageable pageable);
 
     /** 제목 또는 내용으로 게시글을 페이징 조회합니다. (작성자 fetch join) */
     @Query(

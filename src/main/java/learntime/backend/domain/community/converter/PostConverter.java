@@ -28,8 +28,11 @@ public class PostConverter {
             Boolean isImageLoadSuccessful,
             List<CommentResponseDTO> comments,
             Boolean isLiked,
-            Boolean hasBlocked
-        ) {
+            Boolean hasBlocked,
+            String studyTitle,
+            Integer currentMemberCount,
+            Boolean isFull
+    ) {
         Long userId = post.getUser() != null ? post.getUser().getUserId() : null;
 
         String userName = post.getUser() != null ? post.getUser().getName() : "탈퇴한 사용자";
@@ -65,17 +68,22 @@ public class PostConverter {
                 .comments(comments)
                 .studyTotalIndicator(studyIndicator)
                 .studyId(post.getStudyId())
+                .studyTitle(studyTitle)
+                .currentMemberCount(currentMemberCount)
+                .isFull(isFull)
+                .category(post.getCategory())
                 .isNotice(post.isNotice())
                 .build();
     }
 
-    public static Post toPost (PostCreateRequestDTO request, String studySnapshot, User user) {
+    public static Post toPost(PostCreateRequestDTO request, String studySnapshot, User user) {
         return Post.builder()
                 .title(request.title())
                 .content(request.content())
                 .user(user)
                 .studyId(request.studyId())
                 .studySnapshot(studySnapshot)
+                .category(request.category())
                 .isNotice(request.isNotice())
                 .build();
     }
@@ -87,7 +95,14 @@ public class PostConverter {
                 .build();
     }
 
-    public static PostListResponseDTO toPostListResponseDTO(Post post, Long commentCount, Boolean hasBlocked) {
+    public static PostListResponseDTO toPostListResponseDTO(
+            Post post,
+            Long commentCount,
+            Boolean hasBlocked,
+            String studyTitle,
+            Integer currentMemberCount,
+            Boolean isFull
+    ) {
         Long userId = post.getUser() != null ? post.getUser().getUserId() : null;
         String userName = post.getUser() != null ? post.getUser().getName() : "탈퇴한 사용자";
         String userProfileImageUrl = (post.getUser() != null && post.getUser().getProfile() != null)
@@ -105,11 +120,16 @@ public class PostConverter {
                 .likeCount(post.getLikeCount())
                 .commentCount(commentCount)
                 .createdAt(post.getCreatedAt())
+                .studyId(post.getStudyId())
+                .studyTitle(studyTitle)
+                .currentMemberCount(currentMemberCount)
+                .isFull(isFull)
+                .category(post.getCategory())
                 .isNotice(post.isNotice())
                 .build();
     }
 
-
-
-
+    public static PostListResponseDTO toPostListResponseDTO(Post post, Long commentCount, Boolean hasBlocked) {
+        return toPostListResponseDTO(post, commentCount, hasBlocked, null, null, null);
+    }
 }

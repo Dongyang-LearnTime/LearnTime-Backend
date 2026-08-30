@@ -81,6 +81,10 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     @Query("DELETE FROM StudyInvitation si WHERE si.study.studyId = :studyId")
     void deleteStudyInvitationsByStudyId(@Param("studyId") Long studyId);
 
+    @Modifying
+    @Query("DELETE FROM StudyJoinRequest sjr WHERE sjr.study.studyId = :studyId")
+    void deleteStudyJoinRequestsByStudyId(@Param("studyId") Long studyId);
+
     // 4계층 삭제
     @Modifying
     @Query("DELETE FROM StudyMember sm WHERE sm.study.studyId = :studyId")

@@ -3,6 +3,7 @@ package learntime.backend.domain.community.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
 import learntime.backend.domain.community.dto.request.PostUpdateRequestDTO;
+import learntime.backend.domain.community.enums.PostCategory;
 import learntime.backend.domain.community.model.Post;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostLikeRepository;
@@ -11,6 +12,7 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.repository.StudyRepository;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study_progress.service.StudyQueryService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
@@ -47,6 +49,9 @@ class PostServiceTest {
 
     @Mock
     private StudyRepository studyRepository;
+
+    @Mock
+    private StudyMemberRepository studyMemberRepository;
 
     @Mock
     private StudyQueryService studyQueryService;
@@ -91,6 +96,7 @@ class PostServiceTest {
                 "게시글 제목",
                 "게시글 내용",
                 studyId,
+                PostCategory.RECRUITMENT,
                 false
         );
 
@@ -126,6 +132,7 @@ class PostServiceTest {
                 "게시글 제목",
                 "게시글 내용",
                 studyId,
+                PostCategory.RECRUITMENT,
                 false
         );
 
@@ -135,6 +142,30 @@ class PostServiceTest {
                 .hasMessageContaining(StudyErrorCode.STUDY_NOT_PUBLIC.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
+    }
+
+    @Test
+    @DisplayName("게시글 생성 실패 - 모집글인데 스터디 ID가 없는 경우")
+    void createPost_RecruitmentWithoutStudyId_ThrowsException() {
+        // given
+        Long userId = 1L;
+
+        User user = mock(User.class);
+        given(user.getUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+        PostCreateRequestDTO request = new PostCreateRequestDTO(
+                "모집글 제목",
+                "모집 내용",
+                null,
+                PostCategory.RECRUITMENT,
+                false
+        );
+
+        // when & then
+        assertThatThrownBy(() -> postService.createPost(request, null, userId))
+                .isInstanceOf(StudyException.class)
+                .hasMessageContaining(StudyErrorCode.STUDY_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -160,7 +191,8 @@ class PostServiceTest {
                 "수정된 제목",
                 "수정된 내용",
                 List.of(),
-                privateStudyId
+                privateStudyId,
+                PostCategory.RECRUITMENT
         );
 
         // when & then

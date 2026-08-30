@@ -2,6 +2,8 @@ package learntime.backend.domain.community.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import learntime.backend.domain.community.enums.PostCategory;
+
 import java.util.List;
 
 public record PostUpdateRequestDTO(
@@ -17,6 +19,9 @@ public record PostUpdateRequestDTO(
         List<String> deletedImageUrls,
 
         @Schema(description = "연동할 스터디 ID (선택 사항)", example = "1")
-        Long studyId
+        Long studyId,
+
+        @Schema(description = "게시글 카테고리 (FREE, RECRUITMENT)", example = "FREE")
+        PostCategory category
 ) {
 }

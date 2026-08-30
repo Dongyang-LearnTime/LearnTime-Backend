@@ -112,6 +112,7 @@ public class StudyManagementService {
         studyRepository.deleteStudyRestDatesByStudyId(studyId);
         studyRepository.deleteStudyRestDaysByStudyId(studyId);
         studyRepository.deleteStudyInvitationsByStudyId(studyId);
+        studyRepository.deleteStudyJoinRequestsByStudyId(studyId);
 
         // 4. StudyMember 및 Study 본체 삭제
         studyRepository.deleteStudyMembersByStudyId(studyId);

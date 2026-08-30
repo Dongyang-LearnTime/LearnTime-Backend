@@ -1,6 +1,7 @@
 package learntime.backend.domain.community.model;
 
 import jakarta.persistence.*;
+import learntime.backend.domain.community.enums.PostCategory;
 import learntime.backend.domain.user.model.User;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
@@ -57,6 +58,11 @@ public class Post extends CommunityBaseEntity {
     @Column(nullable = false)
     private boolean isNotice = false; // 공지사항 여부
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private PostCategory category = PostCategory.FREE; // 카테고리 (FREE, RECRUITMENT, NOTICE)
+
     // 댓글
     @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -101,10 +107,13 @@ public class Post extends CommunityBaseEntity {
     public void incrementViewCount() { this.viewCount++; }
 
     // 게시글 수정
-    public void updatePost(String title, String content, Long studyId, String studySnapshot) {
+    public void updatePost(String title, String content, Long studyId, String studySnapshot, PostCategory category) {
         this.title = title;
         this.content = content;
         this.studyId = studyId;
         this.studySnapshot = studySnapshot;
+        if (category != null) {
+            this.category = category;
+        }
     }
 }
