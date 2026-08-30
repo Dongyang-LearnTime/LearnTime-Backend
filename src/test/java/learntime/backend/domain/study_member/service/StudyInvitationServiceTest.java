@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
-class StudyMemberServiceTest {
+class StudyInvitationServiceTest {
 
     @Autowired
     private StudyInvitationService studyInvitationService;

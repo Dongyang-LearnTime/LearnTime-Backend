@@ -53,11 +53,11 @@ class StudyNotesServiceTest {
 
         given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                 studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(Optional.of(member));
         given(studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatusIn(
                 studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(true);
         given(studyNotesRepository.findByStudyMember(member, pageable))
                 .willReturn(new PageImpl<>(List.of()));
@@ -80,11 +80,11 @@ class StudyNotesServiceTest {
 
         given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                 studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(Optional.of(member));
         given(studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatusIn(
                 studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(true);
         given(studyNotesRepository.findByStudyMember(member, pageable))
                 .willReturn(new PageImpl<>(List.of()));
@@ -103,7 +103,7 @@ class StudyNotesServiceTest {
 
         given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                 studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(Optional.empty());
 
         // when & then

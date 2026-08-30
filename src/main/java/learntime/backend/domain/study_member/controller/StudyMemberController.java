@@ -10,6 +10,7 @@ import learntime.backend.domain.study_member.service.StudyInvitationService;
 import learntime.backend.domain.study_member.service.StudyMemberService;
 import learntime.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -73,6 +74,16 @@ public class StudyMemberController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         studyMemberService.leaveStudy(studyId, userDetails.userId());
         return ResponseEntity.ok().build();
+    }
+
+    // 공개 스터디 바로 참여
+    @PostMapping("/{studyId}/join")
+    @Operation(summary = "공개 스터디 바로 참여", description = "홍보글을 통해 공개 스터디에 참여합니다. 정원이 남아있으면 즉시 가입됩니다.")
+    public ResponseEntity<Long> joinPublicStudy(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberId = studyMemberService.joinPublicStudy(studyId, userDetails.userId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(memberId);
     }
 
 }

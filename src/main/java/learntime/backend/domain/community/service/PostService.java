@@ -11,7 +11,10 @@ import learntime.backend.domain.community.model.PostImage;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostLikeRepository;
 import learntime.backend.domain.community.repository.PostRepository;
-
+import learntime.backend.domain.study.error.code.StudyErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
+import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study_progress.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study_progress.service.StudyQueryService;
 import learntime.backend.domain.user.model.User;
@@ -41,6 +44,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final StudyRepository studyRepository;
 
     private final StudyQueryService studyQueryService;
     private final S3Service s3Service;
@@ -68,6 +72,13 @@ public class PostService {
         if (newStudyId == null) {
             studySnapshot = null;
         } else {
+            Study study = studyRepository.findById(newStudyId)
+                    .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+
+            if (!Boolean.TRUE.equals(study.getIsPublic())) {
+                throw new StudyException(StudyErrorCode.STUDY_NOT_PUBLIC);
+            }
+
             try {
                 StudyTotalInfoResponseDTO studyIndicator = studyQueryService.getStudyMemberTotalIndicatorByUserId(newStudyId, userId);
                 studySnapshot = objectMapper.writeValueAsString(studyIndicator);
@@ -108,6 +119,13 @@ public class PostService {
         // 공부 정보 스냅샷 생성
         String studySnapshot = null;
         if (request.studyId() != null) {
+            Study study = studyRepository.findById(request.studyId())
+                    .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+
+            if (!Boolean.TRUE.equals(study.getIsPublic())) {
+                throw new StudyException(StudyErrorCode.STUDY_NOT_PUBLIC);
+            }
+
             try {
                 StudyTotalInfoResponseDTO studyIndicator = studyQueryService.getStudyMemberTotalIndicatorByUserId(request.studyId(), userId);
                 studySnapshot = objectMapper.writeValueAsString(studyIndicator);

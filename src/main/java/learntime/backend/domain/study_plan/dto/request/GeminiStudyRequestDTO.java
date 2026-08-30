@@ -38,7 +38,10 @@ public record GeminiStudyRequestDTO(
         List <Long> studyMemberList, // 스터디 맴버 리스트
 
         List<Object> restDays, // 쉬는 요일
-        List<LocalDate> restDates // 쉬는 날짜
+        List<LocalDate> restDates, // 쉬는 날짜
+
+        @Schema(description = "스터디 공개 여부 (true: 공개, false: 비공개 / 미지정 시 false)", example = "false")
+        Boolean isPublic
 ) {
     public Integer getValidatedStudyDays() {
         if (endDate.isBefore(startDate)) {

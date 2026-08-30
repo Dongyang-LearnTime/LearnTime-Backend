@@ -78,7 +78,7 @@ class StudyRestServiceTest {
         StudyMember studyMember = mockOwnerMember();
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
-        given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(studyId, userId, StudyMemberStatus.ACTIVE))
+        given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)))
                 .willReturn(Optional.of(studyMember));
         given(studyRestDayRepository.findAllByStudy_StudyId(studyId)).willReturn(List.of());
         given(studyRestDateRepository.findAllByStudy_StudyId(studyId)).willReturn(List.of());
@@ -143,7 +143,7 @@ class StudyRestServiceTest {
         );
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
-        given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(studyId, userId, StudyMemberStatus.ACTIVE))
+        given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)))
                 .willReturn(Optional.of(studyMember));
         given(studyRestDayRepository.findAllByStudy_StudyId(studyId)).willReturn(List.of());
         given(studyRestDateRepository.findAllByStudy_StudyId(studyId)).willReturn(List.of());

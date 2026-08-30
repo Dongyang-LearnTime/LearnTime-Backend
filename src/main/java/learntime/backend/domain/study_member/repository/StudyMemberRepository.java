@@ -24,6 +24,12 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
             StudyMemberStatus status
     );
 
+    Optional<StudyMember> findByStudy_StudyIdAndStudyMemberRoleAndStatus(
+            Long studyId,
+            StudyMemberRole role,
+            StudyMemberStatus status
+    );
+
     @Query("""
         SELECT sm.studyMemberId
         FROM StudyMember sm

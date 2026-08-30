@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import learntime.backend.domain.study_plan.dto.request.GeminiStudyRequestDTO;
 import learntime.backend.domain.study_plan.dto.request.UpdateStudyRestScheduleRequestDTO;
 import learntime.backend.domain.study.dto.request.UpdateStudyTitleRequestDTO;
+import learntime.backend.domain.study.dto.request.UpdateStudyVisibilityRequestDTO;
 import learntime.backend.domain.study_progress.dto.response.StudyMemberRecentWeekInfoResponseDTO;
 import learntime.backend.domain.study_progress.dto.response.StudyProgressIndicatorResponseDTO;
 import learntime.backend.domain.study.dto.response.StudyStatusResponseDTO;
@@ -137,6 +138,16 @@ public class StudyController {
                                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
         boolean isStudyTitle = false; // 공부 진도 제목 여부
         studyFacade.updateTitle(request, userDetails.userId(), isStudyTitle);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{studyId}/visibility")
+    @Operation(summary = "스터디 공개/비공개 설정 변경", description = "방장이 스터디의 공개/비공개 상태를 변경합니다.")
+    public ResponseEntity<Void> updateStudyVisibility(
+            @PathVariable Long studyId,
+            @Valid @RequestBody UpdateStudyVisibilityRequestDTO request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        studyFacade.updateStudyVisibility(studyId, request.isPublic(), userDetails.userId());
         return ResponseEntity.noContent().build();
     }
 

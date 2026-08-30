@@ -52,6 +52,29 @@ public class StudyManagementService {
         }
     }
 
+    @Transactional
+    public void updateVisibility(Long studyId, Boolean isPublic, Long userId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+
+        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
+                        studyId,
+                        userId,
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)
+                )
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        if (studyMember.getStatus() == StudyMemberStatus.COMPLETED) {
+            throw new StudyException(StudyErrorCode.STUDY_MEMBER_ALREADY_COMPLETED);
+        }
+
+        // 방장 권한 검증
+        StudyAuthUtil.checkOwnerRole(studyMember);
+
+        study.updateVisibility(isPublic);
+        log.info("[Study Visibility] 스터디 ID: {}, 공개 여부 변경: {}, 변경자: {}", studyId, isPublic, userId);
+    }
+
     /**
      * 스터디와 관련된 모든 데이터를 벌크 삭제함.
      * (단, StudyNotes는 SET NULL 제약에 의해 데이터가 유지됨.)

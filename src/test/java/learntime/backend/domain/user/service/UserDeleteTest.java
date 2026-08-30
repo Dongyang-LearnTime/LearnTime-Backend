@@ -78,17 +78,15 @@ class UserDeleteTest {
         commentRepository.save(comment);
 
         // given: 4. Study 생성 및 멤버 설정 (OWNER - 탈퇴 예정자, ACTIVE MEMBER - 잔류자)
-        em.createNativeQuery("INSERT INTO study (study_title, book_title, start_date, end_date, status, created_at, updated_at, user_id) VALUES (?, ?, ?, ?, 'PLANNING', NOW(), NOW(), ?)")
-                .setParameter(1, "테스트 스터디")
-                .setParameter(2, "테스트 책")
-                .setParameter(3, LocalDate.now())
-                .setParameter(4, LocalDate.now().plusDays(10))
-                .setParameter(5, withdrawingUser.getUserId())
-                .executeUpdate();
-
-        Study study = (Study) em.createQuery("SELECT s FROM Study s WHERE s.studyTitle = '테스트 스터디' ORDER BY s.studyId DESC")
-                .setMaxResults(1)
-                .getSingleResult();
+        Study study = Study.builder()
+                .studyTitle("테스트 스터디")
+                .bookTitle("테스트 책")
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(10))
+                .isPublic(false)
+                .build();
+        em.persist(study);
+        em.flush();
 
         StudyMember ownerMember = StudyMember.builder()
                 .study(study)

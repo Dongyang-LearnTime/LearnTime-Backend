@@ -46,6 +46,9 @@ public class Study {
     @Column(nullable = false)
     private StudyPlanStatus status = StudyPlanStatus.PLANNING;
 
+    @Column(nullable = false)
+    private Boolean isPublic = false;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -71,15 +74,20 @@ public class Study {
     private List<StudyRestDate> restDates = new ArrayList<>();
 
     @Builder
-    public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate, StudyPlanStatus status) {
+    public Study(String studyTitle, String bookTitle, LocalDate startDate, LocalDate endDate, StudyPlanStatus status, Boolean isPublic) {
         this.studyTitle = studyTitle;
         this.bookTitle = bookTitle;
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = (status == null) ? StudyPlanStatus.PLANNING : status;
+        this.isPublic = (isPublic != null) ? isPublic : false;
     }
 
     // --- 비즈니스 로직 --- //
+    public void updateVisibility(Boolean isPublic) {
+        this.isPublic = (isPublic != null) ? isPublic : false;
+    }
+
     public void updateStatus(StudyPlanStatus status) {
         this.status = status;
     }

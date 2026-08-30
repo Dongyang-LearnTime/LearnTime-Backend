@@ -42,7 +42,9 @@ public enum StudyErrorCode implements BaseErrorCode {
     WITHDRAWN_MEMBER_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "STUDY-032", "탈퇴한 스터디에서는 해당 작업을 수행할 수 없습니다."),
     OWNER_LEAVE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-033", "방장은 스터디를 탈퇴할 수 없습니다. 방장을 위임한 후 탈퇴해주세요."),
     CANNOT_KICK_OWNER(HttpStatus.BAD_REQUEST, "STUDY-034", "방장은 강퇴할 수 없습니다."),
-    STUDY_MEMBER_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "STUDY-035", "진도를 모두 완료한 스터디는 수정할 수 없습니다.");
+    STUDY_MEMBER_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "STUDY-035", "진도를 모두 완료한 스터디는 수정할 수 없습니다."),
+    STUDY_NOT_PUBLIC(HttpStatus.BAD_REQUEST, "STUDY-036", "비공개 스터디는 홍보글을 등록하거나 직접 참여할 수 없습니다."),
+    STUDY_ALREADY_PUBLIC(HttpStatus.BAD_REQUEST, "STUDY-037", "이미 동일한 공개 상태입니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -18,6 +18,8 @@ import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
+import learntime.backend.domain.relationship.repository.FriendRepository;
+import learntime.backend.global.utils.UserBlockUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -36,6 +38,8 @@ public class StudyInitializationService {
     private final StudyMemberRepository studyMemberRepository;
     private final StudyInvitationRepository studyInvitationRepository;
     private final UserRepository userRepository;
+    private final FriendRepository friendRepository;
+    private final UserBlockUtil userBlockUtil;
     private final StudyRestManager studyRestManager;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -65,6 +69,17 @@ public class StudyInitializationService {
                 for (User invitedUser : additionalUsers) {
                     if (invitedUser.getUserId().equals(userId)) {
                         continue;
+                    }
+
+                    // 차단 여부 검증
+                    userBlockUtil.validateNotBlockedByUser(userId, invitedUser.getUserId());
+
+                    // 비공개 스터디인 경우 친구 관계 필수 검증
+                    if (!Boolean.TRUE.equals(request.isPublic())) {
+                        boolean isFriend = friendRepository.existsFriendRelation(userId, invitedUser.getUserId());
+                        if (!isFriend) {
+                            throw new StudyException(StudyErrorCode.NOT_FRIEND_RELATION);
+                        }
                     }
 
                     invitations.add(StudyMemberConverter.toStudyInvitation(study, invitedUser, user));
