@@ -562,4 +562,99 @@ class StudyInvitationServiceTest {
                 .findFirst().orElseThrow();
         assertThat(noneFriend.isInvited()).isFalse();
     }
+
+    @Test
+    @DisplayName("초대받은 대상이 아닌 사용자가 수락 시도시 예외 발생")
+    void approveRequest_fail_notInvitedUser() {
+        // given
+        User inviter = createUser("초대자_권한", "inviter_auth@test.com");
+        User invitedUser = createUser("초대대상_권한", "invited_auth@test.com");
+        User stranger = createUser("제3자", "stranger_auth@test.com");
+
+        Study study = createStudy("권한 테스트 스터디");
+        studyMemberRepository.save(StudyMember.builder().study(study).user(inviter).studyMemberRole(StudyMemberRole.OWNER).build());
+
+        StudyInvitation invitation = studyInvitationRepository.save(
+                StudyInvitation.builder().study(study).invitedUser(invitedUser).inviterUser(inviter).build()
+        );
+
+        // when & then
+        assertThatThrownBy(() -> studyInvitationService.approveRequest(invitation.getStudyInvitationId(), stranger.getUserId()))
+                .isInstanceOf(StudyException.class)
+                .hasMessage(StudyErrorCode.NOT_INVITED_USER.getMessage());
+    }
+
+    @Test
+    @DisplayName("이미 수락/처리된 초대를 다시 수락 시도시 예외 발생")
+    void approveRequest_fail_notPending() {
+        // given
+        User inviter = createUser("초대자_중복", "inviter_dup@test.com");
+        User invitedUser = createUser("초대대상_중복", "invited_dup@test.com");
+
+        Study study = createStudy("중복 수락 테스트 스터디");
+        studyMemberRepository.save(StudyMember.builder().study(study).user(inviter).studyMemberRole(StudyMemberRole.OWNER).build());
+
+        StudyInvitation invitation = studyInvitationRepository.save(
+                StudyInvitation.builder().study(study).invitedUser(invitedUser).inviterUser(inviter).build()
+        );
+
+        // 첫 번째 수락 성공
+        studyInvitationService.approveRequest(invitation.getStudyInvitationId(), invitedUser.getUserId());
+
+        // when & then: 두 번째 수락 시도 -> STUDY_INVITATION_NOT_PENDING 또는 ALREADY_STUDY_MEMBER 예외 발생
+        assertThatThrownBy(() -> studyInvitationService.approveRequest(invitation.getStudyInvitationId(), invitedUser.getUserId()))
+                .isInstanceOf(StudyException.class)
+                .matches(e -> {
+                    StudyException se = (StudyException) e;
+                    return se.getErrorCode() == StudyErrorCode.STUDY_INVITATION_NOT_PENDING
+                            || se.getErrorCode() == StudyErrorCode.ALREADY_STUDY_MEMBER;
+                });
+    }
+
+    @Test
+    @DisplayName("이미 스터디 멤버인 경우 초대 수락 시 예외 발생")
+    void approveRequest_fail_alreadyMember() {
+        // given
+        User inviter = createUser("초대자_멤버", "inviter_mem@test.com");
+        User invitedUser = createUser("초대대상_멤버", "invited_mem@test.com");
+
+        Study study = createStudy("기존 멤버 수락 테스트 스터디");
+        studyMemberRepository.save(StudyMember.builder().study(study).user(inviter).studyMemberRole(StudyMemberRole.OWNER).build());
+        studyMemberRepository.save(StudyMember.builder().study(study).user(invitedUser).studyMemberRole(StudyMemberRole.MEMBER).build());
+
+        StudyInvitation invitation = studyInvitationRepository.save(
+                StudyInvitation.builder().study(study).invitedUser(invitedUser).inviterUser(inviter).build()
+        );
+
+        // when & then
+        assertThatThrownBy(() -> studyInvitationService.approveRequest(invitation.getStudyInvitationId(), invitedUser.getUserId()))
+                .isInstanceOf(StudyException.class)
+                .hasMessage(StudyErrorCode.ALREADY_STUDY_MEMBER.getMessage());
+    }
+
+    @Test
+    @DisplayName("정원 초과 시 초대 수락 실패")
+    void approveRequest_fail_limitExceeded() {
+        // given
+        User inviter = createUser("초대자_정원", "inviter_limit@test.com");
+        User invitedUser = createUser("초대대상_정원", "invited_limit@test.com");
+
+        Study study = createStudy("정원 초과 수락 테스트 스터디");
+        studyMemberRepository.save(StudyMember.builder().study(study).user(inviter).studyMemberRole(StudyMemberRole.OWNER).build());
+
+        // 3명 추가하여 총 4명 정원 채움
+        for (int i = 0; i < 3; i++) {
+            User member = createUser("정원멤버" + i, "limit_mem" + i + "@test.com");
+            studyMemberRepository.save(StudyMember.builder().study(study).user(member).studyMemberRole(StudyMemberRole.MEMBER).build());
+        }
+
+        StudyInvitation invitation = studyInvitationRepository.save(
+                StudyInvitation.builder().study(study).invitedUser(invitedUser).inviterUser(inviter).build()
+        );
+
+        // when & then
+        assertThatThrownBy(() -> studyInvitationService.approveRequest(invitation.getStudyInvitationId(), invitedUser.getUserId()))
+                .isInstanceOf(StudyException.class)
+                .hasMessage(StudyErrorCode.STUDY_MEMBER_LIMIT_EXCEEDED.getMessage());
+    }
 }

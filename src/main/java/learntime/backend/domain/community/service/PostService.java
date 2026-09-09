@@ -16,12 +16,16 @@ import learntime.backend.domain.study.error.code.StudyErrorCode;
 import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study.repository.StudyRepository;
+import learntime.backend.domain.study_member.enums.StudyMemberRole;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
+import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study_progress.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study_progress.service.StudyQueryService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.domain.user.enums.Role;
+import java.util.Objects;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.infra.s3.S3Service;
@@ -87,6 +91,12 @@ public class PostService {
                 throw new StudyException(StudyErrorCode.STUDY_NOT_PUBLIC);
             }
 
+            boolean isStudyConnectingOrChanged = !Objects.equals(post.getStudyId(), newStudyId);
+            boolean isBecomingRecruitment = post.getCategory() != PostCategory.RECRUITMENT;
+            if (request.category() == PostCategory.RECRUITMENT && (isStudyConnectingOrChanged || isBecomingRecruitment)) {
+                validateStudyOwner(newStudyId, userId);
+            }
+
             try {
                 StudyTotalInfoResponseDTO studyIndicator = studyQueryService.getStudyMemberTotalIndicatorByUserId(newStudyId, userId);
                 studySnapshot = objectMapper.writeValueAsString(studyIndicator);
@@ -137,6 +147,10 @@ public class PostService {
 
             if (!Boolean.TRUE.equals(study.getIsPublic())) {
                 throw new StudyException(StudyErrorCode.STUDY_NOT_PUBLIC);
+            }
+
+            if (request.category() == PostCategory.RECRUITMENT) {
+                validateStudyOwner(request.studyId(), userId);
             }
 
             try {
@@ -269,5 +283,14 @@ public class PostService {
         }
     }
 
+    private void validateStudyOwner(Long studyId, Long userId) {
+        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                studyId, userId, StudyMemberStatus.ACTIVE
+        ).orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_RECRUITMENT_OWNER_ONLY));
+
+        if (studyMember.getStudyMemberRole() != StudyMemberRole.OWNER) {
+            throw new StudyException(StudyErrorCode.STUDY_RECRUITMENT_OWNER_ONLY);
+        }
+    }
 
 }

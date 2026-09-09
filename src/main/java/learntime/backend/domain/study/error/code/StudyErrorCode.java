@@ -49,7 +49,8 @@ public enum StudyErrorCode implements BaseErrorCode {
     ALREADY_JOIN_REQUESTED(HttpStatus.BAD_REQUEST, "STUDY-039", "이미 대기 중인 스터디 가입 요청이 존재합니다."),
     NOT_REQUESTER_USER(HttpStatus.FORBIDDEN, "STUDY-040", "가입 요청자 본인만 처리할 수 있습니다."),
     JOIN_REQUEST_NOT_PENDING(HttpStatus.BAD_REQUEST, "STUDY-041", "대기 중인 가입 요청이 아닙니다."),
-    SELF_JOIN_REQUEST_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-042", "자신의 스터디에는 가입을 요청할 수 없습니다.");
+    SELF_JOIN_REQUEST_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-042", "자신의 스터디에는 가입을 요청할 수 없습니다."),
+    STUDY_RECRUITMENT_OWNER_ONLY(HttpStatus.FORBIDDEN, "STUDY-043", "스터디 방장만 모집글에 스터디를 연결할 수 있습니다.");
 
     private final HttpStatus status;
     private final String code;

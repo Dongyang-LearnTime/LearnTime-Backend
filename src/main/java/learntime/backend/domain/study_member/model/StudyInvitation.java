@@ -83,14 +83,23 @@ public class StudyInvitation {
     }
 
     public void accept() {
+        if (!isPending()) {
+            throw new StudyException(StudyErrorCode.STUDY_INVITATION_NOT_PENDING);
+        }
         this.status = StudyInvitationStatus.ACCEPTED;
     }
 
     public void reject() {
+        if (!isPending()) {
+            throw new StudyException(StudyErrorCode.STUDY_INVITATION_NOT_PENDING);
+        }
         this.status = StudyInvitationStatus.REJECTED;
     }
 
     public void cancel() {
+        if (!isPending()) {
+            throw new StudyException(StudyErrorCode.STUDY_INVITATION_NOT_PENDING);
+        }
         this.status = StudyInvitationStatus.CANCELED;
     }
 
