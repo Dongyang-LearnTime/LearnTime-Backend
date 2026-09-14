@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
+import learntime.backend.domain.community.enums.PostCategory;
 import learntime.backend.domain.community.enums.PostSearchType;
 import learntime.backend.domain.community.service.PostQueryService;
 import learntime.backend.domain.community.service.PostService;
@@ -42,12 +43,13 @@ public class PostController {
     private final PostQueryService postQueryService;
 
     @GetMapping
-    @Operation(summary = "게시글 목록 조회", description = "오프셋 기반 페이징으로 게시글 목록을 조회합니다.")
+    @Operation(summary = "게시글 목록 조회", description = "오프셋 기반 페이징으로 게시글 목록을 조회합니다. category 파라미터로 FREE, RECRUITMENT, NOTICE 등을 필터링할 수 있습니다.")
     public ResponseEntity<PageResponse<PostListResponseDTO>> getPostList(
+            @RequestParam(required = false) PostCategory category,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails != null ? userDetails.getUserId() : null;
-        Page<PostListResponseDTO> response = postQueryService.getPostList(pageable, userId);
+        Page<PostListResponseDTO> response = postQueryService.getPostList(pageable, category, userId);
         return ResponseEntity.ok(PageResponse.of(response));
     }
 

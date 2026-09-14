@@ -1,6 +1,8 @@
 package learntime.backend.domain.study_member.service;
 
 import learntime.backend.domain.relationship.repository.UserBlockRepository;
+import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study_member.converter.StudyMemberConverter;
 import learntime.backend.domain.study_member.dto.response.StudyMemberResponseDTO;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
@@ -10,7 +12,12 @@ import learntime.backend.domain.study.error.exception.StudyException;
 import learntime.backend.domain.study_member.dto.request.ChangeOwnerRequestDTO;
 import learntime.backend.domain.study_member.model.StudyMember;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
+import learntime.backend.domain.user.model.User;
+import learntime.backend.domain.user.repository.UserRepository;
+import learntime.backend.global.error.code.AuthErrorCode;
+import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.utils.StudyAuthUtil;
+import learntime.backend.global.utils.UserBlockUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +30,12 @@ import java.util.Set;
 public class StudyMemberService {
 
     private final StudyMemberRepository studyMemberRepository;
+    private final StudyRepository studyRepository;
+    private final UserRepository userRepository;
     private final UserBlockRepository userBlockRepository;
+    private final UserBlockUtil userBlockUtil;
+
+    private static final int STUDY_MEMBER_LIMIT_COUNT = 4;
 
     @Transactional(readOnly = true)
     public List<StudyMemberResponseDTO> getAllStudyMember(Long studyId, Long userId) {
@@ -109,6 +121,52 @@ public class StudyMemberService {
         }
 
         studyMember.withdraw();
+    }
+
+    @Transactional
+    public Long joinPublicStudy(Long studyId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
+
+        // 1. 비관적 락으로 스터디 조회
+        Study study = studyRepository.findByIdWithPessimisticLock(studyId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+
+        // 2. 공개 스터디 여부 검증
+        if (!Boolean.TRUE.equals(study.getIsPublic())) {
+            throw new StudyException(StudyErrorCode.STUDY_NOT_PUBLIC);
+        }
+
+        // 3. 정원 검증 (최대 4명)
+        long activeMemberCount = studyMemberRepository.countByStudyAndStatusIn(
+                study,
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)
+        );
+        if (activeMemberCount >= STUDY_MEMBER_LIMIT_COUNT) {
+            throw new StudyException(StudyErrorCode.STUDY_MEMBER_LIMIT_EXCEEDED);
+        }
+
+        // 4. 이미 참여 중인지 검증
+        boolean alreadyMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserId(studyId, userId);
+        if (alreadyMember) {
+            throw new StudyException(StudyErrorCode.ALREADY_STUDY_MEMBER);
+        }
+
+        // 5. 방장과의 차단 여부 검증
+        StudyMember owner = studyMemberRepository
+                .findByStudy_StudyIdAndStudyMemberRoleAndStatus(studyId, StudyMemberRole.OWNER, StudyMemberStatus.ACTIVE)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
+        userBlockUtil.validateNotBlockedByUser(owner.getUser().getUserId(), userId);
+
+        // 6. 스터디 멤버 저장
+        StudyMember newMember = StudyMember.builder()
+                .study(study)
+                .user(user)
+                .studyMemberRole(StudyMemberRole.MEMBER)
+                .build();
+
+        StudyMember savedMember = studyMemberRepository.save(newMember);
+        return savedMember.getStudyMemberId();
     }
 
 }

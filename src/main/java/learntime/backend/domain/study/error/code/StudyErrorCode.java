@@ -42,7 +42,15 @@ public enum StudyErrorCode implements BaseErrorCode {
     WITHDRAWN_MEMBER_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "STUDY-032", "탈퇴한 스터디에서는 해당 작업을 수행할 수 없습니다."),
     OWNER_LEAVE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-033", "방장은 스터디를 탈퇴할 수 없습니다. 방장을 위임한 후 탈퇴해주세요."),
     CANNOT_KICK_OWNER(HttpStatus.BAD_REQUEST, "STUDY-034", "방장은 강퇴할 수 없습니다."),
-    STUDY_MEMBER_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "STUDY-035", "진도를 모두 완료한 스터디는 수정할 수 없습니다.");
+    STUDY_MEMBER_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "STUDY-035", "진도를 모두 완료한 스터디는 수정할 수 없습니다."),
+    STUDY_NOT_PUBLIC(HttpStatus.BAD_REQUEST, "STUDY-036", "비공개 스터디는 홍보글을 등록하거나 직접 참여할 수 없습니다."),
+    STUDY_ALREADY_PUBLIC(HttpStatus.BAD_REQUEST, "STUDY-037", "이미 동일한 공개 상태입니다."),
+    STUDY_JOIN_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY-038", "스터디 가입 요청을 찾을 수 없습니다."),
+    ALREADY_JOIN_REQUESTED(HttpStatus.BAD_REQUEST, "STUDY-039", "이미 대기 중인 스터디 가입 요청이 존재합니다."),
+    NOT_REQUESTER_USER(HttpStatus.FORBIDDEN, "STUDY-040", "가입 요청자 본인만 처리할 수 있습니다."),
+    JOIN_REQUEST_NOT_PENDING(HttpStatus.BAD_REQUEST, "STUDY-041", "대기 중인 가입 요청이 아닙니다."),
+    SELF_JOIN_REQUEST_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "STUDY-042", "자신의 스터디에는 가입을 요청할 수 없습니다."),
+    STUDY_RECRUITMENT_OWNER_ONLY(HttpStatus.FORBIDDEN, "STUDY-043", "스터디 방장만 모집글에 스터디를 연결할 수 있습니다.");
 
     private final HttpStatus status;
     private final String code;

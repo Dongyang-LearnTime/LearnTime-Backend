@@ -51,7 +51,7 @@ class StudyArchiveServiceTest {
 
         given(studyMemberRepository.findAllByUserIdAndStatusIn(
                 userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(List.of(activeMember, withdrawnMember));
 
         // when
@@ -70,7 +70,7 @@ class StudyArchiveServiceTest {
         Long userId = 99L;
         given(studyMemberRepository.findAllByUserIdAndStatusIn(
                 userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(List.of());
 
         // when

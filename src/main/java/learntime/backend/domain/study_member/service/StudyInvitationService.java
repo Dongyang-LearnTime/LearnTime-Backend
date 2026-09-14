@@ -83,12 +83,25 @@ public class StudyInvitationService {
 
     @Transactional
     public void approveRequest(Long invitationId, Long userId) {
-        StudyInvitation invitation = validateInvitation(invitationId);
+        StudyInvitation invitation = studyInvitationRepository.findByIdWithPessimisticLock(invitationId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_INVITATION_NOT_FOUND));
+
+        if (!invitation.isPending()) {
+            throw new StudyException(StudyErrorCode.STUDY_INVITATION_NOT_PENDING);
+        }
+
         validateInvitedUser(invitation, userId);
-        
+
+        Long studyId = invitation.getStudy().getStudyId();
+
+        // 이미 스터디 멤버인지 방어 검증
+        if (studyMemberRepository.existsByStudy_StudyIdAndUser_UserId(studyId, userId)) {
+            throw new StudyException(StudyErrorCode.ALREADY_STUDY_MEMBER);
+        }
+
         // Study row lock 획득
         Study study = studyRepository
-                .findByIdWithPessimisticLock(invitation.getStudy().getStudyId())
+                .findByIdWithPessimisticLock(studyId)
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
         long memberCount = studyMemberRepository.countByStudyAndStatusIn(study, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED));
@@ -101,6 +114,7 @@ public class StudyInvitationService {
                 .study(study)
                 .user(invitation.getInvitedUser())
                 .studyMemberRole(StudyMemberRole.MEMBER)
+                .status(StudyMemberStatus.ACTIVE)
                 .build());
 
         eventPublisher.publishEvent(new StudyInvitationAcceptedEvent(

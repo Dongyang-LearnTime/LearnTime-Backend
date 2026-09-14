@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import learntime.backend.domain.community.converter.PostConverter;
 import learntime.backend.domain.community.dto.request.PostCreateRequestDTO;
 import learntime.backend.domain.community.dto.request.PostUpdateRequestDTO;
+import learntime.backend.domain.community.enums.PostCategory;
 import learntime.backend.domain.community.error.code.CommunityErrorCode;
 import learntime.backend.domain.community.error.exception.CommunityException;
 import learntime.backend.domain.community.model.Post;
@@ -11,12 +12,20 @@ import learntime.backend.domain.community.model.PostImage;
 import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.domain.community.repository.PostLikeRepository;
 import learntime.backend.domain.community.repository.PostRepository;
-
+import learntime.backend.domain.study.error.code.StudyErrorCode;
+import learntime.backend.domain.study.error.exception.StudyException;
+import learntime.backend.domain.study.model.Study;
+import learntime.backend.domain.study.repository.StudyRepository;
+import learntime.backend.domain.study_member.enums.StudyMemberRole;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
+import learntime.backend.domain.study_member.model.StudyMember;
+import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study_progress.dto.response.StudyTotalInfoResponseDTO;
 import learntime.backend.domain.study_progress.service.StudyQueryService;
 import learntime.backend.domain.user.model.User;
 import learntime.backend.domain.user.repository.UserRepository;
 import learntime.backend.domain.user.enums.Role;
+import java.util.Objects;
 import learntime.backend.global.error.code.AuthErrorCode;
 import learntime.backend.global.error.exception.AuthException;
 import learntime.backend.global.infra.s3.S3Service;
@@ -41,6 +50,8 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final StudyRepository studyRepository;
+    private final StudyMemberRepository studyMemberRepository;
 
     private final StudyQueryService studyQueryService;
     private final S3Service s3Service;
@@ -61,6 +72,11 @@ public class PostService {
         Long postAuthorId = post.getUser() != null ? post.getUser().getUserId() : null;
         AuthorizationUtil.verifyOwnership(userId, postAuthorId);
 
+        // 스터디 모집글인 경우 studyId 필수
+        if (request.category() == PostCategory.RECRUITMENT && request.studyId() == null) {
+            throw new StudyException(StudyErrorCode.STUDY_NOT_FOUND);
+        }
+
         // 스터디 스냅샷 업데이트 로직
         String studySnapshot = post.getStudySnapshot();
         Long newStudyId = request.studyId();
@@ -68,6 +84,19 @@ public class PostService {
         if (newStudyId == null) {
             studySnapshot = null;
         } else {
+            Study study = studyRepository.findById(newStudyId)
+                    .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+
+            if (!Boolean.TRUE.equals(study.getIsPublic())) {
+                throw new StudyException(StudyErrorCode.STUDY_NOT_PUBLIC);
+            }
+
+            boolean isStudyConnectingOrChanged = !Objects.equals(post.getStudyId(), newStudyId);
+            boolean isBecomingRecruitment = post.getCategory() != PostCategory.RECRUITMENT;
+            if (request.category() == PostCategory.RECRUITMENT && (isStudyConnectingOrChanged || isBecomingRecruitment)) {
+                validateStudyOwner(newStudyId, userId);
+            }
+
             try {
                 StudyTotalInfoResponseDTO studyIndicator = studyQueryService.getStudyMemberTotalIndicatorByUserId(newStudyId, userId);
                 studySnapshot = objectMapper.writeValueAsString(studyIndicator);
@@ -77,7 +106,7 @@ public class PostService {
         }
 
         // 본문 업데이트
-        post.updatePost(request.title(), request.content(), newStudyId, studySnapshot);
+        post.updatePost(request.title(), request.content(), newStudyId, studySnapshot, request.category());
 
         // 이미지 삭제 처리
         if (request.deletedImageUrls() != null && !request.deletedImageUrls().isEmpty()) {
@@ -105,9 +134,25 @@ public class PostService {
             throw new AuthException(AuthErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        // 공부 정보 스냅샷 생성
+        // 모집글인 경우 studyId 필수 확인
+        if (request.category() == PostCategory.RECRUITMENT && request.studyId() == null) {
+            throw new StudyException(StudyErrorCode.STUDY_NOT_FOUND);
+        }
+
+        // 공부 정보 스냅샷 생성 및 스터디 검증
         String studySnapshot = null;
         if (request.studyId() != null) {
+            Study study = studyRepository.findById(request.studyId())
+                    .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
+
+            if (!Boolean.TRUE.equals(study.getIsPublic())) {
+                throw new StudyException(StudyErrorCode.STUDY_NOT_PUBLIC);
+            }
+
+            if (request.category() == PostCategory.RECRUITMENT) {
+                validateStudyOwner(request.studyId(), userId);
+            }
+
             try {
                 StudyTotalInfoResponseDTO studyIndicator = studyQueryService.getStudyMemberTotalIndicatorByUserId(request.studyId(), userId);
                 studySnapshot = objectMapper.writeValueAsString(studyIndicator);
@@ -238,5 +283,14 @@ public class PostService {
         }
     }
 
+    private void validateStudyOwner(Long studyId, Long userId) {
+        StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
+                studyId, userId, StudyMemberStatus.ACTIVE
+        ).orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_RECRUITMENT_OWNER_ONLY));
+
+        if (studyMember.getStudyMemberRole() != StudyMemberRole.OWNER) {
+            throw new StudyException(StudyErrorCode.STUDY_RECRUITMENT_OWNER_ONLY);
+        }
+    }
 
 }

@@ -60,6 +60,12 @@ public class StudyFacade {
         studyManagementService.updateTitle(request, userId, isStudyTitle);
     }
 
+    // 스터디 공개/비공개 설정 변경
+    @Transactional
+    public void updateStudyVisibility(Long studyId, Boolean isPublic, Long userId) {
+        studyManagementService.updateVisibility(studyId, isPublic, userId);
+    }
+
     // 휴무 요일/날짜를 재조정하고, 미래 공부 일정의 날짜만 다시 배치합니다.
     @Transactional
     public void updateRestSchedule(Long studyId, UpdateStudyRestScheduleRequestDTO request, Long userId) {

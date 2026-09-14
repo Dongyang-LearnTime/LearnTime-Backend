@@ -24,6 +24,12 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
             StudyMemberStatus status
     );
 
+    Optional<StudyMember> findByStudy_StudyIdAndStudyMemberRoleAndStatus(
+            Long studyId,
+            StudyMemberRole role,
+            StudyMemberStatus status
+    );
+
     @Query("""
         SELECT sm.studyMemberId
         FROM StudyMember sm
@@ -47,6 +53,18 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     """)
     List<StudyMember> findAllActiveByStudyIdFetchUser(
             @Param("studyId") Long studyId
+    );
+
+    @Query("""
+        SELECT sm.study.studyId, COUNT(sm)
+        FROM StudyMember sm
+        WHERE sm.study.studyId IN :studyIds
+          AND sm.status IN :statuses
+        GROUP BY sm.study.studyId
+    """)
+    List<Object[]> countMembersByStudyIdsAndStatusIn(
+            @Param("studyIds") List<Long> studyIds,
+            @Param("statuses") List<StudyMemberStatus> statuses
     );
 
     boolean existsByStudy_StudyIdAndUser_UserId(

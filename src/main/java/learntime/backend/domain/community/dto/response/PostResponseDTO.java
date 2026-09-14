@@ -1,6 +1,7 @@
 package learntime.backend.domain.community.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import learntime.backend.domain.community.enums.PostCategory;
 import learntime.backend.domain.study_progress.dto.response.StudyTotalInfoResponseDTO;
 import lombok.Builder;
 
@@ -22,7 +23,7 @@ public record PostResponseDTO(
         @Schema(description = "작성자 프로필 이미지 URL", example = "https://s3.ap-northeast-2.amazonaws.com/...")
         String userProfileImageUrl,
 
-        @Schema(description = "현재 로그인한 사용자가 작성자 차단했는지 여부. 로그아웃 상태면 NULL'", example = "false")
+        @Schema(description = "현재 로그인한 사용자가 작성자 차단했는지 여부. 로그아웃 상태면 NULL", example = "false")
         Boolean hasBlocked,
         
         @Schema(description = "게시글 제목", example = "오늘 공부 인증합니다!")
@@ -60,6 +61,18 @@ public record PostResponseDTO(
         
         @Schema(description = "연동된 스터디 ID", example = "1")
         Long studyId,
+
+        @Schema(description = "연동된 스터디 제목", example = "이펙티브 자바 완독 스터디")
+        String studyTitle,
+
+        @Schema(description = "현재 스터디 참여 인원 수 (최대 4명)", example = "2")
+        Integer currentMemberCount,
+
+        @Schema(description = "스터디 모집 마감 여부 (정원 4명 도달 시 true)", example = "false")
+        Boolean isFull,
+
+        @Schema(description = "게시글 카테고리 (FREE, RECRUITMENT)", example = "FREE")
+        PostCategory category,
 
         @Schema(description = "공지사항 여부", example = "false")
         Boolean isNotice

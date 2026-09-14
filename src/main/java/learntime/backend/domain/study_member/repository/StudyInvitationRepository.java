@@ -1,8 +1,10 @@
 package learntime.backend.domain.study_member.repository;
 
+import jakarta.persistence.LockModeType;
 import learntime.backend.domain.study_member.enums.StudyInvitationStatus;
 import learntime.backend.domain.study_member.model.StudyInvitation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -93,5 +95,14 @@ public interface StudyInvitationRepository extends JpaRepository<StudyInvitation
         WHERE si.studyInvitationId = :invitationId
     """)
     Optional<StudyInvitation> findByIdFetchAll(@Param("invitationId") Long invitationId);
+
+    // 비관적 락: 초대 수락 시 동시성 제어를 위해 초대 행 잠금
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        SELECT si
+        FROM StudyInvitation si
+        WHERE si.studyInvitationId = :invitationId
+    """)
+    Optional<StudyInvitation> findByIdWithPessimisticLock(@Param("invitationId") Long invitationId);
 
 }

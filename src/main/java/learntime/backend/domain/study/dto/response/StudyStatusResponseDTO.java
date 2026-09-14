@@ -6,6 +6,7 @@ import lombok.Builder;
 @Builder
 public record StudyStatusResponseDTO(
         Long studyId,
-        StudyPlanStatus status
+        StudyPlanStatus status,
+        Boolean isPublic
 ) {
 }

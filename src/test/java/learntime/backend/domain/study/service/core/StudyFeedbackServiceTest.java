@@ -56,7 +56,7 @@ class StudyFeedbackServiceTest {
 
         given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                 studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(Optional.of(member));
         given(studyFeedbackRepository.findAllByStudyMember_StudyMemberId(100L, pageable))
                 .willReturn(new PageImpl<>(List.of()));
@@ -69,7 +69,7 @@ class StudyFeedbackServiceTest {
         assertThat(result).isNotNull();
         verify(studyMemberRepository).findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                 studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN));
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED));
     }
 
     @Test
@@ -82,7 +82,7 @@ class StudyFeedbackServiceTest {
 
         given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                 studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(Optional.of(member));
         given(studyFeedbackRepository.findAllByStudyMember_StudyMemberId(200L, pageable))
                 .willReturn(new PageImpl<>(List.of()));
@@ -101,7 +101,7 @@ class StudyFeedbackServiceTest {
 
         given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                 studyId, userId,
-                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)))
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)))
                 .willReturn(Optional.empty());
 
         // when & then
@@ -120,10 +120,8 @@ class StudyFeedbackServiceTest {
         // given
         Long studyId = 1L, userId = 20L;
 
-        // generateAndSaveFeedback은 ACTIVE 전용 쿼리 사용 → WITHDRAWN이면 empty 반환
-        given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatus(
-                studyId, userId, StudyMemberStatus.ACTIVE))
-                .willReturn(Optional.empty());
+        given(studyQueryService.getStudyAnalysisData(studyId, userId))
+                .willThrow(new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         // when & then
         assertThatThrownBy(() -> studyFeedbackService.generateAndSaveFeedback(studyId, userId))

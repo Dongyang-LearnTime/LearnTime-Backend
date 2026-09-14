@@ -58,6 +58,7 @@ public class StudyQueryService {
         return StudyStatusResponseDTO.builder()
                 .studyId(study.getStudyId())
                 .status(study.getStatus())
+                .isPublic(study.getIsPublic())
                 .build();
     }
 

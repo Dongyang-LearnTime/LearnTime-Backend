@@ -41,6 +41,7 @@ public class StudyConverter {
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .status(StudyPlanStatus.PLANNING)
+                .isPublic(request.isPublic() != null ? request.isPublic() : false)
                 .build();
     }
 
