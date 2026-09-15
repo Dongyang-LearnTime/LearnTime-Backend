@@ -81,10 +81,8 @@ public class StudyManagementService {
      */
     @Transactional
     public void deleteStudyBulk(Long studyId, Long userId) {
-        boolean existsStudy = studyRepository.existsById(studyId);
-        if (!existsStudy) {
-            throw new StudyException(StudyErrorCode.STUDY_NOT_FOUND);
-        }
+        studyRepository.findByIdWithPessimisticLock(studyId)
+                .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_NOT_FOUND));
 
         StudyMember studyMember = studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                         studyId,
@@ -94,9 +92,10 @@ public class StudyManagementService {
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         // 방장 권한 검증
-        StudyAuthUtil.checkOwnerRole(studyMember);
+        StudyAuthUtil.checkOwnerRoleAllowCompleted(studyMember);
 
         // 1. 가장 하위 계층(1계층) 벌크 삭제
+        studyRepository.deleteForumMessagesByStudyId(studyId);
         studyRepository.deleteStudyMemberContentsByStudyId(studyId);
         studyRepository.deleteQuizAnswersByStudyId(studyId);
         studyRepository.deleteStudyStatusesByStudyId(studyId);

@@ -234,7 +234,7 @@ class MessageServiceTest {
     }
 
     @Test
-    @DisplayName("송신자와 수신자 둘 다 삭제한 경우 바로 삭제되지 않고, 읽은 지 1개월이 지나 스케줄러가 실행되어야 물리 삭제됨")
+    @DisplayName("송신자와 수신자 둘 다 삭제한 경우 바로 삭제되지 않고, 양쪽 삭제 후 1개월이 지나 스케줄러가 실행되어야 물리 삭제됨")
     void deleteMessage_byBoth_shouldNotDeleteImmediatelyAndGetsCleanedByScheduler() throws Exception {
         // given
         User sender = createUser("송신자", "sender@test.com");
@@ -245,13 +245,12 @@ class MessageServiceTest {
         messageService.deleteMessage(sender.getUserId(), message.getMessageId());
         messageService.deleteMessage(receiver.getUserId(), message.getMessageId());
 
-        // then 1: DB에는 아직 남아 있어야 함 (읽음 처리가 되지 않았음)
+        // then 1: 보존 기간 동안에는 DB에 남아 있어야 함
         Optional<Message> foundBeforeRead = messageRepository.findById(message.getMessageId());
         assertThat(foundBeforeRead).isPresent();
 
-        // when 2: 읽음 처리 후 1개월하고 1일 전으로 readAt 수정
-        message.readMessage();
-        Field readAtField = Message.class.getDeclaredField("readAt");
+        // when 2: 미열람 상태 그대로 삭제 시각을 1개월하고 1일 전으로 수정
+        Field readAtField = Message.class.getDeclaredField("completelyDeletedAt");
         readAtField.setAccessible(true);
         readAtField.set(message, LocalDateTime.now().minusMonths(1).minusDays(1));
         messageRepository.saveAndFlush(message);

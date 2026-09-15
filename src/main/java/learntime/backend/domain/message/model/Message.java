@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "message",
         indexes = {
+                @Index(name = "idx_message_cleanup", columnList = "completely_deleted_at"),
                 @Index(
                         name = "idx_receiver_box",
                         columnList = "receiver_id, receiver_deleted, sent_at"
@@ -50,12 +51,14 @@ public class Message {
     @Column(nullable = false)
     private boolean receiverDeleted = false;
 
+    private LocalDateTime completelyDeletedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id", nullable = false)
+    @JoinColumn(name = "sender_id")
     private User sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id", nullable = false)
+    @JoinColumn(name = "receiver_id")
     private User receiver;
 
     @Builder
@@ -73,10 +76,18 @@ public class Message {
 
     public void deleteBySender() {
         this.senderDeleted = true;
+        markCompletelyDeleted();
     }
 
     public void deleteByReceiver() {
         this.receiverDeleted = true;
+        markCompletelyDeleted();
+    }
+
+    private void markCompletelyDeleted() {
+        if (isCompletelyDeleted() && completelyDeletedAt == null) {
+            completelyDeletedAt = LocalDateTime.now();
+        }
     }
 
     public boolean isCompletelyDeleted() {

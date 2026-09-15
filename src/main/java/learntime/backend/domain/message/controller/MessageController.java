@@ -67,7 +67,7 @@ public class MessageController {
     }
 
     @DeleteMapping("/{messageId}")
-    @Operation(summary = "쪽지 삭제", description = "쪽지를 삭제 상태로 변경합니다. 양방향 모두에서 삭제 처리될 경우 DB에서 영구 삭제됩니다.")
+    @Operation(summary = "쪽지 삭제", description = "쪽지를 삭제 상태로 변경합니다. 양쪽 모두 삭제한 시점부터 1개월 후 정리 작업에서 영구 삭제됩니다.")
     public ResponseEntity<Void> deleteMessage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long messageId

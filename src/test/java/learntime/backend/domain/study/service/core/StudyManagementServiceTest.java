@@ -41,7 +41,7 @@ class StudyManagementServiceTest {
         // given
         Long studyId = 1L;
         Long userId = 1L;
-        given(studyRepository.existsById(studyId)).willReturn(false);
+        given(studyRepository.findByIdWithPessimisticLock(studyId)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> studyManagementService.deleteStudyBulk(studyId, userId))
@@ -55,7 +55,7 @@ class StudyManagementServiceTest {
         // given
         Long studyId = 1L;
         Long userId = 1L;
-        given(studyRepository.existsById(studyId)).willReturn(true);
+        given(studyRepository.findByIdWithPessimisticLock(studyId)).willReturn(Optional.of(mock(Study.class)));
         given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)))
                 .willReturn(Optional.empty());
 
@@ -71,10 +71,10 @@ class StudyManagementServiceTest {
         // given
         Long studyId = 1L;
         Long userId = 1L;
-        given(studyRepository.existsById(studyId)).willReturn(true);
+        given(studyRepository.findByIdWithPessimisticLock(studyId)).willReturn(Optional.of(mock(Study.class)));
         
         StudyMember studyMember = mock(StudyMember.class);
-        given(studyMember.isActive()).willReturn(true);
+        given(studyMember.getStatus()).willReturn(StudyMemberStatus.ACTIVE);
         given(studyMember.getStudyMemberRole()).willReturn(StudyMemberRole.MEMBER); // MEMBER 권한
         
         given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)))
@@ -92,10 +92,10 @@ class StudyManagementServiceTest {
         // given
         Long studyId = 1L;
         Long userId = 1L;
-        given(studyRepository.existsById(studyId)).willReturn(true);
+        given(studyRepository.findByIdWithPessimisticLock(studyId)).willReturn(Optional.of(mock(Study.class)));
         
         StudyMember studyMember = mock(StudyMember.class);
-        given(studyMember.isActive()).willReturn(true);
+        given(studyMember.getStatus()).willReturn(StudyMemberStatus.ACTIVE);
         given(studyMember.getStudyMemberRole()).willReturn(StudyMemberRole.OWNER); // 방장 권한
         
         given(studyMemberRepository.findByStudy_StudyIdAndUser_UserIdAndStatusIn(studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)))

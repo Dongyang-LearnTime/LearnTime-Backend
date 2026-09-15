@@ -12,6 +12,8 @@ import learntime.backend.domain.notification.repository.NotificationRepository;
 import learntime.backend.domain.notification.repository.ReminderRepository;
 import learntime.backend.domain.relationship.repository.UserBlockRepository;
 import learntime.backend.domain.study_member.repository.StudyInvitationRepository;
+import learntime.backend.domain.study_member.repository.StudyJoinRequestRepository;
+import learntime.backend.domain.study_forum.repository.StudyForumMessageRepository;
 import learntime.backend.domain.study_member.repository.StudyMemberRepository;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
@@ -81,6 +83,8 @@ public class UserService {
     private final NotificationRepository notificationRepository;
     private final StudyMemberRepository studyMemberRepository;
     private final StudyInvitationRepository studyInvitationRepository;
+    private final StudyJoinRequestRepository studyJoinRequestRepository;
+    private final StudyForumMessageRepository studyForumMessageRepository;
     private final UserTermsRepository userTermsRepository;
     private final MessageRepository messageRepository;
     private final UserBadgeRepository userBadgeRepository;
@@ -182,7 +186,7 @@ public class UserService {
     // 회원 탈퇴 로직
     @Transactional
     public void deleteUser(Long userId, String socialToken) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         LocalDateTime deletedAt = LocalDateTime.now();
@@ -220,6 +224,8 @@ public class UserService {
         messageRepository.deleteSentMessagesByUserId(userId);
         messageRepository.deleteReceivedMessagesByUserId(userId);
         studyInvitationRepository.cancelPendingByUserId(userId, deletedAt);
+        studyJoinRequestRepository.cancelPendingByUserId(userId, deletedAt);
+        studyForumMessageRepository.detachAuthorByUserId(userId);
         reassignOwnedStudies(userId); // 공부 진도 방장 이동
         studyMemberRepository.withdrawAllByUserId(userId);
         userTermsRepository.deleteAllByUserId(userId);
@@ -257,13 +263,13 @@ public class UserService {
         List<StudyMember> ownedMemberships = studyMemberRepository.findOwnedMemberships(
                 userId,
                 StudyMemberRole.OWNER,
-                StudyMemberStatus.ACTIVE
+                List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)
         );
 
         for (StudyMember ownedMembership : ownedMemberships) {
-            List<StudyMember> activeMembers = studyMemberRepository.findAllByStudy_StudyIdAndStatus(
+            List<StudyMember> activeMembers = studyMemberRepository.findAllByStudy_StudyIdAndStatusIn(
                     ownedMembership.getStudy().getStudyId(),
-                    StudyMemberStatus.ACTIVE
+                    List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)
             );
 
             List<StudyMember> candidates = activeMembers.stream()
@@ -271,7 +277,9 @@ public class UserService {
                     .toList();
 
             if (candidates.isEmpty()) {
-                ownedMembership.getStudy().updateStatus(StudyPlanStatus.FAILED);
+                if (ownedMembership.isActive()) {
+                    ownedMembership.getStudy().updateStatus(StudyPlanStatus.FAILED);
+                }
                 continue;
             }
 

@@ -20,7 +20,8 @@ import java.util.List;
 @Table(
         name = "study_member",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"study_id", "user_id"})
+                @UniqueConstraint(columnNames = {"study_id", "user_id"}),
+                @UniqueConstraint(name = "uk_study_member_study_member", columnNames = {"study_id", "study_member_id"})
         }
 )
 @Getter

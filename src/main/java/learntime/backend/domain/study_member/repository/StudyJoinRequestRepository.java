@@ -7,10 +7,16 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface StudyJoinRequestRepository extends JpaRepository<StudyJoinRequest, Long> {
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE StudyJoinRequest r SET r.status = StudyJoinRequestStatus.CANCELED, r.updatedAt = :now "
+            + "WHERE r.requesterUser.userId = :userId AND r.status = StudyJoinRequestStatus.PENDING")
+    void cancelPendingByUserId(@Param("userId") Long userId, @Param("now") LocalDateTime now);
 
     boolean existsByStudy_StudyIdAndRequesterUser_UserIdAndStatus(Long studyId, Long userId, StudyJoinRequestStatus status);
 

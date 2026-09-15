@@ -104,12 +104,12 @@ public class MessageService {
 
         validateMessageAccess(message, userId);
 
-        if (message.getSender().getUserId().equals(userId)) {
+        if (message.getSender() != null && message.getSender().getUserId().equals(userId)) {
             message.deleteBySender();
             log.info("[쪽지 삭제 처리 - 송신자] messageId={}, senderId={}", messageId, userId);
         }
 
-        if (message.getReceiver().getUserId().equals(userId)) {
+        if (message.getReceiver() != null && message.getReceiver().getUserId().equals(userId)) {
             message.deleteByReceiver();
             log.info("[쪽지 삭제 처리 - 수신자] messageId={}, receiverId={}", messageId, userId);
         }
@@ -118,10 +118,10 @@ public class MessageService {
 
     private void validateMessageAccess(Message message, Long userId) {
         // 현재 사용자가 송신자인지 확인
-        boolean isSender = message.getSender().getUserId().equals(userId);
+        boolean isSender = (message.getSender() != null && message.getSender().getUserId().equals(userId));
 
         // 현재 사용자가 수신자인지 확인
-        boolean isReceiver = message.getReceiver().getUserId().equals(userId);
+        boolean isReceiver = (message.getReceiver() != null && message.getReceiver().getUserId().equals(userId));
 
         // 송신자/수신자 모두 아닌 경우 접근 불가
         if (!isSender && !isReceiver) {

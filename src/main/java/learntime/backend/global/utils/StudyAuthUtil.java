@@ -51,6 +51,13 @@ public class StudyAuthUtil {
         }
     }
 
+    public static void checkOwnerRoleAllowCompleted(StudyMember member) {
+        if ((member.getStatus() != StudyMemberStatus.ACTIVE && member.getStatus() != StudyMemberStatus.COMPLETED)
+                || member.getStudyMemberRole() != StudyMemberRole.OWNER) {
+            throw new StudyException(StudyErrorCode.STUDY_UNAUTHORIZED_ACCESS);
+        }
+    }
+
     // 현재 사용자가 스터디 맴버이고, 오너인지 확인
     public static void checkOwnerRole(StudyMember studyMember) {
         if (!studyMember.isActive() || studyMember.getStudyMemberRole() != StudyMemberRole.OWNER) {
