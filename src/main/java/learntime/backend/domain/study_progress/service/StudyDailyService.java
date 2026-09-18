@@ -19,7 +19,6 @@ import learntime.backend.domain.study.repository.StudyRepository;
 import learntime.backend.domain.study_plan.repository.StudyRestDateRepository;
 import learntime.backend.domain.study_plan.repository.StudyRestDayRepository;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
-import learntime.backend.global.utils.StudyAuthUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -84,16 +83,16 @@ public class StudyDailyService {
         StudyDailyPlan studyDailyPlan = studyDailyPlanRepository.findByStudyIdAndPlanDate(studyId, planDate)
                 .orElse(null);
 
-        // ACTIVE + WITHDRAWN 모두 허용 — 탈퇴 후에도 과거 진도 조회 가능
-        Long studyMemberId = studyMemberRepository
-                .findStudyMemberIdByStudyIdAndUserIdAndStatusIn(
+        // 수료·탈퇴 후에도 본인의 과거 진도와 참여 상태를 조회할 수 있습니다.
+        StudyMember studyMember = studyMemberRepository
+                .findByStudy_StudyIdAndUser_UserIdAndStatusIn(
                         studyId, userId,
-                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN)
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.WITHDRAWN, StudyMemberStatus.COMPLETED)
                 )
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         List<Long> allStudyMemberIds = studyMemberRepository
-                .findAllActiveByStudyIdFetchUser(studyId)
+                .findAllByStudyIdAndStatusInFetchUser(studyId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED))
                 .stream()
                 .map(StudyMember::getStudyMemberId)
                 .toList();
@@ -101,12 +100,12 @@ public class StudyDailyService {
         StudyStatus studyStatus = null;
         if (studyDailyPlan != null) {
             studyStatus = studyStatusRepository.
-                    findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMemberId, studyDailyPlan.getStudyDailyPlanId())
+                    findByStudyMember_StudyMemberIdAndStudyDailyPlan_StudyDailyPlanId(studyMember.getStudyMemberId(), studyDailyPlan.getStudyDailyPlanId())
                     .orElse(null);
         }
 
         return StudyDailyPlanConverter.toStudyDailyPlanInfoResponseDTO
-                (planDate, study, restDays, restDates, studyDailyPlan, studyStatus, studyMemberId, allStudyMemberIds);
+                (planDate, study, restDays, restDates, studyDailyPlan, studyStatus, studyMember.getStudyMemberId(), studyMember.getStatus(), allStudyMemberIds);
     }
 
     // study id를 기준으로 모든 StudyDailyPlan의 정보를 가져옵니다.
@@ -115,7 +114,10 @@ public class StudyDailyService {
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_DAILY_NOT_FOUND));
 
         // Fix 5: Study 엔티티의 Lazy 컬렉션 대신 repository 직접 조회
-        StudyAuthUtil.verifyStudyMember(studyId, userId, studyMemberRepository);
+        if (!studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatusIn(
+                studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED))) {
+            throw new StudyException(StudyErrorCode.STUDY_UNAUTHORIZED_ACCESS);
+        }
 
         List<StudyDailyPlan> studyDailyPlanList =
                 studyDailyPlanRepository.findAllByStudy(study);
@@ -242,7 +244,7 @@ public class StudyDailyService {
     // 완료되지 않은 진도를 실패 처리함
     @Transactional
     public void markIncompletePlansAsFailure() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
 
         log.info("[StudyDailyPlan] 미완료 계획 실패 처리 시작 - 기준일: {}", today);
         long startTime = System.currentTimeMillis();
@@ -265,7 +267,7 @@ public class StudyDailyService {
     // 스케줄러에 의해 완료(실패) 처리된 진도를 바탕으로 종료된 스터디 멤버의 상태를 완료 처리하고 포인트를 지급합니다.
     @Transactional
     public void finalizeExpiredStudyMembers() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
         List<StudyMember> expiredMembers = studyMemberRepository.findActiveMembersWithExpiredStudy(today);
 
         int count = 0;
@@ -343,7 +345,7 @@ public class StudyDailyService {
                 .map(StudyMember::getStudyMemberId)
                 .toList();
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
 
         List<StudyDailyPlan> dailyPlans = studyDailyPlanRepository.findAllByStudyIdInAndPlanDate(studyIds, today);
         Map<Long, StudyDailyPlan> studyIdToPlanMap = dailyPlans.stream()

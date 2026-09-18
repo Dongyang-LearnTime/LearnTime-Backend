@@ -40,16 +40,16 @@ public class StudyMemberService {
     @Transactional(readOnly = true)
     public List<StudyMemberResponseDTO> getAllStudyMember(Long studyId, Long userId) {
         boolean isStudyMember =
-                studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatus(
+                studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatusIn(
                         studyId,
                         userId,
-                        StudyMemberStatus.ACTIVE
+                        List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED)
                 );
         if (!isStudyMember) {
             throw new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND);
         }
 
-        List<StudyMember> studyMemberList = studyMemberRepository.findAllActiveByStudyIdFetchUser(studyId);
+        List<StudyMember> studyMemberList = studyMemberRepository.findAllByStudyIdAndStatusInFetchUser(studyId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED));
 
         Set<Long> blockedIds = userBlockRepository.findBlockedUserIds(userId);
 

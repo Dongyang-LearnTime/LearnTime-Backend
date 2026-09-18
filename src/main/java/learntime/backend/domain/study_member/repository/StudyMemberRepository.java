@@ -75,6 +75,12 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
             @Param("statuses") List<StudyMemberStatus> statuses
     );
 
+    @Query("SELECT sm FROM StudyMember sm JOIN FETCH sm.user WHERE sm.study.studyId = :studyId AND sm.status IN :statuses")
+    List<StudyMember> findAllByStudyIdAndStatusInFetchUser(
+            @Param("studyId") Long studyId,
+            @Param("statuses") List<StudyMemberStatus> statuses
+    );
+
     boolean existsByStudy_StudyIdAndUser_UserId(
             Long studyId,
             Long userId

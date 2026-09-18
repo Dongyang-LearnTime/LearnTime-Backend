@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import learntime.backend.domain.study_progress.enums.CompletionStatus;
 import learntime.backend.domain.study_progress.enums.ProgressStatus;
 import lombok.Builder;
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -57,6 +58,9 @@ public record StudyDailyPlanInfoResponseDTO(
 
         @Schema(description = "조회한 사용자의 스터디 멤버 ID")
         Long studyMemberId,
+
+        @Schema(description = "내 스터디 참여 상태")
+        StudyMemberStatus memberStatus,
 
         @Schema(description = "모든 스터디 멤버 ID 목록")
         List<Long> allStudyMemberIds

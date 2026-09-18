@@ -47,8 +47,8 @@ public class StudyQueryService {
     private final StudyMemberRepository studyMemberRepository;
 
     public StudyStatusResponseDTO getStudyStatus(Long studyId, Long userId) {
-        boolean isStudyMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatus(
-                studyId, userId, StudyMemberStatus.ACTIVE);
+        boolean isStudyMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatusIn(
+                studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED));
         if (!isStudyMember) {
             throw new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND);
         }
@@ -70,7 +70,7 @@ public class StudyQueryService {
 
         // Fix 4: Lazy 컬렉션 스트림 대신 repository 직접 조회로 NPE 방지
         StudyMember member = studyMemberRepository
-                .findByStudy_StudyIdAndUser_UserIdAndStatus(studyId, userId, StudyMemberStatus.ACTIVE)
+                .findByStudy_StudyIdAndUser_UserIdAndStatusIn(studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED))
                 .orElseThrow(() -> new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND));
 
         StudyTotalInfoResponseDTO indicator = getStudyMemberTotalIndicatorByUserId(studyId, userId);
@@ -96,7 +96,7 @@ public class StudyQueryService {
     // 특정 유저의 전체 통계 지표를 조회합니다.
     @Transactional(readOnly = true)
     public StudyTotalInfoResponseDTO getStudyMemberTotalIndicatorByUserId(Long studyId, Long userId) {
-        Long studyMemberId = studyMemberRepository.findActiveStudyMemberIdByStudyIdAndUserId(studyId, userId)
+        Long studyMemberId = studyMemberRepository.findStudyMemberIdByStudyIdAndUserIdAndStatusIn(studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED))
                 .orElseThrow(() -> {
                     if (!studyRepository.existsById(studyId)) {
                         return new StudyException(StudyErrorCode.STUDY_NOT_FOUND);
@@ -139,8 +139,8 @@ public class StudyQueryService {
 
     @Transactional(readOnly = true)
     public List<StudyMemberRecentWeekInfoResponseDTO> getRecentWeekStudyInfos(Long studyId, Long userId) {
-        boolean isStudyMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatus(
-                studyId, userId, StudyMemberStatus.ACTIVE);
+        boolean isStudyMember = studyMemberRepository.existsByStudy_StudyIdAndUser_UserIdAndStatusIn(
+                studyId, userId, List.of(StudyMemberStatus.ACTIVE, StudyMemberStatus.COMPLETED));
         if (!isStudyMember) {
             throw new StudyException(StudyErrorCode.STUDY_MEMBER_NOT_FOUND);
         }
@@ -166,7 +166,7 @@ public class StudyQueryService {
                 .collect(Collectors.toSet());
 
         List<StudyMember> studyMembers = study.getStudyMembers().stream()
-                .filter(StudyMember::isActive)
+                .filter(member -> member.isActive() || member.getStatus() == StudyMemberStatus.COMPLETED)
                 .toList();
         List<Long> studyMemberIds = studyMembers.stream()
                 .map(StudyMember::getStudyMemberId)

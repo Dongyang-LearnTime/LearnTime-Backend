@@ -11,6 +11,7 @@ import learntime.backend.domain.study_progress.model.StudyStatus;
 import learntime.backend.global.error.code.ErrorCode;
 import learntime.backend.global.error.exception.BusinessException;
 
+import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -39,6 +40,7 @@ public class StudyDailyPlanConverter {
             StudyDailyPlan plan,
             StudyStatus status,
             Long studyMemberId,
+            StudyMemberStatus memberStatus,
             List<Long> allStudyMemberIds
     ) {
         Long studyDailyPlanId = plan != null ? plan.getStudyDailyPlanId() : null;
@@ -76,6 +78,7 @@ public class StudyDailyPlanConverter {
 
                 // 멤버 정보
                 .studyMemberId(studyMemberId)
+                .memberStatus(memberStatus)
                 .allStudyMemberIds(allStudyMemberIds)
 
                 .build();

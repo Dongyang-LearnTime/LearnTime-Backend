@@ -1,14 +1,14 @@
 package learntime.backend.domain.user.repository;
 
 import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RequiredArgsConstructor
 public class UserCleanupRepositoryImpl implements UserCleanupRepository {
-    private final EntityManager entityManager;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // Native SQL includes soft-deleted rows hidden by Hibernate restrictions.
     @Override
