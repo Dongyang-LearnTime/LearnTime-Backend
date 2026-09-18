@@ -34,6 +34,10 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
 
     // --- 벌크 삭제 쿼리 모음 (하위부터 삭제) ---
 
+    @Modifying
+    @Query("DELETE FROM StudyForumMessage m WHERE m.study.studyId = :studyId")
+    void deleteForumMessagesByStudyId(@Param("studyId") Long studyId);
+
     // 1계층 삭제
     @Modifying
     @Query("DELETE FROM StudyMemberContent smc WHERE smc.studyMember.study.studyId = :studyId")

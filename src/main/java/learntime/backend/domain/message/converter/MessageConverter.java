@@ -17,11 +17,11 @@ public class MessageConverter {
                 .content(message.getContent())
                 .sentAt(message.getSentAt())
                 .readAt(message.getReadAt())
-                .senderId(message.getSender().getUserId())
-                .senderName(message.getSender().getName())
-                .senderRole(message.getSender().getRole())
-                .receiverId(message.getReceiver().getUserId())
-                .receiverName(message.getReceiver().getName())
+                .senderId(message.getSender() == null ? null : message.getSender().getUserId())
+                .senderName(message.getSender() == null ? "탈퇴한 사용자" : message.getSender().getName())
+                .senderRole(message.getSender() == null ? null : message.getSender().getRole())
+                .receiverId(message.getReceiver() == null ? null : message.getReceiver().getUserId())
+                .receiverName(message.getReceiver() == null ? "탈퇴한 사용자" : message.getReceiver().getName())
                 .build();
     }
 }

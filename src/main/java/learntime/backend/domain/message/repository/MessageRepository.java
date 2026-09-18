@@ -14,11 +14,11 @@ import java.time.LocalDateTime;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-    @Query(value = "select m from Message m join fetch m.receiver where m.sender.userId = :senderId and m.senderDeleted = false",
+    @Query(value = "select m from Message m left join fetch m.receiver where m.sender.userId = :senderId and m.senderDeleted = false",
             countQuery = "select count(m) from Message m where m.sender.userId = :senderId and m.senderDeleted = false")
     Page<Message> findSentMessages(@Param("senderId") Long senderId, Pageable pageable);
 
-    @Query(value = "select m from Message m join fetch m.sender where m.receiver.userId = :receiverId and m.receiverDeleted = false",
+    @Query(value = "select m from Message m left join fetch m.sender where m.receiver.userId = :receiverId and m.receiverDeleted = false",
             countQuery = "select count(m) from Message m where m.receiver.userId = :receiverId and m.receiverDeleted = false")
     Page<Message> findReceivedMessages(@Param("receiverId") Long receiverId, Pageable pageable);
 
@@ -36,15 +36,18 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("delete from Message m " +
             "where m.senderDeleted = true " +
             "and m.receiverDeleted = true " +
-            "and m.readAt is not null " +
-            "and m.readAt <= :threshold")
+            "and m.completelyDeletedAt <= :threshold")
     int deleteExpiredMessages(@Param("threshold") LocalDateTime threshold);
 
     @Modifying(clearAutomatically = true)
-    @Query("update Message m set m.senderDeleted = true where m.sender.userId = :userId")
+    @Query("update Message m set m.completelyDeletedAt = CASE WHEN m.receiverDeleted = true "
+            + "THEN COALESCE(m.completelyDeletedAt, CURRENT_TIMESTAMP) ELSE m.completelyDeletedAt END, "
+            + "m.senderDeleted = true, m.sender = null where m.sender.userId = :userId")
     void deleteSentMessagesByUserId(@Param("userId") Long userId);
 
     @Modifying(clearAutomatically = true)
-    @Query("update Message m set m.receiverDeleted = true where m.receiver.userId = :userId")
+    @Query("update Message m set m.completelyDeletedAt = CASE WHEN m.senderDeleted = true "
+            + "THEN COALESCE(m.completelyDeletedAt, CURRENT_TIMESTAMP) ELSE m.completelyDeletedAt END, "
+            + "m.receiverDeleted = true, m.receiver = null where m.receiver.userId = :userId")
     void deleteReceivedMessagesByUserId(@Param("userId") Long userId);
 }

@@ -9,7 +9,7 @@
 build
 
 README.md
-GEMINI.md
+AGENTS.md
 
 Dockerfile
 docker-compose.yml

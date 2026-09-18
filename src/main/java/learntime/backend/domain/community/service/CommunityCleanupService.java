@@ -2,7 +2,7 @@ package learntime.backend.domain.community.service;
 
 import learntime.backend.domain.community.repository.CommentRepository;
 import learntime.backend.domain.community.repository.PostRepository;
-import learntime.backend.global.infra.s3.S3Service;
+import learntime.backend.domain.community.repository.PostImageRepository;
 import learntime.backend.global.infra.s3.event.ImageDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 @Slf4j
 @Service
@@ -20,6 +21,7 @@ public class CommunityCleanupService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final PostImageRepository postImageRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -28,7 +30,9 @@ public class CommunityCleanupService {
         log.info("Starting hard delete for posts and comments deleted before: {}", threshold);
 
         // 1. 삭제될 게시글의 이미지 URL 미리 조회 (S3 객체 삭제용)
-        List<String> imageUrlsToDelete = postRepository.findDeletedPostImageUrlsBefore(threshold);
+        Set<String> imageUrlsToDelete = new HashSet<>(postRepository.findDeletedPostImageUrlsBefore(threshold));
+        imageUrlsToDelete.addAll(postImageRepository.findDeletedImageUrlsBefore(threshold));
+        postImageRepository.hardDeleteImagesBefore(threshold);
 
         // 2. 게시글과 연관된 하위 엔티티들 하드 딜리트 (외래키 제약조건 고려)
         postRepository.hardDeletePostViewHistoryByDeletedPostThreshold(threshold);

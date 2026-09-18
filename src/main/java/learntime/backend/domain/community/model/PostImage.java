@@ -6,7 +6,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
-@Table
+@Table(indexes = @Index(name = "idx_post_image_deleted_at", columnList = "deleted_at"))
 // soft delete
 @SQLDelete(sql = "UPDATE post_image SET deleted_at = CURRENT_TIMESTAMP WHERE post_image_id = ?")
 @SQLRestriction("deleted_at IS NULL")

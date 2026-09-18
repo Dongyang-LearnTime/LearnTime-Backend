@@ -38,5 +38,6 @@ out/
 .vscode/
 
 ### GEMINI ###
-GEMINI.md
+AGENTS.md
+SKILL.md
 .antigravitycli

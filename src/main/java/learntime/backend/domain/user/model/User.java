@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(uniqueConstraints = {
+@Table(indexes = @Index(name = "idx_user_deleted_at", columnList = "deleted_at"), uniqueConstraints = {
         @UniqueConstraint(name = "uq_social_user", columnNames = {"social_id", "social_provider"})
 })
 @SQLDelete(sql = "UPDATE user SET deleted_at = NOW() WHERE user_id = ?") // DELECT 수행 시, 삭제 대신 deletedAt에 시간 표시(soft delete)

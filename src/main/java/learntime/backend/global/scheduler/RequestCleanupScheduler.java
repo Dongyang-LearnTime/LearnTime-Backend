@@ -64,7 +64,7 @@ public class RequestCleanupScheduler {
         LocalDateTime threshold = LocalDateTime.now().minusMonths(1);
         int deletedCount = messageRepository.deleteExpiredMessages(threshold);
         if (deletedCount > 0) {
-            log.info("[쪽지 만료 삭제] 서로 삭제되고 읽은 지 1개월이 지난 쪽지 삭제 완료. 삭제 건수: {}", deletedCount);
+            log.info("[쪽지 만료 삭제] 양쪽 모두 삭제한 지 1개월이 지난 쪽지 삭제 완료. 삭제 건수: {}", deletedCount);
         }
     }
 

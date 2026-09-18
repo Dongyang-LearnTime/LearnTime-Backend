@@ -4,6 +4,8 @@ import learntime.backend.domain.study.model.Study;
 import learntime.backend.domain.study_member.enums.StudyMemberRole;
 import learntime.backend.domain.study_member.enums.StudyMemberStatus;
 import learntime.backend.domain.study_member.model.StudyMember;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,6 +18,10 @@ import java.util.Optional;
 @Repository
 public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> {
     Optional<StudyMember> findByStudy_StudyIdAndUser_UserId(Long studyId, Long userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT sm FROM StudyMember sm WHERE sm.study.studyId = :studyId AND sm.user.userId = :userId")
+    Optional<StudyMember> findForForumWrite(@Param("studyId") Long studyId, @Param("userId") Long userId);
 
 
     Optional<StudyMember> findByStudy_StudyIdAndUser_UserIdAndStatus(
@@ -44,6 +50,8 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
 
     List<StudyMember> findAllByStudy_StudyIdAndStatus(Long studyId, StudyMemberStatus status);
 
+    List<StudyMember> findAllByStudy_StudyIdAndStatusIn(Long studyId, List<StudyMemberStatus> statuses);
+
     @Query("""
         SELECT sm
         FROM StudyMember sm
@@ -64,6 +72,12 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     """)
     List<Object[]> countMembersByStudyIdsAndStatusIn(
             @Param("studyIds") List<Long> studyIds,
+            @Param("statuses") List<StudyMemberStatus> statuses
+    );
+
+    @Query("SELECT sm FROM StudyMember sm JOIN FETCH sm.user WHERE sm.study.studyId = :studyId AND sm.status IN :statuses")
+    List<StudyMember> findAllByStudyIdAndStatusInFetchUser(
+            @Param("studyId") Long studyId,
             @Param("statuses") List<StudyMemberStatus> statuses
     );
 
@@ -89,12 +103,12 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
         JOIN FETCH sm.study
         WHERE sm.user.userId = :userId
           AND sm.studyMemberRole = :role
-          AND sm.status = :status
+          AND sm.status IN :statuses
     """)
     List<StudyMember> findOwnedMemberships(
             @Param("userId") Long userId,
             @Param("role") StudyMemberRole role,
-            @Param("status") StudyMemberStatus status
+            @Param("statuses") List<StudyMemberStatus> statuses
     );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

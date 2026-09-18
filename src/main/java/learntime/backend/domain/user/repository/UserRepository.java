@@ -17,13 +17,17 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, UserCleanupRepository {
     Optional<User> findByEmail(String email);
     Optional<User> findBySocialIdAndSocialProvider(String socialId, learntime.backend.domain.user.enums.AuthProvider socialProvider);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM User u WHERE u.email = :email")
     Optional<User> findByEmailForUpdate(@Param("email") String email);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.userId = :userId")
+    Optional<User> findByIdForUpdate(@Param("userId") Long userId);
 
     boolean existsByName(String name);
     boolean existsByEmail(String email);
@@ -49,9 +53,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("deletedAt") LocalDateTime deletedAt
     );
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query(value = "DELETE FROM user WHERE deleted_at > '2000-01-01 00:00:00' AND deleted_at < :thresholdDate", nativeQuery = true)
-    int hardDeleteOldUsers(@Param("thresholdDate") LocalDateTime thresholdDate);
 
     @Query("SELECT u.userId FROM User u WHERE u.name LIKE %:keyword% ORDER BY u.userId DESC")
     List<Long> findUserIdsByNameContaining(@Param("keyword") String keyword, Pageable pageable);

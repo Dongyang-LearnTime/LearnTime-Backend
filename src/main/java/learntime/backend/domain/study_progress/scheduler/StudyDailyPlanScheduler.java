@@ -21,6 +21,7 @@ public class StudyDailyPlanScheduler {
     public void runOnStartup() {
         try {
             studyDailyPlanService.markIncompletePlansAsFailure();
+            studyDailyPlanService.finalizeExpiredStudyMembers();
         } catch (Exception e) {
             LoggerFactory.getLogger(StudyDailyPlanScheduler.class).error("[스케줄러 실패] 서버 시작 시 미완료 진도 정리 실패", e);
         }
